@@ -14,8 +14,7 @@ spec:
       targetPort: 8000
       protocol: TCP
   selector:
-    app.kubernetes.io/name: kairos
-    app.kubernetes.io/component: web
+    app: frappe
 
 ---
 apiVersion: v1
@@ -34,8 +33,7 @@ spec:
       targetPort: 9000
       protocol: TCP
   selector:
-    app.kubernetes.io/name: kairos
-    app.kubernetes.io/component: socketio
+    app: frappe
 
 ---
 apiVersion: v1

@@ -8,8 +8,8 @@ metadata:
     app.kubernetes.io/component: storage
 spec:
   accessModes:
-    - ReadWriteMany  # Required for multiple pods to access
-  storageClassName: standard-rwx  # GKE Filestore or similar RWX storage class
+    - ReadWriteOnce  # Using PD for reliability
+  storageClassName: standard-rwo
   resources:
     requests:
       storage: 10Gi
@@ -25,8 +25,8 @@ metadata:
     app.kubernetes.io/component: storage
 spec:
   accessModes:
-    - ReadWriteMany
-  storageClassName: standard-rwx
+    - ReadWriteOnce
+  storageClassName: standard-rwo
   resources:
     requests:
       storage: 5Gi

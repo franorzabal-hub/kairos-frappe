@@ -21,11 +21,8 @@ resources:
   - deployment-mariadb.yaml
   - deployment-redis.yaml
 
-  # Frappe Services
-  - deployment-web.yaml
-  - deployment-worker.yaml
-  - deployment-scheduler.yaml
-  - deployment-socketio.yaml
+  # Frappe Services (all-in-one pod for RWO volume compatibility)
+  - deployment-frappe.yaml
 
   # Services
   - services.yaml
@@ -42,4 +39,5 @@ commonLabels:
 
 images:
   - name: frappe/frappe
-    newTag: v15
+    newName: gcr.io/kairos-escuela-app/kairos
+    newTag: cc150f2
