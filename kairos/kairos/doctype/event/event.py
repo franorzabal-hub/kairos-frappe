@@ -1,10 +1,20 @@
 # Copyright (c) 2024, Kairos and contributors
 # For license information, please see license.txt
 
+import re
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import nowdatetime, get_datetime, slugify
+from frappe.utils import now_datetime, get_datetime
+
+
+def slugify(text: str) -> str:
+	"""Convert text to URL-friendly slug."""
+	text = text.lower().strip()
+	text = re.sub(r'[^\w\s-]', '', text)
+	text = re.sub(r'[\s_-]+', '-', text)
+	text = re.sub(r'^-+|-+$', '', text)
+	return text
 
 
 class Event(Document):
@@ -131,7 +141,7 @@ class Event(Document):
 	def set_publish_date(self):
 		"""Set publish date when status changes to Published."""
 		if self.status == "Published" and not self.publish_date:
-			self.publish_date = nowdatetime()
+			self.publish_date = now_datetime()
 
 	def before_save(self):
 		"""Actions before saving the document."""
@@ -156,11 +166,11 @@ class Event(Document):
 
 	def is_past_event(self):
 		"""Check if the event has already ended."""
-		return get_datetime(self.end_datetime) < nowdatetime()
+		return get_datetime(self.end_datetime) < now_datetime()
 
 	def is_ongoing(self):
 		"""Check if the event is currently ongoing."""
-		now = nowdatetime()
+		now = now_datetime()
 		return get_datetime(self.start_datetime) <= now <= get_datetime(self.end_datetime)
 
 	def can_rsvp(self):
@@ -169,7 +179,7 @@ class Event(Document):
 			return False
 		if self.status != "Published":
 			return False
-		if self.rsvp_deadline and get_datetime(self.rsvp_deadline) < nowdatetime():
+		if self.rsvp_deadline and get_datetime(self.rsvp_deadline) < now_datetime():
 			return False
 		if self.is_past_event():
 			return False

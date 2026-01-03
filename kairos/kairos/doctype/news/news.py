@@ -1,11 +1,20 @@
 # Copyright (c) 2024, Kairos and contributors
 # For license information, please see license.txt
 
+import re
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import nowdatetime, get_datetime
-from frappe.utils.data import slugify
+from frappe.utils import now_datetime, get_datetime
+
+
+def slugify(text: str) -> str:
+	"""Convert text to URL-friendly slug."""
+	text = text.lower().strip()
+	text = re.sub(r'[^\w\s-]', '', text)
+	text = re.sub(r'[\s_-]+', '-', text)
+	text = re.sub(r'^-+|-+$', '', text)
+	return text
 
 
 class News(Document):
@@ -76,7 +85,7 @@ class News(Document):
 
 	def update_status_based_on_dates(self):
 		"""Update status based on publish/unpublish dates."""
-		now = nowdatetime()
+		now = now_datetime()
 
 		if self.status == "Draft":
 			return
