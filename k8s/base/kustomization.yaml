@@ -27,8 +27,8 @@ resources:
   # Services
   - services.yaml
 
-  # Ingress
-  - ingress.yaml
+  # Ingress (disabled for dev - using LoadBalancer instead)
+  # - ingress.yaml
 
   # Jobs
   - job-create-site.yaml
