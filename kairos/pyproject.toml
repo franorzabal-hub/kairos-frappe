@@ -1,0 +1,18 @@
+[project]
+name = "kairos"
+version = "0.0.1"
+description = "School-parent communication platform"
+authors = [
+    {name = "Fran Orzabal", email = "franorzabal@gmail.com"}
+]
+requires-python = ">=3.10"
+dependencies = [
+    "frappe"
+]
+
+[build-system]
+requires = ["flit_core>=3.4"]
+build-backend = "flit_core.buildapi"
+
+[tool.bench.frappe-dependencies]
+frappe = ">=15.0.0"
