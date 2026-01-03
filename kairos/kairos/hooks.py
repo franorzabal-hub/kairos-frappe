@@ -42,7 +42,12 @@ app_license = "MIT"
 # Fixtures
 # --------
 
-# fixtures = []
+fixtures = [
+    "Role",
+    {"dt": "Custom DocPerm", "filters": [
+        ["role", "in", ["School Admin", "School Manager", "Teacher", "Secretary", "Parent", "Student"]]
+    ]}
+]
 
 # Installation
 # ------------
@@ -125,3 +130,25 @@ app_license = "MIT"
 # auth_hooks = [
 #     "kairos.auth.validate"
 # ]
+
+# Permission Query Conditions
+# ---------------------------
+# Filtros SQL para limitar registros visibles por rol
+
+permission_query_conditions = {
+    "Student": "kairos.permissions.student_query",
+    "Message Recipient": "kairos.permissions.message_recipient_query",
+    "Event RSVP": "kairos.permissions.event_rsvp_query",
+    "News": "kairos.permissions.news_query",
+    "School Event": "kairos.permissions.school_event_query",
+}
+
+# Has Permission
+# --------------
+# Validación de permisos a nivel de documento individual
+
+has_permission = {
+    "Student": "kairos.permissions.student_has_permission",
+    "Guardian": "kairos.permissions.guardian_has_permission",
+    "Message Recipient": "kairos.permissions.message_recipient_has_permission",
+}
