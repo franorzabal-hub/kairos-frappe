@@ -48,6 +48,20 @@ spec:
               # Always update common_site_config.json from configmap
               cp /config/common_site_config.json /mnt/sites/common_site_config.json
               echo "Config updated"
+
+              # Create domain symlinks for development access
+              if [ -d /mnt/sites/kairos.localhost ]; then
+                # Get external IP from environment or use nip.io pattern
+                EXTERNAL_IP="${EXTERNAL_IP:-34.55.58.75}"
+                DOMAIN="kairos.${EXTERNAL_IP}.nip.io"
+                if [ ! -L "/mnt/sites/${DOMAIN}" ]; then
+                  ln -sf kairos.localhost "/mnt/sites/${DOMAIN}"
+                  echo "Created symlink for ${DOMAIN}"
+                fi
+              fi
+          env:
+            - name: EXTERNAL_IP
+              value: "34.55.58.75"
           volumeMounts:
             - name: sites
               mountPath: /mnt/sites
