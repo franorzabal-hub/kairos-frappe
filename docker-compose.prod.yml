@@ -20,6 +20,7 @@ x-frappe-common: &frappe-common
   volumes:
     - sites:/home/frappe/frappe-bench/sites
     - logs:/home/frappe/frappe-bench/logs
+    - apps:/home/frappe/frappe-bench/apps
   environment:
     - DB_HOST=mariadb
     - DB_PORT=3306
@@ -66,6 +67,23 @@ services:
     restart: unless-stopped
 
   # ===================
+  # Nginx (Frontend)
+  # ===================
+  nginx:
+    image: nginx:alpine
+    container_name: kairos-nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - sites:/home/frappe/frappe-bench/sites:ro
+      - apps:/home/frappe/frappe-bench/apps:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+      - socketio
+    restart: unless-stopped
+
+  # ===================
   # Frappe Services
   # ===================
   web:
@@ -85,8 +103,8 @@ services:
         --preload
         frappe.app:application
     working_dir: /home/frappe/frappe-bench/sites
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/method/ping"]
       interval: 30s
@@ -98,8 +116,8 @@ services:
     <<: *frappe-common
     container_name: kairos-socketio
     command: node /home/frappe/frappe-bench/apps/frappe/socketio.js
-    ports:
-      - "9000:9000"
+    expose:
+      - "9000"
     restart: unless-stopped
 
   worker-default:
@@ -175,6 +193,7 @@ services:
 volumes:
   sites:
   logs:
+  apps:
   mariadb-data:
 
 networks:
