@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: kairos
+data:
+  nginx.conf: |
+    upstream frappe-web {
+        server 127.0.0.1:8000 fail_timeout=0;
+    }
+
+    upstream frappe-socketio {
+        server 127.0.0.1:9000 fail_timeout=0;
+    }
+
+    server {
+        listen 8080;
+        server_name _;
+
+        root /home/frappe/frappe-bench/sites;
+
+        add_header X-Frame-Options "SAMEORIGIN";
+        add_header X-Content-Type-Options nosniff;
+        add_header X-XSS-Protection "1; mode=block";
+
+        location /assets {
+            try_files $uri =404;
+            add_header Cache-Control "max-age=31536000";
+        }
+
+        location ~ ^/protected/(.*) {
+            internal;
+            try_files /$host/$1 =404;
+        }
+
+        location /socket.io {
+            proxy_pass http://frappe-socketio;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header X-Frappe-Site-Name $host;
+            proxy_set_header Origin $scheme://$http_host;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        location / {
+            rewrite ^(.+)/$ $1 permanent;
+            rewrite ^(.+)/index\.html$ $1 permanent;
+            rewrite ^(.+)\.html$ $1 permanent;
+
+            location ~* ^/files/.*.(htm|html|svg|xml) {
+                add_header Content-disposition "attachment";
+                try_files /$host/public/$uri @webserver;
+            }
+
+            try_files /$host/public/$uri @webserver;
+        }
+
+        location @webserver {
+            proxy_pass http://frappe-web;
+            proxy_set_header X-Frappe-Site-Name $host;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+            proxy_redirect off;
+        }
+
+        location /api {
+            proxy_pass http://frappe-web;
+            proxy_set_header X-Frappe-Site-Name $host;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 120s;
+        }
+
+        client_max_body_size 50m;
+        client_body_buffer_size 16K;
+        client_header_buffer_size 1k;
+        keepalive_timeout 120;
+    }
