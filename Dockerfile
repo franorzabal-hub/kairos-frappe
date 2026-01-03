@@ -99,8 +99,9 @@ RUN ./env/bin/pip install -e ./apps/kairos
 # Build assets (frappe only - kairos has no frontend assets)
 RUN bench build --app frappe
 
-# Add kairos to apps.txt
-RUN echo "kairos" >> /home/frappe/frappe-bench/sites/apps.txt
+# Add kairos to apps.txt (ensure newline before appending)
+RUN echo "" >> /home/frappe/frappe-bench/sites/apps.txt && \
+    echo "kairos" >> /home/frappe/frappe-bench/sites/apps.txt
 
 # Clean up .git folders to reduce image size
 RUN find /home/frappe/frappe-bench/apps -name ".git" -type d -exec rm -rf {} + 2>/dev/null || true

@@ -136,23 +136,38 @@ services:
   create-site:
     <<: *frappe-common
     container_name: kairos-create-site
-    command: >
-      bash -c "
-        cd /home/frappe/frappe-bench &&
-        if [ ! -d sites/${SITE_NAME:-kairos.localhost} ]; then
-          echo 'Creating site...' &&
-          bench new-site ${SITE_NAME:-kairos.localhost}
-            --db-root-password ${DB_ROOT_PASSWORD:-kairos_root_password}
-            --admin-password ${ADMIN_PASSWORD:-admin}
-            --no-mariadb-socket &&
-          bench --site ${SITE_NAME:-kairos.localhost} install-app kairos &&
-          bench use ${SITE_NAME:-kairos.localhost} &&
-          echo 'Site created successfully!'
+    command:
+      - bash
+      - -c
+      - |
+        cd /home/frappe/frappe-bench
+        SITE_NAME=$${SITE_NAME:-kairos.localhost}
+
+        # Configure common_site_config.json with DB and Redis settings
+        cat > sites/common_site_config.json << 'SITECONFIG'
+        {
+          "db_host": "mariadb",
+          "db_port": 3306,
+          "redis_cache": "redis://redis-cache:6379",
+          "redis_queue": "redis://redis-queue:6379",
+          "redis_socketio": "redis://redis-cache:6379",
+          "socketio_port": 9000
+        }
+        SITECONFIG
+
+        if [ ! -d "sites/$$SITE_NAME" ]; then
+          echo "Creating site $$SITE_NAME..."
+          bench new-site $$SITE_NAME \
+            --db-root-password $${DB_ROOT_PASSWORD:-kairos_root_password} \
+            --admin-password $${ADMIN_PASSWORD:-admin} \
+            --mariadb-user-host-login-scope='%'
+          bench --site $$SITE_NAME install-app kairos
+          bench use $$SITE_NAME
+          echo "Site created successfully!"
         else
-          echo 'Site already exists, running migrations...' &&
-          bench --site ${SITE_NAME:-kairos.localhost} migrate
+          echo "Site already exists, running migrations..."
+          bench --site $$SITE_NAME migrate
         fi
-      "
     restart: "no"
     profiles:
       - setup
