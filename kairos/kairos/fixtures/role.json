@@ -1,6 +1,7 @@
 [
     {
         "doctype": "Role",
+        "name": "School Admin",
         "role_name": "School Admin",
         "desk_access": 1,
         "is_custom": 1,
@@ -10,6 +11,7 @@
     },
     {
         "doctype": "Role",
+        "name": "School Manager",
         "role_name": "School Manager",
         "desk_access": 1,
         "is_custom": 1,
@@ -19,6 +21,7 @@
     },
     {
         "doctype": "Role",
+        "name": "Teacher",
         "role_name": "Teacher",
         "desk_access": 1,
         "is_custom": 1,
@@ -28,6 +31,7 @@
     },
     {
         "doctype": "Role",
+        "name": "Secretary",
         "role_name": "Secretary",
         "desk_access": 1,
         "is_custom": 1,
@@ -37,6 +41,7 @@
     },
     {
         "doctype": "Role",
+        "name": "Parent",
         "role_name": "Parent",
         "desk_access": 0,
         "is_custom": 1,
@@ -46,6 +51,7 @@
     },
     {
         "doctype": "Role",
+        "name": "Student",
         "role_name": "Student",
         "desk_access": 0,
         "is_custom": 1,

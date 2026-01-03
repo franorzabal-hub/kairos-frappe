@@ -15,6 +15,7 @@ resources:
 
   # Configuration
   - configmap.yaml
+  - configmap-nginx.yaml
   - secrets.yaml
 
   # Database & Cache
@@ -40,4 +41,4 @@ commonLabels:
 images:
   - name: frappe/frappe
     newName: gcr.io/kairos-escuela-app/kairos
-    newTag: cc150f2
+    newTag: aadecd3
