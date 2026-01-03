@@ -17,7 +17,7 @@ def slugify(text: str) -> str:
 	return text
 
 
-class Event(Document):
+class SchoolEvent(Document):
 	# begin: auto-generated types
 	# This code is auto-generated. Do not modify anything in this block.
 
@@ -42,7 +42,7 @@ class Event(Document):
 		longitude: DF.Float | None
 		max_attendees: DF.Int
 		max_guests_per_rsvp: DF.Int
-		naming_series: DF.Literal["EVT-.YYYY.-.#####"]
+		naming_series: DF.Literal["SEVT-.YYYY.-.#####"]
 		notify_on_publish: DF.Check
 		organizer: DF.Link
 		organizer_email: DF.Data | None
@@ -133,7 +133,7 @@ class Event(Document):
 		"""Ensure slug is unique by appending a number if necessary."""
 		slug = base_slug
 		counter = 1
-		while frappe.db.exists("Event", {"slug": slug, "name": ("!=", self.name or "")}):
+		while frappe.db.exists("School Event", {"slug": slug, "name": ("!=", self.name or "")}):
 			slug = f"{base_slug}-{counter}"
 			counter += 1
 		return slug
@@ -151,7 +151,7 @@ class Event(Document):
 
 	def increment_views(self):
 		"""Increment the views count for the event."""
-		frappe.db.set_value("Event", self.name, "views_count", self.views_count + 1, update_modified=False)
+		frappe.db.set_value("School Event", self.name, "views_count", self.views_count + 1, update_modified=False)
 
 	def update_rsvp_counts(self):
 		"""Update RSVP counts from the RSVP child table or related doctype."""
