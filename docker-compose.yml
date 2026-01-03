@@ -1,0 +1,43 @@
+# Docker Compose para desarrollo local de Kairos
+# Servicios: MariaDB + Redis
+
+services:
+  mariadb:
+    image: mariadb:10.6
+    container_name: kairos-mariadb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: _kairos
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis-cache:
+    image: redis:7-alpine
+    container_name: kairos-redis-cache
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_cache_data:/data
+
+  redis-queue:
+    image: redis:7-alpine
+    container_name: kairos-redis-queue
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_queue_data:/data
+
+volumes:
+  mariadb_data:
+  redis_cache_data:
+  redis_queue_data:
