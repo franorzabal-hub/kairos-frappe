@@ -1,0 +1,45 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: kairos-base
+
+namespace: kairos
+
+resources:
+  # Namespace
+  - namespace.yaml
+
+  # Storage
+  - pvc.yaml
+
+  # Configuration
+  - configmap.yaml
+  - secrets.yaml
+
+  # Database & Cache
+  - deployment-mariadb.yaml
+  - deployment-redis.yaml
+
+  # Frappe Services
+  - deployment-web.yaml
+  - deployment-worker.yaml
+  - deployment-scheduler.yaml
+  - deployment-socketio.yaml
+
+  # Services
+  - services.yaml
+
+  # Ingress
+  - ingress.yaml
+
+  # Jobs
+  - job-create-site.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: kairos
+  app.kubernetes.io/managed-by: kustomize
+
+images:
+  - name: frappe/frappe
+    newTag: v15

@@ -1,0 +1,110 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: kairos-production
+
+namespace: kairos-prod
+
+resources:
+  - ../../base
+
+namePrefix: prod-
+
+commonLabels:
+  environment: production
+
+# Production-specific patches
+patches:
+  # Increase replicas for production
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+    target:
+      kind: Deployment
+      name: frappe-web
+
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 4
+    target:
+      kind: Deployment
+      name: frappe-worker-default
+
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+    target:
+      kind: Deployment
+      name: frappe-worker-short
+
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+    target:
+      kind: Deployment
+      name: frappe-worker-long
+
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+    target:
+      kind: Deployment
+      name: frappe-socketio
+
+  # Increase resources for production
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "2000m"
+            memory: "4Gi"
+    target:
+      kind: Deployment
+      name: frappe-web
+
+  # Increase storage for production
+  - patch: |-
+      - op: replace
+        path: /spec/resources/requests/storage
+        value: 50Gi
+    target:
+      kind: PersistentVolumeClaim
+      name: frappe-sites
+
+  - patch: |-
+      - op: replace
+        path: /spec/resources/requests/storage
+        value: 100Gi
+    target:
+      kind: PersistentVolumeClaim
+      name: mariadb-data
+
+# Use custom image with kairos app
+images:
+  - name: frappe/frappe
+    newName: gcr.io/YOUR_PROJECT/kairos  # Change to your container registry
+    newTag: latest
+
+# Generate secrets from files (for production, use sealed-secrets or external-secrets)
+# secretGenerator:
+#   - name: frappe-secrets
+#     files:
+#       - secrets/db-password
+#       - secrets/admin-password
+
+configMapGenerator:
+  - name: frappe-config
+    behavior: merge
+    literals:
+      - GUNICORN_WORKERS=8
+      - GUNICORN_THREADS=8

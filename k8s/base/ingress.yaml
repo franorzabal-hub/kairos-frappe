@@ -1,0 +1,74 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kairos-ingress
+  namespace: kairos
+  labels:
+    app.kubernetes.io/name: kairos
+    app.kubernetes.io/component: ingress
+  annotations:
+    # GKE Ingress annotations
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "kairos-ip"
+
+    # For GKE with BackendConfig
+    cloud.google.com/backend-config: '{"default": "kairos-backend-config"}'
+
+    # SSL/TLS
+    networking.gke.io/managed-certificates: "kairos-certificate"
+
+    # Health check path
+    cloud.google.com/health-check-path: "/api/method/ping"
+spec:
+  rules:
+    - host: kairos.example.com  # Change to your domain
+      http:
+        paths:
+          # Main web application
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frappe-web
+                port:
+                  number: 8000
+          # SocketIO for real-time updates
+          - path: /socket.io
+            pathType: Prefix
+            backend:
+              service:
+                name: frappe-socketio
+                port:
+                  number: 9000
+
+---
+# BackendConfig for GKE health checks
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: kairos-backend-config
+  namespace: kairos
+spec:
+  healthCheck:
+    checkIntervalSec: 30
+    timeoutSec: 10
+    healthyThreshold: 1
+    unhealthyThreshold: 3
+    type: HTTP
+    requestPath: /api/method/ping
+    port: 8000
+  sessionAffinity:
+    affinityType: "CLIENT_IP"
+  connectionDraining:
+    drainingTimeoutSec: 60
+
+---
+# Managed SSL Certificate for GKE
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: kairos-certificate
+  namespace: kairos
+spec:
+  domains:
+    - kairos.example.com  # Change to your domain

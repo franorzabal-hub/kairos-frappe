@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frappe-config
+  namespace: kairos
+  labels:
+    app.kubernetes.io/name: kairos
+    app.kubernetes.io/component: config
+data:
+  # Frappe/Bench configuration
+  FRAPPE_SITE_NAME_HEADER: "Host"
+  WORKER_CLASS: "gthread"
+  GUNICORN_WORKERS: "4"
+  GUNICORN_THREADS: "4"
+
+  # Redis configuration
+  REDIS_CACHE: "redis://redis-cache:6379"
+  REDIS_QUEUE: "redis://redis-queue:6379"
+  REDIS_SOCKETIO: "redis://redis-cache:6379"
+
+  # Database configuration
+  DB_HOST: "mariadb"
+  DB_PORT: "3306"
+
+  # SocketIO configuration
+  SOCKETIO_PORT: "9000"
+
+  # Site configuration
+  SITES_DIR: "/home/frappe/frappe-bench/sites"
+
+  # common_site_config.json template
+  common_site_config.json: |
+    {
+      "db_host": "mariadb",
+      "db_port": 3306,
+      "redis_cache": "redis://redis-cache:6379",
+      "redis_queue": "redis://redis-queue:6379",
+      "redis_socketio": "redis://redis-cache:6379",
+      "socketio_port": 9000,
+      "webserver_port": 8000,
+      "serve_default_site": true,
+      "background_workers": 4,
+      "developer_mode": 0
+    }
