@@ -1,0 +1,257 @@
+{
+	"actions": [],
+	"autoname": "naming_series:",
+	"creation": "2025-01-03 00:00:00.000000",
+	"doctype": "DocType",
+	"engine": "InnoDB",
+	"field_order": [
+		"naming_series",
+		"message",
+		"guardian",
+		"column_break_basic",
+		"student",
+		"user",
+		"email_status_section",
+		"email_status",
+		"email_sent_at",
+		"column_break_email",
+		"email_delivered_at",
+		"email_error",
+		"sms_status_section",
+		"sms_status",
+		"sms_sent_at",
+		"column_break_sms",
+		"sms_error",
+		"push_status_section",
+		"push_status",
+		"push_sent_at",
+		"read_status_section",
+		"is_read",
+		"read_at",
+		"column_break_read",
+		"read_count",
+		"acknowledgment_section",
+		"acknowledged",
+		"acknowledged_at",
+		"column_break_acknowledgment",
+		"acknowledgment_note"
+	],
+	"fields": [
+		{
+			"fieldname": "naming_series",
+			"fieldtype": "Select",
+			"hidden": 1,
+			"label": "Naming Series",
+			"options": "MRCP-.#####",
+			"reqd": 1
+		},
+		{
+			"fieldname": "message",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Message",
+			"options": "Message",
+			"reqd": 1
+		},
+		{
+			"fieldname": "guardian",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Guardian",
+			"options": "Guardian",
+			"reqd": 1
+		},
+		{
+			"fieldname": "column_break_basic",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "student",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Student",
+			"options": "Student"
+		},
+		{
+			"fieldname": "user",
+			"fieldtype": "Link",
+			"label": "User",
+			"options": "User"
+		},
+		{
+			"fieldname": "email_status_section",
+			"fieldtype": "Section Break",
+			"label": "Email Status"
+		},
+		{
+			"default": "Pending",
+			"fieldname": "email_status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Email Status",
+			"options": "Pending\nSent\nDelivered\nFailed\nBounced"
+		},
+		{
+			"fieldname": "email_sent_at",
+			"fieldtype": "Datetime",
+			"label": "Email Sent At"
+		},
+		{
+			"fieldname": "column_break_email",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "email_delivered_at",
+			"fieldtype": "Datetime",
+			"label": "Email Delivered At"
+		},
+		{
+			"fieldname": "email_error",
+			"fieldtype": "Data",
+			"label": "Email Error"
+		},
+		{
+			"fieldname": "sms_status_section",
+			"fieldtype": "Section Break",
+			"label": "SMS Status"
+		},
+		{
+			"default": "Pending",
+			"fieldname": "sms_status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "SMS Status",
+			"options": "Pending\nSent\nDelivered\nFailed"
+		},
+		{
+			"fieldname": "sms_sent_at",
+			"fieldtype": "Datetime",
+			"label": "SMS Sent At"
+		},
+		{
+			"fieldname": "column_break_sms",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "sms_error",
+			"fieldtype": "Data",
+			"label": "SMS Error"
+		},
+		{
+			"fieldname": "push_status_section",
+			"fieldtype": "Section Break",
+			"label": "Push Status"
+		},
+		{
+			"default": "Pending",
+			"fieldname": "push_status",
+			"fieldtype": "Select",
+			"in_standard_filter": 1,
+			"label": "Push Status",
+			"options": "Pending\nSent\nDelivered\nFailed"
+		},
+		{
+			"fieldname": "push_sent_at",
+			"fieldtype": "Datetime",
+			"label": "Push Sent At"
+		},
+		{
+			"fieldname": "read_status_section",
+			"fieldtype": "Section Break",
+			"label": "Read Status"
+		},
+		{
+			"default": "0",
+			"fieldname": "is_read",
+			"fieldtype": "Check",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Is Read"
+		},
+		{
+			"fieldname": "read_at",
+			"fieldtype": "Datetime",
+			"label": "Read At"
+		},
+		{
+			"fieldname": "column_break_read",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "0",
+			"fieldname": "read_count",
+			"fieldtype": "Int",
+			"label": "Read Count"
+		},
+		{
+			"fieldname": "acknowledgment_section",
+			"fieldtype": "Section Break",
+			"label": "Acknowledgment"
+		},
+		{
+			"default": "0",
+			"fieldname": "acknowledged",
+			"fieldtype": "Check",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Acknowledged"
+		},
+		{
+			"fieldname": "acknowledged_at",
+			"fieldtype": "Datetime",
+			"label": "Acknowledged At"
+		},
+		{
+			"fieldname": "column_break_acknowledgment",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "acknowledgment_note",
+			"fieldtype": "Data",
+			"label": "Acknowledgment Note"
+		}
+	],
+	"index_web_pages_for_search": 1,
+	"links": [],
+	"modified": "2025-01-03 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "Kairos",
+	"name": "Message Recipient",
+	"naming_rule": "By \"Naming Series\" field",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "System Manager",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 0,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Education Manager",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"track_changes": 1
+}

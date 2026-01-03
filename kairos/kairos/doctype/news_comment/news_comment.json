@@ -1,0 +1,153 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-01-03 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "news",
+  "user",
+  "user_name",
+  "column_break_main",
+  "posted_at",
+  "status",
+  "section_break_comment",
+  "comment",
+  "section_break_threading",
+  "parent_comment",
+  "section_break_edit",
+  "is_edited",
+  "edited_at"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Series",
+   "options": "NCMT-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "news",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "News",
+   "options": "News",
+   "reqd": 1
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "User",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "user.full_name",
+   "fieldname": "user_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "User Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_main",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "now",
+   "fieldname": "posted_at",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Posted At"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Pending\nApproved\nRejected\nSpam"
+  },
+  {
+   "fieldname": "section_break_comment",
+   "fieldtype": "Section Break",
+   "label": "Comment"
+  },
+  {
+   "fieldname": "comment",
+   "fieldtype": "Text",
+   "label": "Comment",
+   "reqd": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_threading",
+   "fieldtype": "Section Break",
+   "label": "Threading"
+  },
+  {
+   "fieldname": "parent_comment",
+   "fieldtype": "Link",
+   "label": "Parent Comment",
+   "options": "News Comment"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_edit",
+   "fieldtype": "Section Break",
+   "label": "Edit History"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_edited",
+   "fieldtype": "Check",
+   "label": "Is Edited"
+  },
+  {
+   "depends_on": "is_edited",
+   "fieldname": "edited_at",
+   "fieldtype": "Datetime",
+   "label": "Edited At"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-03 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Kairos",
+ "name": "News Comment",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "All",
+   "write": 1
+  }
+ ],
+ "sort_field": "posted_at",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

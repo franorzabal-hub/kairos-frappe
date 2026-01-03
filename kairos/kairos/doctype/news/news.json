@@ -1,0 +1,268 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-01-03 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "basic_info_section",
+  "naming_series",
+  "title",
+  "slug",
+  "column_break_basic",
+  "summary",
+  "content",
+  "featured_image",
+  "scope_section",
+  "scope_type",
+  "institution",
+  "column_break_scope",
+  "campus",
+  "grade",
+  "publishing_section",
+  "author",
+  "author_name",
+  "column_break_publishing",
+  "status",
+  "publish_date",
+  "unpublish_date",
+  "column_break_publishing_2",
+  "is_featured",
+  "is_pinned",
+  "categorization_section",
+  "category",
+  "engagement_section",
+  "views_count",
+  "allow_comments",
+  "seo_section",
+  "meta_title",
+  "meta_description"
+ ],
+ "fields": [
+  {
+   "fieldname": "basic_info_section",
+   "fieldtype": "Section Break",
+   "label": "Basic Info"
+  },
+  {
+   "default": "NEWS-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "NEWS-.YYYY.-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "slug",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Slug",
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_basic",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "summary",
+   "fieldtype": "Small Text",
+   "label": "Summary"
+  },
+  {
+   "fieldname": "content",
+   "fieldtype": "Text Editor",
+   "label": "Content"
+  },
+  {
+   "fieldname": "featured_image",
+   "fieldtype": "Attach Image",
+   "label": "Featured Image"
+  },
+  {
+   "fieldname": "scope_section",
+   "fieldtype": "Section Break",
+   "label": "Scope"
+  },
+  {
+   "default": "Institution",
+   "fieldname": "scope_type",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Scope Type",
+   "options": "Institution\nCampus\nGrade"
+  },
+  {
+   "fieldname": "institution",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Institution",
+   "options": "Institution"
+  },
+  {
+   "fieldname": "column_break_scope",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.scope_type=='Campus' || doc.scope_type=='Grade'",
+   "fieldname": "campus",
+   "fieldtype": "Link",
+   "label": "Campus",
+   "options": "Campus"
+  },
+  {
+   "depends_on": "eval:doc.scope_type=='Grade'",
+   "fieldname": "grade",
+   "fieldtype": "Link",
+   "label": "Grade",
+   "options": "Grade"
+  },
+  {
+   "fieldname": "publishing_section",
+   "fieldtype": "Section Break",
+   "label": "Publishing"
+  },
+  {
+   "fieldname": "author",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Author",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "author.full_name",
+   "fieldname": "author_name",
+   "fieldtype": "Data",
+   "label": "Author Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_publishing",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nScheduled\nPublished\nArchived"
+  },
+  {
+   "fieldname": "publish_date",
+   "fieldtype": "Datetime",
+   "label": "Publish Date"
+  },
+  {
+   "fieldname": "unpublish_date",
+   "fieldtype": "Datetime",
+   "label": "Unpublish Date"
+  },
+  {
+   "fieldname": "column_break_publishing_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_featured",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Is Featured"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_pinned",
+   "fieldtype": "Check",
+   "label": "Is Pinned"
+  },
+  {
+   "fieldname": "categorization_section",
+   "fieldtype": "Section Break",
+   "label": "Categorization"
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Category",
+   "options": "News Category"
+  },
+  {
+   "fieldname": "engagement_section",
+   "fieldtype": "Section Break",
+   "label": "Engagement"
+  },
+  {
+   "default": "0",
+   "fieldname": "views_count",
+   "fieldtype": "Int",
+   "label": "Views Count",
+   "read_only": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "allow_comments",
+   "fieldtype": "Check",
+   "label": "Allow Comments"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "seo_section",
+   "fieldtype": "Section Break",
+   "label": "SEO"
+  },
+  {
+   "fieldname": "meta_title",
+   "fieldtype": "Data",
+   "label": "Meta Title"
+  },
+  {
+   "fieldname": "meta_description",
+   "fieldtype": "Small Text",
+   "label": "Meta Description"
+  }
+ ],
+ "image_field": "featured_image",
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-03 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Kairos",
+ "name": "News",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "All"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "title",
+ "track_changes": 1
+}

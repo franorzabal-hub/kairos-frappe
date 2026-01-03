@@ -1,0 +1,46 @@
+{
+	"actions": [],
+	"creation": "2025-01-03 00:00:00.000000",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"file",
+		"file_name",
+		"file_size"
+	],
+	"fields": [
+		{
+			"fieldname": "file",
+			"fieldtype": "Attach",
+			"in_list_view": 1,
+			"label": "File",
+			"reqd": 1
+		},
+		{
+			"fieldname": "file_name",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "File Name"
+		},
+		{
+			"fieldname": "file_size",
+			"fieldtype": "Int",
+			"in_list_view": 1,
+			"label": "File Size"
+		}
+	],
+	"index_web_pages_for_search": 1,
+	"istable": 1,
+	"links": [],
+	"modified": "2025-01-03 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "Kairos",
+	"name": "Message Attachment",
+	"owner": "Administrator",
+	"permissions": [],
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"track_changes": 1
+}

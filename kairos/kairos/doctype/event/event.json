@@ -1,0 +1,503 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2024-01-01 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "basic_info_section",
+  "naming_series",
+  "event_name",
+  "slug",
+  "column_break_basic",
+  "summary",
+  "featured_image",
+  "description_section",
+  "description",
+  "schedule_section",
+  "start_datetime",
+  "end_datetime",
+  "column_break_schedule",
+  "all_day",
+  "timezone",
+  "location_section",
+  "location_type",
+  "venue_name",
+  "venue_address",
+  "room",
+  "column_break_location",
+  "latitude",
+  "longitude",
+  "virtual_link",
+  "virtual_password",
+  "scope_section",
+  "scope_type",
+  "institution",
+  "column_break_scope",
+  "campus",
+  "grade",
+  "section",
+  "organization_section",
+  "organizer",
+  "organizer_name",
+  "column_break_organization",
+  "organizer_email",
+  "organizer_phone",
+  "publishing_section",
+  "status",
+  "publish_date",
+  "column_break_publishing",
+  "is_featured",
+  "categorization_section",
+  "category",
+  "rsvp_section",
+  "rsvp_enabled",
+  "rsvp_deadline",
+  "max_attendees",
+  "column_break_rsvp",
+  "waitlist_enabled",
+  "rsvp_options",
+  "guests_allowed",
+  "max_guests_per_rsvp",
+  "notifications_section",
+  "send_reminder",
+  "reminder_days_before",
+  "column_break_notifications",
+  "notify_on_publish",
+  "tracking_section",
+  "views_count",
+  "rsvp_yes_count",
+  "column_break_tracking",
+  "rsvp_no_count",
+  "rsvp_maybe_count"
+ ],
+ "fields": [
+  {
+   "fieldname": "basic_info_section",
+   "fieldtype": "Section Break",
+   "label": "Basic Information"
+  },
+  {
+   "default": "EVT-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "EVT-.YYYY.-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "event_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Event Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "slug",
+   "fieldtype": "Data",
+   "label": "Slug",
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_basic",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "summary",
+   "fieldtype": "Small Text",
+   "label": "Summary"
+  },
+  {
+   "fieldname": "featured_image",
+   "fieldtype": "Attach Image",
+   "label": "Featured Image"
+  },
+  {
+   "fieldname": "description_section",
+   "fieldtype": "Section Break",
+   "label": "Description"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "Description"
+  },
+  {
+   "fieldname": "schedule_section",
+   "fieldtype": "Section Break",
+   "label": "Schedule"
+  },
+  {
+   "fieldname": "start_datetime",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Start Date/Time",
+   "reqd": 1
+  },
+  {
+   "fieldname": "end_datetime",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "End Date/Time",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_schedule",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "all_day",
+   "fieldtype": "Check",
+   "label": "All Day Event"
+  },
+  {
+   "fieldname": "timezone",
+   "fieldtype": "Data",
+   "label": "Timezone"
+  },
+  {
+   "fieldname": "location_section",
+   "fieldtype": "Section Break",
+   "label": "Location"
+  },
+  {
+   "default": "In-Person",
+   "fieldname": "location_type",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Location Type",
+   "options": "In-Person\nVirtual\nHybrid"
+  },
+  {
+   "depends_on": "eval:doc.location_type=='In-Person' || doc.location_type=='Hybrid'",
+   "fieldname": "venue_name",
+   "fieldtype": "Data",
+   "label": "Venue Name"
+  },
+  {
+   "depends_on": "eval:doc.location_type=='In-Person' || doc.location_type=='Hybrid'",
+   "fieldname": "venue_address",
+   "fieldtype": "Small Text",
+   "label": "Venue Address"
+  },
+  {
+   "depends_on": "eval:doc.location_type=='In-Person' || doc.location_type=='Hybrid'",
+   "fieldname": "room",
+   "fieldtype": "Data",
+   "label": "Room"
+  },
+  {
+   "fieldname": "column_break_location",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.location_type=='In-Person' || doc.location_type=='Hybrid'",
+   "fieldname": "latitude",
+   "fieldtype": "Float",
+   "label": "Latitude",
+   "precision": "8"
+  },
+  {
+   "depends_on": "eval:doc.location_type=='In-Person' || doc.location_type=='Hybrid'",
+   "fieldname": "longitude",
+   "fieldtype": "Float",
+   "label": "Longitude",
+   "precision": "8"
+  },
+  {
+   "depends_on": "eval:doc.location_type=='Virtual' || doc.location_type=='Hybrid'",
+   "fieldname": "virtual_link",
+   "fieldtype": "Data",
+   "label": "Virtual Link"
+  },
+  {
+   "depends_on": "eval:doc.location_type=='Virtual' || doc.location_type=='Hybrid'",
+   "fieldname": "virtual_password",
+   "fieldtype": "Data",
+   "label": "Virtual Password"
+  },
+  {
+   "fieldname": "scope_section",
+   "fieldtype": "Section Break",
+   "label": "Scope"
+  },
+  {
+   "default": "Campus",
+   "fieldname": "scope_type",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Scope Type",
+   "options": "Institution\nCampus\nGrade\nSection"
+  },
+  {
+   "fieldname": "institution",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Institution",
+   "options": "Institution"
+  },
+  {
+   "fieldname": "column_break_scope",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.scope_type=='Campus' || doc.scope_type=='Grade' || doc.scope_type=='Section'",
+   "fieldname": "campus",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Campus",
+   "options": "Campus"
+  },
+  {
+   "depends_on": "eval:doc.scope_type=='Grade' || doc.scope_type=='Section'",
+   "fieldname": "grade",
+   "fieldtype": "Link",
+   "label": "Grade",
+   "options": "Grade"
+  },
+  {
+   "depends_on": "eval:doc.scope_type=='Section'",
+   "fieldname": "section",
+   "fieldtype": "Link",
+   "label": "Section",
+   "options": "Section"
+  },
+  {
+   "fieldname": "organization_section",
+   "fieldtype": "Section Break",
+   "label": "Organization"
+  },
+  {
+   "fieldname": "organizer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Organizer",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "organizer.full_name",
+   "fieldname": "organizer_name",
+   "fieldtype": "Data",
+   "label": "Organizer Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_organization",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "organizer_email",
+   "fieldtype": "Data",
+   "label": "Organizer Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "organizer_phone",
+   "fieldtype": "Data",
+   "label": "Organizer Phone",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "publishing_section",
+   "fieldtype": "Section Break",
+   "label": "Publishing"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nPublished\nCancelled\nCompleted"
+  },
+  {
+   "fieldname": "publish_date",
+   "fieldtype": "Datetime",
+   "label": "Publish Date"
+  },
+  {
+   "fieldname": "column_break_publishing",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_featured",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Is Featured"
+  },
+  {
+   "fieldname": "categorization_section",
+   "fieldtype": "Section Break",
+   "label": "Categorization"
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Category",
+   "options": "Event Category"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "rsvp_section",
+   "fieldtype": "Section Break",
+   "label": "RSVP Settings"
+  },
+  {
+   "default": "0",
+   "fieldname": "rsvp_enabled",
+   "fieldtype": "Check",
+   "label": "RSVP Enabled"
+  },
+  {
+   "depends_on": "eval:doc.rsvp_enabled",
+   "fieldname": "rsvp_deadline",
+   "fieldtype": "Datetime",
+   "label": "RSVP Deadline"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.rsvp_enabled",
+   "description": "0 = Unlimited",
+   "fieldname": "max_attendees",
+   "fieldtype": "Int",
+   "label": "Max Attendees"
+  },
+  {
+   "fieldname": "column_break_rsvp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.rsvp_enabled && doc.max_attendees > 0",
+   "fieldname": "waitlist_enabled",
+   "fieldtype": "Check",
+   "label": "Waitlist Enabled"
+  },
+  {
+   "default": "Yes-No",
+   "depends_on": "eval:doc.rsvp_enabled",
+   "fieldname": "rsvp_options",
+   "fieldtype": "Select",
+   "label": "RSVP Options",
+   "options": "Yes-No\nYes-No-Maybe"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.rsvp_enabled",
+   "fieldname": "guests_allowed",
+   "fieldtype": "Check",
+   "label": "Guests Allowed"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.rsvp_enabled && doc.guests_allowed",
+   "fieldname": "max_guests_per_rsvp",
+   "fieldtype": "Int",
+   "label": "Max Guests per RSVP"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "notifications_section",
+   "fieldtype": "Section Break",
+   "label": "Notifications"
+  },
+  {
+   "default": "0",
+   "fieldname": "send_reminder",
+   "fieldtype": "Check",
+   "label": "Send Reminder"
+  },
+  {
+   "default": "1",
+   "depends_on": "eval:doc.send_reminder",
+   "fieldname": "reminder_days_before",
+   "fieldtype": "Int",
+   "label": "Reminder Days Before"
+  },
+  {
+   "fieldname": "column_break_notifications",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "notify_on_publish",
+   "fieldtype": "Check",
+   "label": "Notify on Publish"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "tracking_section",
+   "fieldtype": "Section Break",
+   "label": "Tracking"
+  },
+  {
+   "default": "0",
+   "fieldname": "views_count",
+   "fieldtype": "Int",
+   "label": "Views Count",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "rsvp_yes_count",
+   "fieldtype": "Int",
+   "label": "RSVP Yes Count",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_tracking",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "rsvp_no_count",
+   "fieldtype": "Int",
+   "label": "RSVP No Count",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "rsvp_maybe_count",
+   "fieldtype": "Int",
+   "label": "RSVP Maybe Count",
+   "read_only": 1
+  }
+ ],
+ "image_field": "featured_image",
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-01-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Kairos",
+ "name": "Event",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "start_datetime",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "event_name",
+ "track_changes": 1
+}

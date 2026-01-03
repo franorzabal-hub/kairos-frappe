@@ -1,0 +1,195 @@
+{
+	"actions": [],
+	"autoname": "field:guardian",
+	"creation": "2024-01-01 00:00:00.000000",
+	"doctype": "DocType",
+	"engine": "InnoDB",
+	"field_order": [
+		"guardian_section",
+		"guardian",
+		"preferred_language",
+		"preferred_channel",
+		"notification_preferences_section",
+		"receives_messages",
+		"receives_announcements",
+		"receives_attendance_alerts",
+		"column_break_notifications",
+		"receives_grade_alerts",
+		"receives_fee_reminders",
+		"quiet_hours_section",
+		"quiet_hours_start",
+		"quiet_hours_end",
+		"verification_section",
+		"email_verified",
+		"mobile_verified",
+		"column_break_verification",
+		"last_app_login",
+		"push_token"
+	],
+	"fields": [
+		{
+			"fieldname": "guardian_section",
+			"fieldtype": "Section Break",
+			"label": "Guardian Details"
+		},
+		{
+			"fieldname": "guardian",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Guardian",
+			"options": "Guardian",
+			"reqd": 1,
+			"unique": 1
+		},
+		{
+			"fieldname": "preferred_language",
+			"fieldtype": "Link",
+			"label": "Preferred Language",
+			"options": "Language"
+		},
+		{
+			"default": "All",
+			"fieldname": "preferred_channel",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"label": "Preferred Channel",
+			"options": "Email\nSMS\nPush\nAll"
+		},
+		{
+			"fieldname": "notification_preferences_section",
+			"fieldtype": "Section Break",
+			"label": "Notification Preferences"
+		},
+		{
+			"default": "1",
+			"description": "Can receive messages",
+			"fieldname": "receives_messages",
+			"fieldtype": "Check",
+			"label": "Receives Messages"
+		},
+		{
+			"default": "1",
+			"description": "Receives announcements",
+			"fieldname": "receives_announcements",
+			"fieldtype": "Check",
+			"label": "Receives Announcements"
+		},
+		{
+			"default": "1",
+			"description": "Attendance notifications",
+			"fieldname": "receives_attendance_alerts",
+			"fieldtype": "Check",
+			"label": "Receives Attendance Alerts"
+		},
+		{
+			"fieldname": "column_break_notifications",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "1",
+			"description": "Academic notifications",
+			"fieldname": "receives_grade_alerts",
+			"fieldtype": "Check",
+			"label": "Receives Grade Alerts"
+		},
+		{
+			"default": "1",
+			"description": "Payment reminders",
+			"fieldname": "receives_fee_reminders",
+			"fieldtype": "Check",
+			"label": "Receives Fee Reminders"
+		},
+		{
+			"fieldname": "quiet_hours_section",
+			"fieldtype": "Section Break",
+			"label": "Quiet Hours"
+		},
+		{
+			"description": "Do not disturb start",
+			"fieldname": "quiet_hours_start",
+			"fieldtype": "Time",
+			"label": "Quiet Hours Start"
+		},
+		{
+			"description": "Do not disturb end",
+			"fieldname": "quiet_hours_end",
+			"fieldtype": "Time",
+			"label": "Quiet Hours End"
+		},
+		{
+			"fieldname": "verification_section",
+			"fieldtype": "Section Break",
+			"label": "Verification & Mobile App"
+		},
+		{
+			"default": "0",
+			"description": "Email confirmed",
+			"fieldname": "email_verified",
+			"fieldtype": "Check",
+			"label": "Email Verified"
+		},
+		{
+			"default": "0",
+			"description": "Phone confirmed",
+			"fieldname": "mobile_verified",
+			"fieldtype": "Check",
+			"label": "Mobile Verified"
+		},
+		{
+			"fieldname": "column_break_verification",
+			"fieldtype": "Column Break"
+		},
+		{
+			"description": "Last mobile app access",
+			"fieldname": "last_app_login",
+			"fieldtype": "Datetime",
+			"label": "Last App Login",
+			"read_only": 1
+		},
+		{
+			"description": "Mobile push notification token",
+			"fieldname": "push_token",
+			"fieldtype": "Data",
+			"label": "Push Token"
+		}
+	],
+	"index_web_pages_for_search": 1,
+	"links": [],
+	"modified": "2024-01-01 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "Kairos",
+	"name": "Guardian Communication Preferences",
+	"naming_rule": "By fieldname",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "System Manager",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 0,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Education Manager",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"track_changes": 1
+}

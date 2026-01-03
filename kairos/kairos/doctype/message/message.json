@@ -1,0 +1,335 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "naming_series:",
+ "creation": "2025-01-03 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "basic_info_section",
+  "naming_series",
+  "subject",
+  "message_type",
+  "priority",
+  "column_break_basic",
+  "sender",
+  "sender_name",
+  "send_datetime",
+  "content_section",
+  "content",
+  "content_plain",
+  "scope_section",
+  "scope_type",
+  "institution",
+  "campus",
+  "column_break_scope",
+  "grade",
+  "section",
+  "student_group",
+  "status_section",
+  "status",
+  "scheduled_time",
+  "delivery_section",
+  "send_email",
+  "send_sms",
+  "column_break_delivery",
+  "send_push",
+  "send_in_app",
+  "settings_section",
+  "requires_acknowledgment",
+  "allow_replies",
+  "column_break_settings",
+  "expires_on",
+  "category",
+  "tracking_section",
+  "total_recipients",
+  "delivered_count",
+  "column_break_tracking",
+  "read_count",
+  "failed_count"
+ ],
+ "fields": [
+  {
+   "fieldname": "basic_info_section",
+   "fieldtype": "Section Break",
+   "label": "Basic Information"
+  },
+  {
+   "default": "MSG-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "MSG-.YYYY.-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Subject",
+   "reqd": 1
+  },
+  {
+   "default": "General",
+   "fieldname": "message_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Message Type",
+   "options": "Announcement\nNotice\nAlert\nGeneral"
+  },
+  {
+   "default": "Normal",
+   "fieldname": "priority",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Priority",
+   "options": "Normal\nHigh\nUrgent"
+  },
+  {
+   "fieldname": "column_break_basic",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sender",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Sender",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "sender.full_name",
+   "fieldname": "sender_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Sender Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "send_datetime",
+   "fieldtype": "Datetime",
+   "label": "Send Datetime"
+  },
+  {
+   "fieldname": "content_section",
+   "fieldtype": "Section Break",
+   "label": "Content"
+  },
+  {
+   "fieldname": "content",
+   "fieldtype": "Text Editor",
+   "label": "Content"
+  },
+  {
+   "fieldname": "content_plain",
+   "fieldtype": "Long Text",
+   "label": "Content (Plain Text)"
+  },
+  {
+   "fieldname": "scope_section",
+   "fieldtype": "Section Break",
+   "label": "Scope"
+  },
+  {
+   "fieldname": "scope_type",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Scope Type",
+   "options": "Institution\nCampus\nGrade\nSection\nGroup\nIndividual",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:in_list(['Institution', 'Campus', 'Grade', 'Section'], doc.scope_type)",
+   "fieldname": "institution",
+   "fieldtype": "Link",
+   "label": "Institution",
+   "options": "Institution"
+  },
+  {
+   "depends_on": "eval:in_list(['Campus', 'Grade', 'Section'], doc.scope_type)",
+   "fieldname": "campus",
+   "fieldtype": "Link",
+   "label": "Campus",
+   "options": "Campus"
+  },
+  {
+   "fieldname": "column_break_scope",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:in_list(['Grade', 'Section'], doc.scope_type)",
+   "fieldname": "grade",
+   "fieldtype": "Link",
+   "label": "Grade",
+   "options": "Grade"
+  },
+  {
+   "depends_on": "eval:doc.scope_type == 'Section'",
+   "fieldname": "section",
+   "fieldtype": "Link",
+   "label": "Section",
+   "options": "Section"
+  },
+  {
+   "depends_on": "eval:doc.scope_type == 'Group'",
+   "fieldname": "student_group",
+   "fieldtype": "Link",
+   "label": "Student Group",
+   "options": "Student Group"
+  },
+  {
+   "fieldname": "status_section",
+   "fieldtype": "Section Break",
+   "label": "Status"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nScheduled\nSent\nCancelled"
+  },
+  {
+   "depends_on": "eval:doc.status == 'Scheduled'",
+   "fieldname": "scheduled_time",
+   "fieldtype": "Datetime",
+   "label": "Scheduled Time"
+  },
+  {
+   "fieldname": "delivery_section",
+   "fieldtype": "Section Break",
+   "label": "Delivery Options"
+  },
+  {
+   "default": "0",
+   "fieldname": "send_email",
+   "fieldtype": "Check",
+   "label": "Send Email"
+  },
+  {
+   "default": "0",
+   "fieldname": "send_sms",
+   "fieldtype": "Check",
+   "label": "Send SMS"
+  },
+  {
+   "fieldname": "column_break_delivery",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "send_push",
+   "fieldtype": "Check",
+   "label": "Send Push Notification"
+  },
+  {
+   "default": "1",
+   "fieldname": "send_in_app",
+   "fieldtype": "Check",
+   "label": "Send In-App"
+  },
+  {
+   "fieldname": "settings_section",
+   "fieldtype": "Section Break",
+   "label": "Settings"
+  },
+  {
+   "default": "0",
+   "fieldname": "requires_acknowledgment",
+   "fieldtype": "Check",
+   "label": "Requires Acknowledgment"
+  },
+  {
+   "default": "0",
+   "fieldname": "allow_replies",
+   "fieldtype": "Check",
+   "label": "Allow Replies"
+  },
+  {
+   "fieldname": "column_break_settings",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "expires_on",
+   "fieldtype": "Date",
+   "label": "Expires On"
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Link",
+   "label": "Category",
+   "options": "Message Category"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "tracking_section",
+   "fieldtype": "Section Break",
+   "label": "Tracking"
+  },
+  {
+   "default": "0",
+   "fieldname": "total_recipients",
+   "fieldtype": "Int",
+   "label": "Total Recipients",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "delivered_count",
+   "fieldtype": "Int",
+   "label": "Delivered Count",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_tracking",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "read_count",
+   "fieldtype": "Int",
+   "label": "Read Count",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "failed_count",
+   "fieldtype": "Int",
+   "label": "Failed Count",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-01-03 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Kairos",
+ "name": "Message",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "subject",
+ "track_changes": 1
+}
