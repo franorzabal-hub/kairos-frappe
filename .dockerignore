@@ -1,0 +1,59 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.env
+.venv
+env/
+venv/
+ENV/
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Frappe Bench (local dev)
+frappe-bench/
+*.bench
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation (keep in image for reference)
+# docs/
+
+# Kubernetes (not needed in image)
+k8s/
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.docker/
+
+# Misc
+*.md
+!kairos/**/*.md
+.beads/

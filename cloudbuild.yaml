@@ -1,0 +1,86 @@
+# Google Cloud Build configuration
+# Builds and pushes Kairos image to Google Container Registry
+
+substitutions:
+  _REGION: us-central1
+  _FRAPPE_VERSION: v15
+
+steps:
+  # Step 1: Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build'
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'FRAPPE_VERSION=${_FRAPPE_VERSION}'
+      - '-t'
+      - 'gcr.io/${PROJECT_ID}/kairos:${SHORT_SHA}'
+      - '-t'
+      - 'gcr.io/${PROJECT_ID}/kairos:latest'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/kairos/kairos:${SHORT_SHA}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/kairos/kairos:latest'
+      - '.'
+
+  # Step 2: Push to Container Registry (GCR)
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-gcr'
+    args:
+      - 'push'
+      - 'gcr.io/${PROJECT_ID}/kairos:${SHORT_SHA}'
+    waitFor:
+      - 'build'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-gcr-latest'
+    args:
+      - 'push'
+      - 'gcr.io/${PROJECT_ID}/kairos:latest'
+    waitFor:
+      - 'build'
+
+  # Step 3: Push to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-ar'
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/kairos/kairos:${SHORT_SHA}'
+    waitFor:
+      - 'build'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-ar-latest'
+    args:
+      - 'push'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/kairos/kairos:latest'
+    waitFor:
+      - 'build'
+
+  # Step 4: Deploy to GKE (optional - uncomment to enable)
+  # - name: 'gcr.io/cloud-builders/gke-deploy'
+  #   id: 'deploy'
+  #   args:
+  #     - 'run'
+  #     - '--filename=k8s/overlays/production'
+  #     - '--location=${_REGION}'
+  #     - '--cluster=kairos-cluster'
+  #     - '--image=gcr.io/${PROJECT_ID}/kairos:${SHORT_SHA}'
+  #   waitFor:
+  #     - 'push-gcr'
+
+images:
+  - 'gcr.io/${PROJECT_ID}/kairos:${SHORT_SHA}'
+  - 'gcr.io/${PROJECT_ID}/kairos:latest'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/kairos/kairos:${SHORT_SHA}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/kairos/kairos:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+
+timeout: '1800s'  # 30 minutes
+
+tags:
+  - 'kairos'
+  - 'frappe'
