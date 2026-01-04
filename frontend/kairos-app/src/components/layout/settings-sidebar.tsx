@@ -161,12 +161,12 @@ export function SettingsSidebar({ className }: SettingsSidebarProps) {
   return (
     <aside
       className={cn(
-        "flex h-full w-[280px] flex-col border-r bg-background",
+        "flex h-full w-[280px] flex-col border-r bg-background overflow-hidden",
         className
       )}
     >
       {/* Search */}
-      <div className="p-3 border-b">
+      <div className="shrink-0 p-3 border-b">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -179,8 +179,8 @@ export function SettingsSidebar({ className }: SettingsSidebarProps) {
       </div>
 
       {/* Navigation */}
-      <ScrollArea className="flex-1">
-        <div className="p-2">
+      <ScrollArea className="flex-1 min-h-0">
+        <div className="p-2 pb-6">
           {filteredSections.map((section) => (
             <div key={section.title} className="mb-4">
               <SectionHeader>{section.title}</SectionHeader>
