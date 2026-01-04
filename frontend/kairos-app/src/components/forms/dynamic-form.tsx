@@ -9,15 +9,22 @@
 
 "use client";
 
-import { useForm, FieldValues, DefaultValues } from "react-hook-form";
-import { useMemo } from "react";
+import { useForm, useWatch, FieldValues, DefaultValues, Control } from "react-hook-form";
+import { useMemo, useCallback } from "react";
 import { DocTypeMeta, DocTypeField, FieldType } from "@/types/frappe";
+import { computeFieldDependsState, FieldDependsState } from "@/lib/depends-on";
 import { DataField } from "@/components/forms/fields/data-field";
 import { SelectField } from "@/components/forms/fields/select-field";
 import { DateField } from "@/components/forms/fields/date-field";
+import { DatetimeField } from "@/components/forms/fields/datetime-field";
 import { LinkField } from "@/components/forms/fields/link-field";
 import { CheckField } from "@/components/forms/fields/check-field";
 import { TableField } from "@/components/forms/fields/table-field";
+import { TextField } from "@/components/forms/fields/text-field";
+import { TextEditorField } from "@/components/forms/fields/text-editor-field";
+import { MultiSelectField } from "@/components/forms/fields/multiselect-field";
+import { AttachField } from "@/components/forms/fields/attach-field";
+import { AttachImageField } from "@/components/forms/fields/attach-image-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -133,6 +140,46 @@ function isLayoutField(fieldtype: FieldType): boolean {
 }
 
 /**
+ * Hook to compute field depends_on state reactively
+ * Watches form values and re-computes when they change
+ */
+function useFieldDependsState<T extends FieldValues>(
+  field: DocTypeField,
+  control: Control<T>
+): FieldDependsState {
+  // Watch all form values to react to changes
+  const formValues = useWatch({ control }) as Record<string, unknown>;
+
+  // Compute field state based on current form values
+  return useMemo(
+    () => computeFieldDependsState(field, formValues),
+    [field, formValues]
+  );
+}
+
+/**
+ * Wrapper component that handles depends_on visibility
+ */
+function DependsOnFieldWrapper<T extends FieldValues>({
+  field,
+  control,
+  children,
+}: {
+  field: DocTypeField;
+  control: Control<T>;
+  children: (state: FieldDependsState) => React.ReactNode;
+}) {
+  const state = useFieldDependsState(field, control);
+
+  // Don't render if field is not visible
+  if (!state.isVisible) {
+    return null;
+  }
+
+  return <>{children(state)}</>;
+}
+
+/**
  * Build default values from fields and initial data
  */
 function buildDefaultValues<T extends FieldValues>(
@@ -147,7 +194,7 @@ function buildDefaultValues<T extends FieldValues>(
     // Use initial data if available, otherwise use field default
     if (initialData && field.fieldname in initialData) {
       defaults[field.fieldname] = initialData[field.fieldname];
-    } else if (field.fieldtype === "Table" || field.fieldtype === "Table MultiSelect") {
+    } else if (field.fieldtype === "Table" || field.fieldtype === "Table MultiSelect" || field.fieldtype === "MultiSelect") {
       // Initialize table fields as empty arrays
       defaults[field.fieldname] = [];
     } else if (field.default) {
@@ -186,9 +233,11 @@ export function DynamicForm<T extends FieldValues>({
     defaultValues,
   });
 
-  const renderField = (field: DocTypeField) => {
-    const isRequired = field.reqd === 1;
-    const isReadOnly = field.read_only === 1 || isLoading;
+  // Render a field with depends_on state
+  const renderFieldWithState = useCallback(
+    (field: DocTypeField, dependsState: FieldDependsState) => {
+      const isRequired = dependsState.isRequired;
+      const isReadOnly = dependsState.isReadOnly || isLoading;
 
     switch (field.fieldtype) {
       case "Data":
@@ -280,11 +329,23 @@ export function DynamicForm<T extends FieldValues>({
 
       case "Text":
       case "Long Text":
+        return (
+          <TextField
+            key={field.fieldname}
+            name={field.fieldname as never}
+            control={control}
+            label={field.label}
+            placeholder={field.description}
+            required={isRequired}
+            readOnly={isReadOnly}
+            description={field.description}
+          />
+        );
+
       case "Text Editor":
       case "HTML":
-        // TODO: Implement TextareaField component
         return (
-          <DataField
+          <TextEditorField
             key={field.fieldname}
             name={field.fieldname as never}
             control={control}
@@ -297,15 +358,27 @@ export function DynamicForm<T extends FieldValues>({
         );
 
       case "Datetime":
+        return (
+          <DatetimeField
+            key={field.fieldname}
+            name={field.fieldname as never}
+            control={control}
+            label={field.label}
+            required={isRequired}
+            readOnly={isReadOnly}
+            description={field.description}
+          />
+        );
+
       case "Time":
-        // TODO: Implement DateTimeField and TimeField components
+        // Time field - use DataField with time input type for now
         return (
           <DataField
             key={field.fieldname}
             name={field.fieldname as never}
             control={control}
             label={field.label}
-            placeholder={field.description}
+            placeholder="HH:MM:SS"
             required={isRequired}
             readOnly={isReadOnly}
             description={field.description}
@@ -313,15 +386,39 @@ export function DynamicForm<T extends FieldValues>({
         );
 
       case "Attach":
-      case "Attach Image":
-        // TODO: Implement AttachField component
         return (
-          <DataField
+          <AttachField
             key={field.fieldname}
             name={field.fieldname as never}
             control={control}
             label={field.label}
-            placeholder="File path"
+            required={isRequired}
+            readOnly={isReadOnly}
+            description={field.description}
+          />
+        );
+
+      case "Attach Image":
+        return (
+          <AttachImageField
+            key={field.fieldname}
+            name={field.fieldname as never}
+            control={control}
+            label={field.label}
+            required={isRequired}
+            readOnly={isReadOnly}
+            description={field.description}
+          />
+        );
+
+      case "MultiSelect":
+        return (
+          <MultiSelectField
+            key={field.fieldname}
+            name={field.fieldname as never}
+            control={control}
+            label={field.label}
+            options={parseSelectOptions(field.options)}
             required={isRequired}
             readOnly={isReadOnly}
             description={field.description}
@@ -387,7 +484,33 @@ export function DynamicForm<T extends FieldValues>({
           />
         );
     }
-  };
+  }, [control, isLoading, childDocMetas]);
+
+  // Wrap field rendering with depends_on evaluation
+  const renderField = useCallback(
+    (field: DocTypeField) => {
+      // Check if field has any depends_on expressions
+      const hasDependsOn = field.depends_on || field.mandatory_depends_on || field.read_only_depends_on;
+
+      if (!hasDependsOn) {
+        // No depends_on - render with default state
+        const defaultState: FieldDependsState = {
+          isVisible: field.hidden !== 1,
+          isRequired: field.reqd === 1,
+          isReadOnly: field.read_only === 1,
+        };
+        return defaultState.isVisible ? renderFieldWithState(field, defaultState) : null;
+      }
+
+      // Has depends_on - use wrapper for reactive evaluation
+      return (
+        <DependsOnFieldWrapper key={field.fieldname} field={field} control={control}>
+          {(state) => renderFieldWithState(field, state)}
+        </DependsOnFieldWrapper>
+      );
+    },
+    [control, renderFieldWithState]
+  );
 
   return (
     <form

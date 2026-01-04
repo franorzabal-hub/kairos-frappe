@@ -35,6 +35,13 @@ export interface DocTypeField {
   depends_on?: string;
   mandatory_depends_on?: string;
   read_only_depends_on?: string;
+  // Permission level - fields with higher perm_level require additional permissions
+  perm_level?: number;
+  // Computed permission state (set by permission calculation)
+  _perms?: {
+    read: boolean;
+    write: boolean;
+  };
 }
 
 /**
@@ -64,7 +71,8 @@ export type FieldType =
   | "Section Break"
   | "Column Break"
   | "Tab Break"
-  | "Table MultiSelect";
+  | "Table MultiSelect"
+  | "MultiSelect";
 
 /**
  * DocType metadata
@@ -88,6 +96,7 @@ export interface DocTypeMeta {
  */
 export interface DocTypePermission {
   role: string;
+  permlevel?: number; // Permission level this applies to (default 0)
   read: 0 | 1;
   write: 0 | 1;
   create: 0 | 1;
@@ -95,6 +104,25 @@ export interface DocTypePermission {
   submit: 0 | 1;
   cancel: 0 | 1;
   amend: 0 | 1;
+  // If owner restriction applies
+  if_owner?: 0 | 1;
+}
+
+/**
+ * User's effective permissions for a DocType
+ * This comes from frappe.desk.form.load.getdoctype response
+ */
+export interface UserDocTypePermissions {
+  // Permission levels the user can read
+  read?: number[];
+  // Permission levels the user can write
+  write?: number[];
+  // Standard permissions
+  create?: boolean;
+  delete?: boolean;
+  submit?: boolean;
+  cancel?: boolean;
+  amend?: boolean;
 }
 
 /**

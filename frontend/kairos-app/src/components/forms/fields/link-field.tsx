@@ -10,7 +10,8 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Control, Controller, FieldValues, Path } from "react-hook-form";
-import { Search, X, Loader2, ChevronDown } from "lucide-react";
+import { Search, X, Loader2, ChevronDown, ExternalLink } from "lucide-react";
+import { LinkSelectDialog } from "@/components/dialogs/link-select-dialog";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -132,6 +133,7 @@ function LinkFieldInner({
   const [isOpen, setIsOpen] = useState(false);
   const [localInputValue, setLocalInputValue] = useState<string | null>(null);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [showModal, setShowModal] = useState(false);
 
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -353,6 +355,24 @@ function LinkFieldInner({
             </Button>
           )}
 
+          {/* Expand/Modal button */}
+          {!readOnly && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(false);
+                setShowModal(true);
+              }}
+              className="h-6 w-6"
+              aria-label={`Browse ${doctype}`}
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Button>
+          )}
+
           {/* Dropdown indicator */}
           {!readOnly && (
             <ChevronDown
@@ -436,6 +456,20 @@ function LinkFieldInner({
 
       {/* Error message */}
       {error && <p className="text-sm text-destructive">{error}</p>}
+
+      {/* Link Select Dialog */}
+      <LinkSelectDialog
+        open={showModal}
+        onOpenChange={setShowModal}
+        doctype={doctype}
+        value={value}
+        onSelect={(selectedValue) => {
+          onChange(selectedValue);
+          setShowModal(false);
+        }}
+        filters={filters}
+        allowCreate={!readOnly}
+      />
     </div>
   );
 }
