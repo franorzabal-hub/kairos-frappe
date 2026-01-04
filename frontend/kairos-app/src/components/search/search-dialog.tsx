@@ -477,125 +477,134 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [open, onOpenChange]);
 
+  // Heights for layout calculation
+  const HEADER_HEIGHT = 76; // p-4 + h-11 input + borders
+  const FOOTER_HEIGHT = 52; // py-3 + button heights
+  const CONTENT_HEIGHT = 700 - HEADER_HEIGHT - FOOTER_HEIGHT;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-5xl p-0 gap-0 overflow-hidden bg-white rounded-2xl"
+        className="max-w-5xl p-0 overflow-hidden bg-white rounded-2xl"
         showCloseButton={false}
-        style={{ height: "700px" }}
+        style={{ height: 700, maxHeight: "90vh" }}
       >
         <DialogTitle className="sr-only">Search records</DialogTitle>
 
-        <div className="grid grid-rows-[auto_1fr_auto] h-full">
-          {/* 1. Search Header - Full width */}
-          <div className="p-4 border-b border-slate-100">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder="Search records..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-11 pl-10 pr-4 text-sm bg-white border border-slate-200 rounded-lg
-                          placeholder:text-slate-400 text-slate-700
-                          focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400
-                          transition-all duration-200"
-              />
+        {/* Header - Fixed at top */}
+        <div
+          className="p-4 border-b border-slate-100 bg-white"
+          style={{ height: HEADER_HEIGHT }}
+        >
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="Search records..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-11 pl-10 pr-4 text-sm bg-white border border-slate-200 rounded-lg
+                        placeholder:text-slate-400 text-slate-700
+                        focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400
+                        transition-all duration-200"
+            />
+          </div>
+        </div>
+
+        {/* Content Area - Middle */}
+        <div
+          className="flex"
+          style={{ height: CONTENT_HEIGHT }}
+        >
+          {/* Left Panel - Records List */}
+          <div className="w-[400px] border-r border-slate-100 flex flex-col">
+            <div className="px-4 py-3 border-b border-slate-50 shrink-0">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                Records
+              </span>
+            </div>
+
+            <div ref={listRef} className="flex-1 overflow-y-auto p-2 space-y-0.5">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+                </div>
+              ) : error ? (
+                <div className="p-4 text-center">
+                  <p className="text-sm text-red-600">{error}</p>
+                  <button
+                    onClick={loadRecords}
+                    className="mt-2 text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    Try again
+                  </button>
+                </div>
+              ) : filteredRecords.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Search className="w-8 h-8 text-slate-200 mb-3" />
+                  <p className="text-sm text-slate-500">No records found</p>
+                </div>
+              ) : (
+                filteredRecords.map((record, index) => (
+                  <div key={`${record.doctype}-${record.name}`} data-record-row>
+                    <RecordRow
+                      record={record}
+                      isSelected={index === selectedIndex}
+                      onClick={() => {
+                        setSelectedIndex(index);
+                        setSelectedRecord(record);
+                      }}
+                      onDoubleClick={() => navigateToRecord(record)}
+                    />
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
-          {/* 2. Content Area - Two columns */}
-          <div className="flex min-h-0 overflow-hidden">
-            {/* Left Panel - Records List */}
-            <div className="w-[400px] border-r border-slate-100 flex flex-col overflow-hidden">
-              <div className="px-4 py-3 border-b border-slate-50 flex-shrink-0">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  Records
-                </span>
-              </div>
+          {/* Right Panel - Details */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <RecordPreview record={selectedRecord} />
+          </div>
+        </div>
 
-              {/* Scrollable Records List */}
-              <div ref={listRef} className="flex-1 overflow-y-auto p-2 space-y-0.5">
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
-                  </div>
-                ) : error ? (
-                  <div className="p-4 text-center">
-                    <p className="text-sm text-red-600">{error}</p>
-                    <button
-                      onClick={loadRecords}
-                      className="mt-2 text-sm text-blue-600 hover:text-blue-700"
-                    >
-                      Try again
-                    </button>
-                  </div>
-                ) : filteredRecords.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <Search className="w-8 h-8 text-slate-200 mb-3" />
-                    <p className="text-sm text-slate-500">No records found</p>
-                  </div>
-                ) : (
-                  filteredRecords.map((record, index) => (
-                    <div key={`${record.doctype}-${record.name}`} data-record-row>
-                      <RecordRow
-                        record={record}
-                        isSelected={index === selectedIndex}
-                        onClick={() => {
-                          setSelectedIndex(index);
-                          setSelectedRecord(record);
-                        }}
-                        onDoubleClick={() => navigateToRecord(record)}
-                      />
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Right Panel - Details */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <RecordPreview record={selectedRecord} />
-            </div>
+        {/* Footer - Fixed at bottom */}
+        <div
+          className="px-4 py-3 border-t border-slate-100 flex items-center justify-between bg-white"
+          style={{ height: FOOTER_HEIGHT }}
+        >
+          <div className="flex items-center gap-2">
+            <button
+              onClick={navigateUp}
+              disabled={selectedIndex === 0 || filteredRecords.length === 0}
+              className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronUp className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={navigateDown}
+              disabled={selectedIndex >= filteredRecords.length - 1 || filteredRecords.length === 0}
+              className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+            <span className="text-xs text-slate-400 ml-1">Navigate</span>
           </div>
 
-          {/* 3. Actions Footer - Full width */}
-          <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-between bg-white">
-            {/* Left - Navigation */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={navigateUp}
-                disabled={selectedIndex === 0 || filteredRecords.length === 0}
-                className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronUp className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={navigateDown}
-                disabled={selectedIndex >= filteredRecords.length - 1 || filteredRecords.length === 0}
-                className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                <ChevronDown className="w-3.5 h-3.5" />
-              </button>
-              <span className="text-xs text-slate-400 ml-1">Navigate</span>
-            </div>
-
-            {/* Right - Action Buttons */}
-            <div className="flex items-center gap-2">
-              <button className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-md bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-colors">
-                Actions
-                <kbd className="px-1 py-0.5 text-[10px] font-mono bg-slate-100 rounded border border-slate-200">⌘K</kbd>
-              </button>
-              <button
-                onClick={() => selectedRecord && navigateToRecord(selectedRecord)}
-                disabled={!selectedRecord}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium rounded-md bg-blue-500 text-white border border-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Open record
-                <kbd className="px-1 py-0.5 text-[10px] font-mono bg-blue-400/30 rounded border border-blue-400/50">↵</kbd>
-              </button>
-            </div>
+          <div className="flex items-center gap-2">
+            <button className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-md bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-colors">
+              Actions
+              <kbd className="px-1 py-0.5 text-[10px] font-mono bg-slate-100 rounded border border-slate-200">⌘K</kbd>
+            </button>
+            <button
+              onClick={() => selectedRecord && navigateToRecord(selectedRecord)}
+              disabled={!selectedRecord}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium rounded-md bg-blue-500 text-white border border-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Open record
+              <kbd className="px-1 py-0.5 text-[10px] font-mono bg-blue-400/30 rounded border border-blue-400/50">↵</kbd>
+            </button>
           </div>
         </div>
       </DialogContent>
