@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter();
-  
+
   useEffect(() => {
-    // Redirect to Student list as the default landing page
-    router.replace("/Student");
+    // Redirect to dashboard as the default landing page
+    router.replace("/dashboard");
   }, [router]);
 
   return (
