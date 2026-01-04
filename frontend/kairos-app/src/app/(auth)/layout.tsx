@@ -3,14 +3,41 @@
  *
  * Layout for authentication pages (login, register, forgot password).
  * Provides a clean, centered layout without the dashboard sidebar.
- * Note: FrappeProvider is now provided by the root layout.
+ * Redirects authenticated users to dashboard.
  */
+
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    // If user is already logged in, redirect to dashboard
+    const userInfo = localStorage.getItem("kairos_user");
+    if (userInfo) {
+      router.replace("/dashboard");
+    } else {
+      setIsChecking(false);
+    }
+  }, [router]);
+
+  // Show nothing while checking auth status
+  if (isChecking) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Background pattern */}

@@ -99,8 +99,8 @@ export default function LoginPage() {
         localStorage.removeItem("kairos_remembered_user");
       }
 
-      // Redirect to Student list
-      window.location.href = "/Student";
+      // Redirect to dashboard
+      window.location.href = "/dashboard";
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Login failed. Please try again.";
