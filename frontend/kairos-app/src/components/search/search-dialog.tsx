@@ -477,25 +477,17 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [open, onOpenChange]);
 
-  // Heights for layout calculation
-  const HEADER_HEIGHT = 76; // p-4 + h-11 input + borders
-  const FOOTER_HEIGHT = 52; // py-3 + button heights
-  const CONTENT_HEIGHT = 700 - HEADER_HEIGHT - FOOTER_HEIGHT;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-5xl p-0 overflow-hidden bg-white rounded-2xl"
+        unstyled
         showCloseButton={false}
-        style={{ height: 700, maxHeight: "90vh" }}
+        className="w-[1024px] max-w-[calc(100vw-2rem)] h-[700px] max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col"
       >
         <DialogTitle className="sr-only">Search records</DialogTitle>
 
         {/* Header - Fixed at top */}
-        <div
-          className="p-4 border-b border-slate-100 bg-white"
-          style={{ height: HEADER_HEIGHT }}
-        >
+        <div className="shrink-0 p-4 border-b border-slate-100 bg-white">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
@@ -512,11 +504,8 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
           </div>
         </div>
 
-        {/* Content Area - Middle */}
-        <div
-          className="flex"
-          style={{ height: CONTENT_HEIGHT }}
-        >
+        {/* Content Area - Middle (takes remaining space) */}
+        <div className="flex-1 flex min-h-0 overflow-hidden">
           {/* Left Panel - Records List */}
           <div className="w-[400px] border-r border-slate-100 flex flex-col">
             <div className="px-4 py-3 border-b border-slate-50 shrink-0">
@@ -570,10 +559,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
         </div>
 
         {/* Footer - Fixed at bottom */}
-        <div
-          className="px-4 py-3 border-t border-slate-100 flex items-center justify-between bg-white"
-          style={{ height: FOOTER_HEIGHT }}
-        >
+        <div className="shrink-0 px-4 py-3 border-t border-slate-100 flex items-center justify-between bg-white">
           <div className="flex items-center gap-2">
             <button
               onClick={navigateUp}
