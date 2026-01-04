@@ -59,7 +59,6 @@ const DOCTYPE_ICONS: Record<string, LucideIcon> = {
   News: Newspaper,
   "School Event": Calendar,
   Grade: GraduationCap,
-  Enrollment: FileText,
   "Guardian Invite": Mail,
 };
 
@@ -71,7 +70,6 @@ const SEARCHABLE_DOCTYPES = [
   "News",
   "School Event",
   "Grade",
-  "Enrollment",
   "Guardian Invite",
 ];
 
@@ -415,40 +413,37 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
 
   // Fields to fetch for each DocType to get display name
   const DOCTYPE_FIELDS: Record<string, string[]> = {
-    Student: ["name", "full_name", "first_name", "last_name"],
-    Guardian: ["name", "guardian_name", "full_name"],
-    Institution: ["name", "institution_name", "title"],
-    Message: ["name", "subject", "title"],
-    News: ["name", "title", "headline"],
-    "School Event": ["name", "title", "event_name"],
-    Grade: ["name", "title", "grade_name"],
-    Enrollment: ["name", "student_name", "program"],
-    "Guardian Invite": ["name", "guardian_name", "email"],
+    Student: ["name", "full_name"],
+    Guardian: ["name", "full_name"],
+    Institution: ["name", "institution_name"],
+    Message: ["name", "subject"],
+    News: ["name", "title"],
+    "School Event": ["name", "event_name"],
+    Grade: ["name", "grade_name"],
+    "Guardian Invite": ["name", "email"],
   };
 
   // Get display label from item based on doctype
   const getDisplayLabel = (doctype: string, item: Record<string, string>): string => {
     switch (doctype) {
       case "Student":
-        return item.full_name || `${item.first_name || ""} ${item.last_name || ""}`.trim() || item.name;
+        return item.full_name || item.name;
       case "Guardian":
-        return item.guardian_name || item.full_name || item.name;
+        return item.full_name || item.name;
       case "Institution":
-        return item.institution_name || item.title || item.name;
+        return item.institution_name || item.name;
       case "Message":
-        return item.subject || item.title || item.name;
+        return item.subject || item.name;
       case "News":
-        return item.title || item.headline || item.name;
-      case "School Event":
-        return item.title || item.event_name || item.name;
-      case "Grade":
-        return item.title || item.grade_name || item.name;
-      case "Enrollment":
-        return item.student_name || item.program || item.name;
-      case "Guardian Invite":
-        return item.guardian_name || item.email || item.name;
-      default:
         return item.title || item.name;
+      case "School Event":
+        return item.event_name || item.name;
+      case "Grade":
+        return item.grade_name || item.name;
+      case "Guardian Invite":
+        return item.email || item.name;
+      default:
+        return item.name;
     }
   };
 
