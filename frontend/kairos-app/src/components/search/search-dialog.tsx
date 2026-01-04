@@ -2,8 +2,10 @@
  * Search Dialog Component (Attio-style)
  *
  * Split-view search dialog with:
- * - Left panel: Search input + results list
- * - Right panel: Preview of selected record with details
+ * - Full-width search header
+ * - Left panel: Records list
+ * - Right panel: Record details preview
+ * - Full-width footer with navigation
  */
 
 "use client";
@@ -14,9 +16,11 @@ import { useFrappeGetDoc } from "frappe-react-sdk";
 import {
   Building2,
   Calendar,
+  ChevronDown,
+  ChevronUp,
   FileText,
-  GraduationCap,
   Globe,
+  GraduationCap,
   Mail,
   MapPin,
   MessageSquare,
@@ -24,6 +28,7 @@ import {
   Plus,
   Search,
   Tag,
+  User,
   UserCheck,
   Users,
   X,
@@ -35,10 +40,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn, doctypeToSlug } from "@/lib/utils";
 import { useGlobalSearch, type GlobalSearchResult } from "@/hooks/use-global-search";
@@ -52,7 +54,7 @@ interface SearchDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-interface SearchResultItemProps {
+interface RecordItemProps {
   item: GlobalSearchResult;
   isSelected: boolean;
   onSelect: () => void;
@@ -61,246 +63,315 @@ interface SearchResultItemProps {
 
 interface RecordPreviewProps {
   item: GlobalSearchResult | null;
-  onOpenRecord: () => void;
+  isLoading: boolean;
 }
 
 // ============================================================================
-// DocType Icons & Labels
+// DocType Configuration
 // ============================================================================
 
-const DOCTYPE_ICONS: Record<string, LucideIcon> = {
-  Student: Users,
-  Guardian: UserCheck,
-  Institution: Building2,
-  Message: MessageSquare,
-  News: Newspaper,
-  "School Event": Calendar,
-  Grade: GraduationCap,
-  Enrollment: FileText,
-  "Guardian Invite": Mail,
+const DOCTYPE_CONFIG: Record<string, { icon: LucideIcon; color: string; bgColor: string }> = {
+  Student: { icon: Users, color: "text-blue-600", bgColor: "bg-blue-50 border-blue-200" },
+  Guardian: { icon: UserCheck, color: "text-green-600", bgColor: "bg-green-50 border-green-200" },
+  Institution: { icon: Building2, color: "text-purple-600", bgColor: "bg-purple-50 border-purple-200" },
+  Message: { icon: MessageSquare, color: "text-yellow-600", bgColor: "bg-yellow-50 border-yellow-200" },
+  News: { icon: Newspaper, color: "text-pink-600", bgColor: "bg-pink-50 border-pink-200" },
+  "School Event": { icon: Calendar, color: "text-orange-600", bgColor: "bg-orange-50 border-orange-200" },
+  Grade: { icon: GraduationCap, color: "text-cyan-600", bgColor: "bg-cyan-50 border-cyan-200" },
+  Enrollment: { icon: FileText, color: "text-indigo-600", bgColor: "bg-indigo-50 border-indigo-200" },
+  "Guardian Invite": { icon: Mail, color: "text-emerald-600", bgColor: "bg-emerald-50 border-emerald-200" },
 };
 
-const DOCTYPE_COLORS: Record<string, string> = {
-  Student: "bg-blue-100 text-blue-700",
-  Guardian: "bg-green-100 text-green-700",
-  Institution: "bg-purple-100 text-purple-700",
-  Message: "bg-yellow-100 text-yellow-700",
-  News: "bg-pink-100 text-pink-700",
-  "School Event": "bg-orange-100 text-orange-700",
-  Grade: "bg-cyan-100 text-cyan-700",
-  Enrollment: "bg-indigo-100 text-indigo-700",
-  "Guardian Invite": "bg-emerald-100 text-emerald-700",
-};
-
-function getDocTypeIcon(doctype: string): LucideIcon {
-  return DOCTYPE_ICONS[doctype] || FileText;
-}
-
-function getDocTypeColor(doctype: string): string {
-  return DOCTYPE_COLORS[doctype] || "bg-gray-100 text-gray-700";
+function getDocTypeConfig(doctype: string) {
+  return DOCTYPE_CONFIG[doctype] || { icon: FileText, color: "text-slate-600", bgColor: "bg-slate-50 border-slate-200" };
 }
 
 // ============================================================================
-// Search Result Item
+// Avatar Component
 // ============================================================================
 
-function SearchResultItem({
-  item,
-  isSelected,
-  onSelect,
-  onNavigate,
-}: SearchResultItemProps) {
-  const Icon = getDocTypeIcon(item.doctype);
-  const colorClass = getDocTypeColor(item.doctype);
+function Avatar({
+  src,
+  name,
+  doctype,
+  className = ""
+}: {
+  src?: string | null;
+  name: string;
+  doctype: string;
+  className?: string;
+}) {
+  const [error, setError] = useState(false);
+  const config = getDocTypeConfig(doctype);
+  const Icon = config.icon;
+
+  if (!src || error) {
+    return (
+      <div className={cn(
+        "flex items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-slate-200",
+        className
+      )}>
+        <Icon className="w-4 h-4 text-slate-400" />
+      </div>
+    );
+  }
 
   return (
-    <button
+    <img
+      src={src}
+      alt={name}
+      onError={() => setError(true)}
       className={cn(
-        "flex items-center gap-3 w-full px-3 py-2.5 text-left transition-colors",
-        isSelected
-          ? "bg-accent"
-          : "hover:bg-muted/50"
+        "rounded-lg object-contain bg-white border border-slate-100",
+        className
       )}
-      onClick={onSelect}
-      onDoubleClick={onNavigate}
-    >
-      <div className="flex items-center justify-center h-9 w-9 rounded-full bg-muted flex-shrink-0">
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-sm truncate">{item.name}</span>
-          {item.description && (
-            <span className="text-sm text-muted-foreground truncate">
-              {item.description}
-            </span>
-          )}
-        </div>
-      </div>
-      <Badge
-        variant="outline"
-        className={cn(
-          "text-xs font-normal flex items-center gap-1 flex-shrink-0",
-          colorClass
-        )}
-      >
-        <Icon className="h-3 w-3" />
-        {item.doctype}
-      </Badge>
-    </button>
+    />
   );
 }
 
 // ============================================================================
-// Record Preview Panel
+// Badge Component
 // ============================================================================
 
-function RecordPreview({ item, onOpenRecord }: RecordPreviewProps) {
+function TypeBadge({ doctype }: { doctype: string }) {
+  const config = getDocTypeConfig(doctype);
+  const Icon = config.icon;
+
+  return (
+    <span className={cn(
+      "inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border",
+      config.bgColor,
+      config.color
+    )}>
+      <Icon className="w-3 h-3" />
+      {doctype}
+    </span>
+  );
+}
+
+// ============================================================================
+// Record Item Component
+// ============================================================================
+
+function RecordItem({ item, isSelected, onSelect, onNavigate }: RecordItemProps) {
+  const config = getDocTypeConfig(item.doctype);
+
+  return (
+    <div
+      onClick={onSelect}
+      onDoubleClick={onNavigate}
+      className={cn(
+        "flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-lg transition-all duration-150",
+        isSelected
+          ? "bg-blue-50 border border-blue-200"
+          : "hover:bg-slate-50 border border-transparent"
+      )}
+    >
+      <Avatar
+        name={item.name}
+        doctype={item.doctype}
+        className="w-9 h-9"
+      />
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-slate-900 text-sm">{item.name}</span>
+          {item.description ? (
+            <span className="text-slate-400 text-sm truncate">{item.description}</span>
+          ) : item.content ? (
+            <span className="text-slate-400 text-sm truncate">{item.content}</span>
+          ) : null}
+        </div>
+      </div>
+
+      <TypeBadge doctype={item.doctype} />
+    </div>
+  );
+}
+
+// ============================================================================
+// Detail Row Component
+// ============================================================================
+
+function DetailRow({
+  icon: Icon,
+  children,
+  className = ""
+}: {
+  icon: LucideIcon;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex items-start gap-3", className)}>
+      <div className="w-5 h-5 flex items-center justify-center mt-0.5">
+        <Icon className="w-4 h-4 text-slate-400" />
+      </div>
+      <div className="flex-1 min-w-0">{children}</div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Record Preview Component
+// ============================================================================
+
+function RecordPreview({ item, isLoading: searchLoading }: RecordPreviewProps) {
   // Fetch actual document data when item is selected
   const { data: docData, isLoading: docLoading } = useFrappeGetDoc(
     item?.doctype || "",
     item?.name || "",
-    item ? undefined : null // Only fetch when item exists
+    item ? undefined : null
   );
 
   if (!item) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+      <div className="flex flex-col items-center justify-center h-full text-slate-400">
         <Search className="h-12 w-12 mb-4 opacity-20" />
         <p className="text-sm">Select a record to preview</p>
       </div>
     );
   }
 
-  const Icon = getDocTypeIcon(item.doctype);
-
-  // Extract common fields from document data
+  const isLoading = searchLoading || docLoading;
   const doc = docData as Record<string, unknown> | undefined;
+  const config = getDocTypeConfig(item.doctype);
+  const Icon = config.icon;
+
+  // Extract common fields
   const description = doc?.description as string | undefined;
   const email = doc?.email as string | undefined;
   const phone = doc?.phone as string | undefined;
   const mobile = doc?.mobile_no as string | undefined;
-  const address = doc?.address as string | undefined;
+  const website = doc?.website as string | undefined;
   const city = doc?.city as string | undefined;
   const state = doc?.state as string | undefined;
   const country = doc?.country as string | undefined;
   const status = doc?.status as string | undefined;
+  const tags = doc?.tags as string[] | undefined;
+
+  // No communication indicator
+  const hasCommunication = email || phone || mobile;
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="px-4 py-3 border-b">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center h-10 w-10 rounded-full bg-muted flex-shrink-0">
-            <Icon className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold truncate">{item.name}</h3>
-              {status && (
-                <Badge variant="outline" className="text-xs font-normal">
-                  {status}
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
+      {/* Detail Header */}
+      <div className="px-6 py-3 border-b border-slate-100 flex items-center gap-3 flex-shrink-0">
+        <Avatar
+          name={item.name}
+          doctype={item.doctype}
+          className="w-7 h-7"
+        />
+        <h2 className="text-base font-semibold text-slate-900">{item.name}</h2>
+        {status ? (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border bg-slate-100 text-slate-500 border-slate-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+            {status}
+          </span>
+        ) : !hasCommunication && !isLoading ? (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border bg-slate-100 text-slate-500 border-slate-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+            No communication found
+          </span>
+        ) : null}
       </div>
 
-      {/* Details */}
+      {/* Detail Content */}
       <ScrollArea className="flex-1">
-        <div className="p-4">
-          <p className="text-xs font-medium text-muted-foreground mb-3">
+        <div className="p-6">
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
             Details
-          </p>
+          </h3>
 
-          {docLoading ? (
-            <div className="space-y-3">
+          {isLoading ? (
+            <div className="space-y-4">
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {/* Description */}
               {description && (
-                <div className="flex items-start gap-3">
-                  <FileText className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-foreground">{description}</p>
-                </div>
+                <DetailRow icon={Building2}>
+                  <p className="text-sm text-slate-600 leading-relaxed">{description}</p>
+                </DetailRow>
+              )}
+
+              {/* Website */}
+              {website && (
+                <DetailRow icon={Globe}>
+                  <a
+                    href={website.startsWith("http") ? website : `https://${website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                  >
+                    {website.replace(/^https?:\/\//, "")}
+                  </a>
+                </DetailRow>
               )}
 
               {/* Email */}
               {email && (
-                <div className="flex items-center gap-3">
-                  <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-sm">{email}</span>
-                </div>
+                <DetailRow icon={Mail}>
+                  <a
+                    href={`mailto:${email}`}
+                    className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                  >
+                    {email}
+                  </a>
+                </DetailRow>
               )}
 
               {/* Phone */}
               {(phone || mobile) && (
-                <div className="flex items-center gap-3">
-                  <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-sm">{phone || mobile}</span>
-                </div>
+                <DetailRow icon={Globe}>
+                  <span className="text-sm text-slate-700">{phone || mobile}</span>
+                </DetailRow>
+              )}
+
+              {/* Tags */}
+              {tags && tags.length > 0 && (
+                <DetailRow icon={Tag}>
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-md border bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 transition-colors"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </DetailRow>
               )}
 
               {/* Location */}
-              {(city || state || country) && (
-                <>
-                  {city && (
-                    <div className="flex items-center gap-3">
-                      <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <span className="text-sm">{city}</span>
-                    </div>
-                  )}
-                  {state && (
-                    <div className="flex items-center gap-3">
-                      <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <span className="text-sm">{state}</span>
-                    </div>
-                  )}
-                  {country && (
-                    <div className="flex items-center gap-3">
-                      <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <span className="text-sm">{country}</span>
-                    </div>
-                  )}
-                </>
+              {city && (
+                <DetailRow icon={MapPin}>
+                  <span className="text-sm text-slate-700">{city}</span>
+                </DetailRow>
+              )}
+              {state && (
+                <DetailRow icon={MapPin}>
+                  <span className="text-sm text-slate-700">{state}</span>
+                </DetailRow>
+              )}
+              {country && (
+                <DetailRow icon={MapPin}>
+                  <span className="text-sm text-slate-700">{country}</span>
+                </DetailRow>
               )}
 
-              {/* Address */}
-              {address && (
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">{address}</span>
-                </div>
-              )}
-
-              {/* DocType badge */}
-              <div className="flex items-center gap-3 pt-2">
-                <Tag className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <Badge variant="secondary" className="text-xs">
-                  {item.doctype}
-                </Badge>
-              </div>
+              {/* DocType */}
+              <DetailRow icon={Tag}>
+                <TypeBadge doctype={item.doctype} />
+              </DetailRow>
             </div>
           )}
         </div>
       </ScrollArea>
-
-      {/* Footer - Attio style */}
-      <div className="px-4 py-3 border-t flex items-center justify-end gap-2">
-        <Button variant="outline" size="sm" className="gap-1">
-          Actions
-          <kbd className="ml-1 text-[10px] font-mono text-muted-foreground">⌘K</kbd>
-        </Button>
-        <Button size="sm" onClick={onOpenRecord} className="gap-1">
-          Open record
-          <kbd className="ml-1 text-[10px] font-mono text-primary-foreground/70">↵</kbd>
-        </Button>
-      </div>
     </div>
   );
 }
@@ -314,13 +385,11 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const {
     query,
     setQuery,
-    results,
     flatResults,
     isLoading,
     error,
     recentItems,
     addRecentItem,
-    clearRecentItems,
     quickActions,
     clear,
   } = useGlobalSearch();
@@ -357,39 +426,6 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     setSelectedIndex(0);
   }, [flatResults]);
 
-  // Handle keyboard navigation
-  useEffect(() => {
-    if (!open) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case "ArrowDown":
-          e.preventDefault();
-          setSelectedIndex((prev) =>
-            prev < displayItems.length - 1 ? prev + 1 : prev
-          );
-          break;
-        case "ArrowUp":
-          e.preventDefault();
-          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
-          break;
-        case "Enter":
-          e.preventDefault();
-          if (selectedItem) {
-            navigateToRecord(selectedItem);
-          }
-          break;
-        case "Escape":
-          e.preventDefault();
-          handleClose();
-          break;
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, displayItems.length, selectedItem]);
-
   // Navigate to record
   const navigateToRecord = useCallback(
     (item: GlobalSearchResult) => {
@@ -418,6 +454,48 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     }, 150);
   }, [onOpenChange, clear]);
 
+  // Navigate up/down
+  const navigateUp = useCallback(() => {
+    setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+  }, []);
+
+  const navigateDown = useCallback(() => {
+    setSelectedIndex((prev) =>
+      prev < displayItems.length - 1 ? prev + 1 : prev
+    );
+  }, [displayItems.length]);
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          navigateDown();
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          navigateUp();
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (selectedItem) {
+            navigateToRecord(selectedItem);
+          }
+          break;
+        case "Escape":
+          e.preventDefault();
+          handleClose();
+          break;
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open, selectedItem, navigateUp, navigateDown, navigateToRecord, handleClose]);
+
   // Keyboard shortcut to open
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -443,127 +521,151 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[500px] p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-5xl h-[700px] p-0 gap-0 overflow-hidden">
         <DialogTitle className="sr-only">Search records</DialogTitle>
-        <div className="flex h-full">
-          {/* Left Panel - Search & Results */}
-          <div className="w-[400px] flex flex-col border-r">
-            {/* Search Input */}
-            <div className="p-3 border-b">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search records..."
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  className="pl-9 pr-9"
-                  autoFocus
-                />
-                {query && (
-                  <button
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    onClick={() => setQuery("")}
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            </div>
 
-            {/* Results List */}
-            <ScrollArea className="flex-1">
-              <div className="p-2">
-                {isLoading && (
-                  <div className="space-y-2 p-2">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <Skeleton className="h-8 w-8 rounded-md" />
-                        <div className="flex-1">
-                          <Skeleton className="h-4 w-32 mb-1" />
-                          <Skeleton className="h-3 w-24" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {error && (
-                  <div className="p-4 text-center text-sm text-destructive">
-                    {error}
-                  </div>
-                )}
-
-                {!isLoading && hasResults && (
-                  <div className="space-y-1">
-                    <p className="px-3 py-1.5 text-xs font-medium text-muted-foreground">
-                      {query ? "Records" : "Recent"}
-                    </p>
-                    {displayItems.map((item, index) => (
-                      <SearchResultItem
-                        key={`${item.doctype}-${item.name}`}
-                        item={item}
-                        isSelected={index === selectedIndex}
-                        onSelect={() => {
-                          setSelectedIndex(index);
-                          setSelectedItem(item);
-                        }}
-                        onNavigate={() => navigateToRecord(item)}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {!isLoading && !hasResults && query && query.length >= 2 && (
-                  <div className="p-4 text-center text-sm text-muted-foreground">
-                    No results found for "{query}"
-                  </div>
-                )}
-
-                {showQuickActions && (
-                  <div className="space-y-1">
-                    <p className="px-3 py-1.5 text-xs font-medium text-muted-foreground">
-                      Quick Actions
-                    </p>
-                    {quickActions.map((action) => {
-                      const Icon = getDocTypeIcon(action.doctype);
-                      return (
-                        <button
-                          key={action.doctype}
-                          className="flex items-center gap-3 w-full px-3 py-2 text-left rounded-md hover:bg-muted transition-colors"
-                          onClick={() => {
-                            const slug = doctypeToSlug(action.doctype);
-                            handleClose();
-                            router.push(`/${slug}/new`);
-                          }}
-                        >
-                          <div className="flex items-center justify-center h-8 w-8 rounded-md bg-primary/10">
-                            <Plus className="h-4 w-4 text-primary" />
-                          </div>
-                          <span className="text-sm">{action.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-
-            {/* Footer - Attio style */}
-            <div className="px-3 py-2 border-t flex items-center text-xs text-muted-foreground">
-              <div className="flex items-center gap-1.5">
-                <kbd className="rounded border bg-muted px-1.5 py-0.5 text-[10px]">↑</kbd>
-                <kbd className="rounded border bg-muted px-1.5 py-0.5 text-[10px]">↓</kbd>
-                <span className="ml-1">Navigate</span>
-              </div>
+        <div className="flex flex-col h-full">
+          {/* 1. Search Header - Full width */}
+          <div className="p-4 border-b border-slate-100 flex-shrink-0">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search records..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full h-11 pl-10 pr-10 text-sm bg-white border border-slate-200 rounded-lg
+                          placeholder:text-slate-400 text-slate-700
+                          focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400
+                          transition-all duration-200"
+                autoFocus
+              />
+              {query && (
+                <button
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  onClick={() => setQuery("")}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Right Panel - Preview */}
-          <div className="flex-1 bg-muted/20">
-            <RecordPreview
-              item={selectedItem}
-              onOpenRecord={() => selectedItem && navigateToRecord(selectedItem)}
-            />
+          {/* 2. Content Area - Two columns */}
+          <div className="flex flex-1 min-h-0">
+            {/* Left Panel - Records List */}
+            <div className="w-[400px] border-r border-slate-100 flex flex-col min-h-0">
+              <div className="px-4 py-3 border-b border-slate-50 flex-shrink-0">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  {query ? "Records" : hasResults ? "Recent" : "Quick Actions"}
+                </span>
+              </div>
+
+              {/* Scrollable Records List */}
+              <ScrollArea className="flex-1">
+                <div className="p-2 space-y-0.5">
+                  {isLoading && (
+                    <div className="space-y-2 p-2">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <Skeleton className="h-9 w-9 rounded-lg" />
+                          <div className="flex-1">
+                            <Skeleton className="h-4 w-32 mb-1" />
+                            <Skeleton className="h-3 w-24" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {error && (
+                    <div className="p-4 text-center text-sm text-red-500">
+                      {error}
+                    </div>
+                  )}
+
+                  {!isLoading && hasResults && displayItems.map((item, index) => (
+                    <RecordItem
+                      key={`${item.doctype}-${item.name}`}
+                      item={item}
+                      isSelected={index === selectedIndex}
+                      onSelect={() => {
+                        setSelectedIndex(index);
+                        setSelectedItem(item);
+                      }}
+                      onNavigate={() => navigateToRecord(item)}
+                    />
+                  ))}
+
+                  {!isLoading && !hasResults && query && query.length >= 2 && (
+                    <div className="p-4 text-center text-sm text-slate-400">
+                      No results found for "{query}"
+                    </div>
+                  )}
+
+                  {showQuickActions && quickActions.map((action) => {
+                    const config = getDocTypeConfig(action.doctype);
+                    return (
+                      <div
+                        key={action.doctype}
+                        onClick={() => {
+                          const slug = doctypeToSlug(action.doctype);
+                          handleClose();
+                          router.push(`/${slug}/new`);
+                        }}
+                        className="flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-lg hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-blue-50">
+                          <Plus className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <span className="text-sm font-medium text-slate-700">{action.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </div>
+
+            {/* Right Panel - Details */}
+            <div className="flex-1 flex flex-col min-h-0 bg-slate-50/50">
+              <RecordPreview item={selectedItem} isLoading={isLoading} />
+            </div>
+          </div>
+
+          {/* 3. Actions Footer - Full width */}
+          <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-between flex-shrink-0 bg-white">
+            {/* Left - Navigation */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={navigateUp}
+                className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors"
+              >
+                <ChevronUp className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={navigateDown}
+                className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors"
+              >
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-xs text-slate-400 ml-1">Navigate</span>
+            </div>
+
+            {/* Right - Action Buttons */}
+            <div className="flex items-center gap-2">
+              <button className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all duration-200 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300">
+                Actions
+                <kbd className="px-1 py-0.5 text-[10px] font-mono bg-slate-100 rounded border border-slate-200">⌘K</kbd>
+              </button>
+              <button
+                onClick={() => selectedItem && navigateToRecord(selectedItem)}
+                disabled={!selectedItem}
+                className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all duration-200 bg-blue-500 text-white border border-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Open record
+                <kbd className="px-1 py-0.5 text-[10px] font-mono bg-blue-400/30 rounded border border-blue-400/50">↵</kbd>
+              </button>
+            </div>
           </div>
         </div>
       </DialogContent>
