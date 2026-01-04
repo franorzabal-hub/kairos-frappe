@@ -4,6 +4,7 @@
  * Renders a form dynamically based on Frappe DocType metadata
  * Handles field rendering, validation, and submission
  * Groups fields by Section Break
+ * Supports Table (child table) fields
  */
 
 "use client";
@@ -15,6 +16,8 @@ import { DataField } from "@/components/forms/fields/data-field";
 import { SelectField } from "@/components/forms/fields/select-field";
 import { DateField } from "@/components/forms/fields/date-field";
 import { LinkField } from "@/components/forms/fields/link-field";
+import { CheckField } from "@/components/forms/fields/check-field";
+import { TableField } from "@/components/forms/fields/table-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +27,8 @@ interface DynamicFormProps<T extends FieldValues> {
   onSubmit: (data: T) => void | Promise<void>;
   isLoading?: boolean;
   formId?: string;
+  /** Child DocType metadata map - needed for rendering Table fields */
+  childDocMetas?: Record<string, DocTypeMeta>;
 }
 
 interface Section {
@@ -142,6 +147,9 @@ function buildDefaultValues<T extends FieldValues>(
     // Use initial data if available, otherwise use field default
     if (initialData && field.fieldname in initialData) {
       defaults[field.fieldname] = initialData[field.fieldname];
+    } else if (field.fieldtype === "Table" || field.fieldtype === "Table MultiSelect") {
+      // Initialize table fields as empty arrays
+      defaults[field.fieldname] = [];
     } else if (field.default) {
       defaults[field.fieldname] = field.default;
     } else {
@@ -158,6 +166,7 @@ export function DynamicForm<T extends FieldValues>({
   onSubmit,
   isLoading = false,
   formId = "dynamic-form",
+  childDocMetas = {},
 }: DynamicFormProps<T>) {
   const sections = useMemo(
     () => groupFieldsBySections(docMeta.fields),
@@ -257,14 +266,12 @@ export function DynamicForm<T extends FieldValues>({
         );
 
       case "Check":
-        // TODO: Implement CheckField component
         return (
-          <DataField
+          <CheckField
             key={field.fieldname}
             name={field.fieldname as never}
             control={control}
             label={field.label}
-            placeholder="0 or 1"
             required={isRequired}
             readOnly={isReadOnly}
             description={field.description}
@@ -322,16 +329,48 @@ export function DynamicForm<T extends FieldValues>({
         );
 
       case "Table":
-      case "Table MultiSelect":
-        // TODO: Implement TableField component
+      case "Table MultiSelect": {
+        // Get the child DocType name from field.options
+        const childDoctype = field.options || "";
+        const childMeta = childDocMetas[childDoctype];
+
+        if (!childMeta) {
+          // Fallback: show placeholder if child meta is not available
+          return (
+            <div key={field.fieldname} className="space-y-2">
+              <Card className="border-dashed">
+                <CardHeader className="py-3">
+                  <CardTitle className="text-base font-medium">
+                    {field.label}
+                    {isRequired && <span className="text-destructive ml-1">*</span>}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="py-4">
+                  <p className="text-sm text-muted-foreground">
+                    Loading child table for: {childDoctype}...
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Tip: Pass childDocMetas prop with metadata for &quot;{childDoctype}&quot;
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          );
+        }
+
         return (
-          <div key={field.fieldname} className="space-y-2">
-            <p className="text-sm font-medium">{field.label}</p>
-            <p className="text-sm text-muted-foreground">
-              Table field for: {field.options}
-            </p>
-          </div>
+          <TableField
+            key={field.fieldname}
+            name={field.fieldname as never}
+            control={control}
+            label={field.label}
+            doctype={childDoctype}
+            fields={childMeta.fields}
+            required={isRequired}
+            readOnly={isReadOnly}
+          />
         );
+      }
 
       default:
         // Fallback to Data field for unknown types

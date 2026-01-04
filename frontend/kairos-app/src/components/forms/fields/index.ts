@@ -24,6 +24,13 @@ export { DatetimeField } from "./datetime-field";
 export { EmailField } from "./email-field";
 export { PhoneField, formatPhoneNumber } from "./phone-field";
 
+// File/Attachment fields
+export { AttachField } from "./attach-field";
+export { AttachImageField } from "./attach-image-field";
+
+// Table fields
+export { TableField } from "./table-field";
+
 // Field type to component mapping for Frappe field types
 export const FieldComponents = {
   Data: DataField,
@@ -41,6 +48,10 @@ export const FieldComponents = {
   Datetime: DatetimeField,
   Email: EmailField,
   Phone: PhoneField,
+  Table: TableField,
+  "Table MultiSelect": TableField,
+  Attach: AttachField,
+  "Attach Image": AttachImageField,
   // Password field can use DataField with type="password" styling
   // or create a dedicated PasswordField component
 } as const;
@@ -70,6 +81,10 @@ export const fieldComponentMap = {
   Datetime: "DatetimeField",
   Email: "EmailField",
   Phone: "PhoneField",
+  Table: "TableField",
+  "Table MultiSelect": "TableField",
+  Attach: "AttachField",
+  "Attach Image": "AttachImageField",
 } as const;
 
 // Import component types for proper re-exports
@@ -85,3 +100,6 @@ import { DateField } from "./date-field";
 import { DatetimeField } from "./datetime-field";
 import { EmailField } from "./email-field";
 import { PhoneField } from "./phone-field";
+import { AttachField } from "./attach-field";
+import { AttachImageField } from "./attach-image-field";
+import { TableField } from "./table-field";
