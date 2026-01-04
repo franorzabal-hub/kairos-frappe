@@ -10,16 +10,27 @@
  * - Search functionality
  * - Dynamic columns based on DocType metadata
  * - Navigation to document detail view
+ * - Bulk selection with Shift+click range selection
+ * - Bulk operations: delete, export CSV, update field
+ * - Calendar view for DocTypes with date fields
  */
 
 "use client";
 
 import { useState, useMemo, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
-import { useFrappeGetDocList } from "frappe-react-sdk";
+import { useFrappeGetDocList, useFrappeDeleteDoc, useFrappeUpdateDoc } from "frappe-react-sdk";
 import { Plus, Search, RefreshCw, AlertCircle } from "lucide-react";
 
 import { useFrappeDocMeta, getFieldDisplayValue } from "@/hooks/use-frappe-meta";
+import { FilterBuilder, ActiveFilters } from "@/components/filters/filter-builder";
+import {
+  FilterCondition,
+  filtersToFrappe,
+  getValidFilters,
+} from "@/lib/filters";
+import { useBulkSelection, usePageSelectionState } from "@/hooks/use-bulk-selection";
+import { useNotification } from "@/hooks/use-notification";
 import {
   DataTable,
   type ColumnDef,
@@ -36,7 +47,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { HeaderCheckbox, RowCheckbox } from "@/components/list/selection-checkbox";
+import { BulkActionsBar, exportToCSV } from "@/components/list/bulk-actions-bar";
 import { DocTypeField } from "@/types/frappe";
+import { ViewSwitcher, type ViewType } from "@/components/views/view-switcher";
+import { CalendarView } from "@/components/views/calendar-view";
+import { KanbanView } from "@/components/views/kanban-view";
 
 // ============================================================================
 // Types
@@ -68,18 +84,40 @@ function slugToDocType(slug: string): string {
 }
 
 /**
- * Convert Frappe DocType name to URL slug
- * e.g., "Sales Invoice" -> "sales-invoice"
- */
-function docTypeToSlug(doctype: string): string {
-  return doctype.toLowerCase().replace(/\s+/g, "-");
-}
-
-/**
  * Format field value for display in table cell
  */
 function formatCellValue(value: unknown, field: DocTypeField): string {
   return getFieldDisplayValue(value, field);
+}
+
+/**
+ * Check if DocType has date fields (for calendar view availability)
+ */
+function hasDateFields(fields: DocTypeField[]): boolean {
+  return fields.some(
+    (field) => field.fieldtype === "Date" || field.fieldtype === "Datetime"
+  );
+}
+
+/**
+ * Find Select fields that can be used for Kanban grouping
+ * Returns the first suitable Select field (typically "status")
+ */
+function findKanbanField(fields: DocTypeField[]): DocTypeField | null {
+  // Priority: look for common status-like fields first
+  const priorityNames = ["status", "workflow_state", "state", "stage", "priority"];
+
+  for (const name of priorityNames) {
+    const field = fields.find(
+      (f) => f.fieldtype === "Select" && f.fieldname.toLowerCase() === name && f.options
+    );
+    if (field) return field;
+  }
+
+  // Fallback: any Select field with options
+  return fields.find(
+    (f) => f.fieldtype === "Select" && f.options && !f.hidden
+  ) || null;
 }
 
 // ============================================================================
@@ -91,14 +129,21 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
   const resolvedParams = use(params);
   const doctypeSlug = resolvedParams.doctype;
   const doctypeName = slugToDocType(doctypeSlug);
+  const { showSuccess, showError, showInfo } = useNotification();
 
   // ============================================================================
   // State
   // ============================================================================
 
+  // View state
+  const [currentView, setCurrentView] = useState<ViewType>("list");
+
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Filter state
+  const [filterConditions, setFilterConditions] = useState<FilterCondition[]>([]);
 
   // Pagination state
   const [pagination, setPagination] = useState<PaginationState>({
@@ -111,6 +156,21 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
     { id: "modified", desc: true },
   ]);
 
+  // Bulk selection state
+  const bulkSelection = useBulkSelection<string>();
+  const {
+    selectedIds,
+    selectedCount,
+    hasSelection,
+    isSelected,
+    toggleSelectAll,
+    handleRangeSelection,
+    clearSelection,
+  } = bulkSelection;
+
+  // Bulk operations loading state
+  const [isBulkOperating, setIsBulkOperating] = useState(false);
+
   // ============================================================================
   // Data Fetching
   // ============================================================================
@@ -121,8 +181,29 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
     isLoading: metaLoading,
     error: metaError,
     listViewFields,
+    visibleFields,
     titleField,
   } = useFrappeDocMeta({ doctype: doctypeName });
+
+  // Find kanban field for Kanban view
+  const kanbanField = useMemo(() => {
+    if (!meta?.fields) return null;
+    return findKanbanField(meta.fields);
+  }, [meta?.fields]);
+
+  // Determine available views based on DocType fields
+  const availableViews = useMemo<ViewType[]>(() => {
+    const views: ViewType[] = ["list"];
+    // Add Kanban if there's a suitable Select field
+    if (kanbanField) {
+      views.push("kanban");
+    }
+    // Add Calendar if there are date fields
+    if (meta?.fields && hasDateFields(meta.fields)) {
+      views.push("calendar");
+    }
+    return views;
+  }, [meta?.fields, kanbanField]);
 
   // Determine fields to fetch - always include name and title_field
   const fieldsToFetch = useMemo(() => {
@@ -141,14 +222,25 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
     return Array.from(fields);
   }, [listViewFields, titleField]);
 
-  // Build filters for search - use title field for simple search
-  const filters = useMemo(() => {
-    if (!debouncedSearch || !meta) return undefined;
+  // Build filters for API - combines search and filter conditions
+  const apiFilters = useMemo(() => {
+    const allFilters: [string, string, unknown][] = [];
 
-    // Search by title field (frappe-react-sdk doesn't support OR filters well)
-    const searchField = titleField || "name";
-    return [[searchField, "like", `%${debouncedSearch}%`]] as [string, string, string][];
-  }, [debouncedSearch, meta, titleField]);
+    // Add search filter
+    if (debouncedSearch && meta) {
+      const searchField = titleField || "name";
+      allFilters.push([searchField, "like", "%" + debouncedSearch + "%"]);
+    }
+
+    // Add filter conditions
+    const validFilters = getValidFilters(filterConditions);
+    if (validFilters.length > 0) {
+      const frappeFilters = filtersToFrappe(validFilters);
+      allFilters.push(...frappeFilters);
+    }
+
+    return allFilters.length > 0 ? allFilters : undefined;
+  }, [debouncedSearch, meta, titleField, filterConditions]);
 
   // Determine sort field and order
   const orderBy = useMemo(() => {
@@ -162,7 +254,7 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
     };
   }, [sorting]);
 
-  // Fetch document list
+  // Fetch document list (only when list view is active)
   // Using type assertion to handle dynamic field names
   const {
     data: documents,
@@ -176,12 +268,12 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
     {
       fields: fieldsToFetch as ["name"],
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      filters: filters as any,
+      filters: apiFilters as any,
       orderBy,
       limit_start: pagination.pageIndex * pagination.pageSize,
       limit: pagination.pageSize,
     },
-    meta ? `doclist_${doctypeName}_${pagination.pageIndex}_${pagination.pageSize}_${orderBy.field}_${orderBy.order}_${debouncedSearch}` : null
+    currentView === "list" && meta ? "doclist_" + doctypeName + "_" + pagination.pageIndex + "_" + pagination.pageSize + "_" + orderBy.field + "_" + orderBy.order + "_" + debouncedSearch + "_" + JSON.stringify(getValidFilters(filterConditions)) : null
   );
 
   // Fetch total count for pagination
@@ -191,9 +283,9 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
     {
       fields: ["count(name) as count"] as unknown as ["name"],
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      filters: filters as any,
+      filters: apiFilters as any,
     },
-    meta ? `doccount_${doctypeName}_${debouncedSearch}` : null
+    currentView === "list" && meta ? "doccount_" + doctypeName + "_" + debouncedSearch + "_" + JSON.stringify(getValidFilters(filterConditions)) : null
   );
 
   // Calculate total count and page count
@@ -206,6 +298,22 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
 
   const pageCount = Math.ceil(totalCount / pagination.pageSize);
 
+  // Get current page document IDs for selection
+  const currentPageIds = useMemo(() => {
+    if (!documents) return [];
+    return (documents as Record<string, unknown>[]).map((doc) => doc.name as string);
+  }, [documents]);
+
+  // Compute page selection state
+  const { isAllPageSelected, isPartiallySelected } = usePageSelectionState(
+    selectedIds,
+    currentPageIds
+  );
+
+  // Frappe mutations for bulk operations
+  const { deleteDoc } = useFrappeDeleteDoc();
+  const { updateDoc } = useFrappeUpdateDoc();
+
   // ============================================================================
   // Table Columns
   // ============================================================================
@@ -214,8 +322,33 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
   type DocRecord = Record<string, unknown>;
 
   const columns = useMemo<ColumnDef<DocRecord, unknown>[]>(() => {
-    // Always start with name/title column
+    // Start with checkbox column for selection
     const cols: ColumnDef<DocRecord, unknown>[] = [
+      {
+        id: "select",
+        header: () => (
+          <HeaderCheckbox
+            isAllSelected={isAllPageSelected}
+            isPartiallySelected={isPartiallySelected}
+            onToggleSelectAll={() => toggleSelectAll(currentPageIds)}
+            disabled={listLoading || currentPageIds.length === 0}
+          />
+        ),
+        cell: ({ row }) => {
+          const rowId = row.original.name as string;
+          return (
+            <RowCheckbox
+              rowId={rowId}
+              isSelected={isSelected(rowId)}
+              onSelectionChange={(id, event) => handleRangeSelection(id, currentPageIds, event)}
+              disabled={listLoading}
+            />
+          );
+        },
+        enableSorting: false,
+        size: 40,
+      },
+      // Name/title column
       {
         accessorKey: titleField || "name",
         header: titleField
@@ -291,11 +424,20 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
     }
 
     return cols;
-  }, [listViewFields, titleField]);
+  }, [listViewFields, titleField, isAllPageSelected, isPartiallySelected, toggleSelectAll, currentPageIds, isSelected, handleRangeSelection, listLoading]);
 
   // ============================================================================
   // Handlers
   // ============================================================================
+
+  // Handle view change
+  const handleViewChange = useCallback((view: ViewType) => {
+    setCurrentView(view);
+    // Clear selection when switching views
+    if (hasSelection) {
+      clearSelection();
+    }
+  }, [hasSelection, clearSelection]);
 
   // Handle search with debounce
   const handleSearchChange = useCallback(
@@ -316,18 +458,18 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
     []
   );
 
-  // Handle row click - navigate to document detail
+  // Handle row click - navigate to document detail (only if not clicking checkbox)
   const handleRowClick = useCallback(
     (row: Record<string, unknown>) => {
       const docName = row.name as string;
-      router.push(`/${doctypeSlug}/${encodeURIComponent(docName)}`);
+      router.push("/" + doctypeSlug + "/" + encodeURIComponent(docName));
     },
     [router, doctypeSlug]
   );
 
   // Handle new document
   const handleNewDocument = useCallback(() => {
-    router.push(`/${doctypeSlug}/new`);
+    router.push("/" + doctypeSlug + "/new");
   }, [router, doctypeSlug]);
 
   // Handle sorting change
@@ -340,9 +482,115 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
   // Handle pagination change
   const handlePaginationChange = useCallback(
     (newPagination: PaginationState) => {
+      // Warn about selection when changing pages
+      if (hasSelection && newPagination.pageIndex !== pagination.pageIndex) {
+        showInfo("Selection is preserved across pages. Clear selection to reset.");
+      }
       setPagination(newPagination);
     },
-    []
+    [hasSelection, pagination.pageIndex, showInfo]
+  );
+
+  // ============================================================================
+  // Bulk Operations
+  // ============================================================================
+
+  // Handle bulk delete
+  const handleBulkDelete = useCallback(async () => {
+    const selectedArray = Array.from(selectedIds);
+    if (selectedArray.length === 0) return;
+
+    setIsBulkOperating(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      for (const docName of selectedArray) {
+        try {
+          await deleteDoc(doctypeName, docName);
+          successCount++;
+        } catch (error) {
+          console.error("Failed to delete " + docName + ":", error);
+          errorCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        showSuccess("Deleted " + successCount + " " + doctypeName.toLowerCase() + (successCount !== 1 ? "s" : ""));
+        clearSelection();
+        refetchList();
+      }
+
+      if (errorCount > 0) {
+        showError("Failed to delete " + errorCount + " item" + (errorCount !== 1 ? "s" : ""));
+      }
+    } finally {
+      setIsBulkOperating(false);
+    }
+  }, [selectedIds, doctypeName, deleteDoc, showSuccess, showError, clearSelection, refetchList]);
+
+  // Handle bulk export to CSV
+  const handleBulkExport = useCallback(() => {
+    if (!documents || selectedIds.size === 0) return;
+
+    const selectedDocs = (documents as Record<string, unknown>[]).filter((doc) =>
+      selectedIds.has(doc.name as string)
+    );
+
+    // If selected docs are not all on current page, show info
+    if (selectedDocs.length < selectedIds.size) {
+      showInfo("Exporting " + selectedDocs.length + " items from current page. Selected items on other pages are not included.");
+    }
+
+    // Build column definitions for export
+    const exportColumns = [
+      { key: "name" as keyof typeof selectedDocs[0], header: "Name" },
+      ...listViewFields.map((field) => ({
+        key: field.fieldname as keyof typeof selectedDocs[0],
+        header: field.label,
+      })),
+    ];
+
+    const timestamp = new Date().toISOString().split("T")[0];
+    exportToCSV(selectedDocs, doctypeName.toLowerCase() + "-export-" + timestamp, exportColumns);
+    showSuccess("Exported " + selectedDocs.length + " " + doctypeName.toLowerCase() + (selectedDocs.length !== 1 ? "s" : "") + " to CSV");
+  }, [documents, selectedIds, listViewFields, doctypeName, showSuccess, showInfo]);
+
+  // Handle bulk field update
+  const handleBulkUpdate = useCallback(
+    async (fieldName: string, value: unknown) => {
+      const selectedArray = Array.from(selectedIds);
+      if (selectedArray.length === 0) return;
+
+      setIsBulkOperating(true);
+      let successCount = 0;
+      let errorCount = 0;
+
+      try {
+        for (const docName of selectedArray) {
+          try {
+            await updateDoc(doctypeName, docName, { [fieldName]: value });
+            successCount++;
+          } catch (error) {
+            console.error("Failed to update " + docName + ":", error);
+            errorCount++;
+          }
+        }
+
+        if (successCount > 0) {
+          showSuccess("Updated " + successCount + " " + doctypeName.toLowerCase() + (successCount !== 1 ? "s" : ""));
+          clearSelection();
+          refetchList();
+        }
+
+        if (errorCount > 0) {
+          showError("Failed to update " + errorCount + " item" + (errorCount !== 1 ? "s" : ""));
+        }
+      } finally {
+        setIsBulkOperating(false);
+      }
+    },
+    [selectedIds, doctypeName, updateDoc, showSuccess, showError, clearSelection, refetchList]
   );
 
   // ============================================================================
@@ -358,7 +606,10 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
             <Skeleton className="h-9 w-48" />
             <Skeleton className="h-5 w-64" />
           </div>
-          <Skeleton className="h-9 w-32" />
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-9 w-24" />
+            <Skeleton className="h-9 w-32" />
+          </div>
         </div>
 
         {/* Search skeleton */}
@@ -432,73 +683,151 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
             Manage {doctypeName.toLowerCase()} records
           </p>
         </div>
-        <Button onClick={handleNewDocument}>
-          <Plus className="mr-2 h-4 w-4" />
-          New {doctypeName}
-        </Button>
-      </div>
-
-      {/* Search and Actions Bar */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={`Search ${doctypeName.toLowerCase()}...`}
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="pl-9"
+        <div className="flex items-center gap-3">
+          {/* View Switcher */}
+          <ViewSwitcher
+            currentView={currentView}
+            onViewChange={handleViewChange}
+            availableViews={availableViews}
           />
+          <Button onClick={handleNewDocument}>
+            <Plus className="mr-2 h-4 w-4" />
+            New {doctypeName}
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => refetchList()}
-          disabled={isValidating}
-          aria-label="Refresh list"
-        >
-          <RefreshCw
-            className={`h-4 w-4 ${isValidating ? "animate-spin" : ""}`}
-          />
-        </Button>
       </div>
 
-      {/* List Error */}
-      {listError && (
-        <Card className="border-destructive">
-          <CardContent className="pt-6">
-            <p className="text-sm text-destructive">
-              Error loading documents: {listError.message}
+      {/* List View */}
+      {currentView === "list" && (
+        <>
+          {/* Search, Filters, and Actions Bar */}
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder={"Search " + doctypeName.toLowerCase() + "..."}
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="pl-9"
+              />
+            </div>
+            <FilterBuilder
+              fields={visibleFields}
+              filters={filterConditions}
+              onFiltersChange={(newFilters) => {
+                setFilterConditions(newFilters);
+                setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+              }}
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => refetchList()}
+              disabled={isValidating}
+              aria-label="Refresh list"
+            >
+              <RefreshCw
+                className={"h-4 w-4 " + (isValidating ? "animate-spin" : "")}
+              />
+            </Button>
+          </div>
+
+          {/* Active Filters */}
+          {getValidFilters(filterConditions).length > 0 && (
+            <ActiveFilters
+              filters={filterConditions}
+              fields={visibleFields}
+              onRemove={(id) =>
+                setFilterConditions((prev) => prev.filter((f) => f.id !== id))
+              }
+              onClearAll={() => setFilterConditions([])}
+            />
+          )}
+
+          {/* Selection Info */}
+          {hasSelection && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{selectedCount} item{selectedCount !== 1 ? "s" : ""} selected</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearSelection}
+                className="h-auto py-1 px-2"
+              >
+                Clear
+              </Button>
+            </div>
+          )}
+
+          {/* List Error */}
+          {listError && (
+            <Card className="border-destructive">
+              <CardContent className="pt-6">
+                <p className="text-sm text-destructive">
+                  Error loading documents: {listError.message}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Data Table */}
+          <DataTable
+            columns={columns}
+            data={(documents as Record<string, unknown>[]) ?? []}
+            isLoading={listLoading}
+            pageCount={pageCount}
+            pagination={pagination}
+            onPaginationChange={handlePaginationChange}
+            sorting={sorting}
+            onSortingChange={handleSortingChange}
+            onRowClick={handleRowClick}
+            emptyMessage={
+              debouncedSearch
+                ? "No " + doctypeName.toLowerCase() + " found matching \"" + debouncedSearch + "\""
+                : "No " + doctypeName.toLowerCase() + " found. Click \"New " + doctypeName + "\" to create one."
+            }
+            showPageSizeSelector={true}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+          />
+
+          {/* Total Count Info */}
+          {!listLoading && totalCount > 0 && (
+            <p className="text-sm text-muted-foreground text-center">
+              Total: {totalCount.toLocaleString()} {doctypeName.toLowerCase()}
+              {totalCount !== 1 ? "s" : ""}
             </p>
-          </CardContent>
-        </Card>
+          )}
+
+          {/* Bulk Actions Bar */}
+          <BulkActionsBar
+            selectedCount={selectedCount}
+            hasSelection={hasSelection}
+            onClearSelection={clearSelection}
+            onBulkDelete={handleBulkDelete}
+            onBulkExport={handleBulkExport}
+            onBulkUpdate={handleBulkUpdate}
+            updateableFields={visibleFields}
+            doctypeName={doctypeName}
+            isLoading={isBulkOperating}
+          />
+        </>
       )}
 
-      {/* Data Table */}
-      <DataTable
-        columns={columns}
-        data={(documents as Record<string, unknown>[]) ?? []}
-        isLoading={listLoading}
-        pageCount={pageCount}
-        pagination={pagination}
-        onPaginationChange={handlePaginationChange}
-        sorting={sorting}
-        onSortingChange={handleSortingChange}
-        onRowClick={handleRowClick}
-        emptyMessage={
-          debouncedSearch
-            ? `No ${doctypeName.toLowerCase()} found matching "${debouncedSearch}"`
-            : `No ${doctypeName.toLowerCase()} found. Click "New ${doctypeName}" to create one.`
-        }
-        showPageSizeSelector={true}
-        pageSizeOptions={PAGE_SIZE_OPTIONS}
-      />
+      {/* Calendar View */}
+      {/* Kanban View */}
+      {currentView === "kanban" && kanbanField && (
+        <KanbanView
+          doctype={doctypeName}
+          columnField={kanbanField.fieldname}
+        />
+      )}
 
-      {/* Total Count Info */}
-      {!listLoading && totalCount > 0 && (
-        <p className="text-sm text-muted-foreground text-center">
-          Total: {totalCount.toLocaleString()} {doctypeName.toLowerCase()}
-          {totalCount !== 1 ? "s" : ""}
-        </p>
+      {/* Calendar View */}
+      {currentView === "calendar" && (
+        <CalendarView
+          doctype={doctypeName}
+          doctypeSlug={doctypeSlug}
+        />
       )}
     </div>
   );
