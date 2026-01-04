@@ -492,8 +492,10 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const navigateToRecord = useCallback((record: RecordItem) => {
     const slug = doctypeToSlug(record.doctype);
     const url = `/${slug}/${encodeURIComponent(record.name)}`;
-    onOpenChange(false);
+    // Navigate first, then close dialog to avoid race conditions
     router.push(url);
+    // Use setTimeout to ensure navigation starts before dialog closes
+    setTimeout(() => onOpenChange(false), 100);
   }, [router, onOpenChange]);
 
   // Keyboard navigation
