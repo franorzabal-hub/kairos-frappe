@@ -6,8 +6,9 @@
 
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { LogOut, Settings, User, Loader2 } from "lucide-react";
+import { LogOut, Settings, User, Loader2, Plus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -24,9 +25,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { NotificationBell } from "@/components/notifications";
+import { NewDocumentDialog } from "@/components/dialogs";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
 
 interface HeaderProps {
   className?: string;
@@ -35,6 +36,7 @@ interface HeaderProps {
 export function Header({ className }: HeaderProps) {
   const { user, isLoading, logout } = useCurrentUser();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showNewDoc, setShowNewDoc] = useState(false);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -66,8 +68,18 @@ export function Header({ className }: HeaderProps) {
           <Awesomebar className="w-full" />
         </div>
 
-        {/* Notifications, Theme Toggle & User Dropdown */}
+        {/* New Document, Notifications, Theme Toggle & User Dropdown */}
         <div className="flex items-center gap-2">
+          {/* New Document */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowNewDoc(true)}
+            title="New Document (Ctrl+N)"
+          >
+            <Plus className="h-5 w-5" />
+          </Button>
+
           {/* Notifications */}
           <NotificationBell />
 
@@ -135,6 +147,9 @@ export function Header({ className }: HeaderProps) {
           )}
         </div>
       </div>
+
+      {/* New Document Dialog */}
+      <NewDocumentDialog open={showNewDoc} onOpenChange={setShowNewDoc} />
     </header>
   );
 }

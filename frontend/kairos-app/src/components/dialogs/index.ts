@@ -12,3 +12,5 @@ export type { AlertDialogCustomProps, AlertVariant } from "./alert-dialog";
 
 export { FormDialog } from "./form-dialog";
 export type { FormDialogProps } from "./form-dialog";
+
+export { NewDocumentDialog } from "./new-document-dialog";
