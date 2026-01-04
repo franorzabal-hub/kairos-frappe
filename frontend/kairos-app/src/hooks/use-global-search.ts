@@ -46,7 +46,7 @@ export interface UseGlobalSearchReturn {
 // ============================================================================
 
 const RECENT_ITEMS_KEY = "kairos_recent_items";
-const FRAPPE_URL = process.env.NEXT_PUBLIC_FRAPPE_URL || "http://kairos.localhost:8000";
+const API_BASE = "/api/frappe";
 
 /**
  * DocTypes available for search in Kairos
@@ -148,7 +148,7 @@ export function useGlobalSearch(): UseGlobalSearchReturn {
       const fetchPromises = SEARCHABLE_DOCTYPES.map(async (doctype) => {
         try {
           const response = await fetch(
-            `${FRAPPE_URL}/api/method/frappe.client.get_list`,
+            `${API_BASE}/api/method/frappe.client.get_list`,
             {
               method: "POST",
               credentials: "include",
@@ -251,7 +251,7 @@ export function useGlobalSearch(): UseGlobalSearchReturn {
         const searchPromises = SEARCHABLE_DOCTYPES.map(async (doctype) => {
           try {
             const response = await fetch(
-              `${FRAPPE_URL}/api/method/frappe.client.get_list`,
+              `${API_BASE}/api/method/frappe.client.get_list`,
               {
                 method: "POST",
                 credentials: "include",
