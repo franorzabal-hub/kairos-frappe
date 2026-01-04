@@ -48,6 +48,7 @@ interface SearchDialogProps {
 interface RecordItem {
   doctype: string;
   name: string;
+  label?: string; // Display name (full_name, title, etc.)
 }
 
 const DOCTYPE_ICONS: Record<string, LucideIcon> = {
@@ -125,6 +126,7 @@ function RecordRow({
   onDoubleClick: () => void;
 }) {
   const Icon = DOCTYPE_ICONS[record.doctype] || FileText;
+  const displayName = record.label || record.name;
 
   return (
     <div
@@ -137,11 +139,14 @@ function RecordRow({
           : "hover:bg-slate-50 border border-transparent"
       )}
     >
-      <Avatar name={record.name} className="w-9 h-9" />
+      <Avatar name={displayName} className="w-9 h-9" />
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-slate-900 text-sm">{record.name}</span>
+          <span className="font-medium text-slate-900 text-sm truncate">{displayName}</span>
+          {record.label && (
+            <span className="text-slate-400 text-xs truncate">{record.name}</span>
+          )}
         </div>
       </div>
 
@@ -171,7 +176,7 @@ function DetailRow({
 }
 
 function RecordPreview({ record }: { record: RecordItem | null }) {
-  const { data: docData, isLoading } = useFrappeGetDoc(
+  const { data: docData, isLoading, error } = useFrappeGetDoc(
     record?.doctype || "",
     record?.name || "",
     record ? undefined : null
@@ -190,35 +195,34 @@ function RecordPreview({ record }: { record: RecordItem | null }) {
   }
 
   const doc = docData as Record<string, unknown> | undefined;
+  const displayName = record.label || record.name;
 
-  const displayName = (doc?.full_name || doc?.student_name || doc?.guardian_name || doc?.title || record.name) as string;
+  // Extract all possible fields
+  const fullName = (doc?.full_name || doc?.student_name || doc?.guardian_name || doc?.institution_name) as string | undefined;
+  const title = doc?.title as string | undefined;
   const description = doc?.description as string | undefined;
   const email = doc?.email as string | undefined;
   const phone = (doc?.phone || doc?.mobile_no || doc?.contact_phone) as string | undefined;
   const website = doc?.website as string | undefined;
+  const address = doc?.address as string | undefined;
   const city = doc?.city as string | undefined;
   const state = doc?.state as string | undefined;
   const country = doc?.country as string | undefined;
   const status = doc?.status as string | undefined;
+  const program = doc?.program as string | undefined;
+  const subject = doc?.subject as string | undefined;
+  const content = doc?.content as string | undefined;
 
   return (
     <div className="flex flex-col h-full">
       {/* Detail Header */}
-      <div className="px-6 py-3 border-b border-slate-100 flex items-center gap-3 flex-shrink-0">
+      <div className="shrink-0 px-6 py-3 border-b border-slate-100 flex items-center gap-3">
         <Avatar name={displayName} className="w-7 h-7" />
-        <h2 className="text-base font-semibold text-slate-900">{displayName}</h2>
-        {!status && (
-          <Badge variant="status">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-            {record.doctype}
-          </Badge>
-        )}
-        {status && (
-          <Badge variant="status">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-            {status}
-          </Badge>
-        )}
+        <h2 className="text-base font-semibold text-slate-900 flex-1 truncate">{displayName}</h2>
+        <Badge variant="status">
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+          {status || record.doctype}
+        </Badge>
       </div>
 
       {/* Detail Content */}
@@ -231,11 +235,41 @@ function RecordPreview({ record }: { record: RecordItem | null }) {
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
           </div>
+        ) : error ? (
+          <div className="text-sm text-red-500">Failed to load details</div>
         ) : (
           <div className="space-y-4">
-            {description && (
+            {/* Name/Title if different from displayName */}
+            {fullName && fullName !== displayName && (
+              <DetailRow icon={User}>
+                <span className="text-sm text-slate-700">{fullName}</span>
+              </DetailRow>
+            )}
+
+            {title && title !== displayName && (
               <DetailRow icon={FileText}>
-                <p className="text-sm text-slate-600 leading-relaxed">{description}</p>
+                <span className="text-sm text-slate-700">{title}</span>
+              </DetailRow>
+            )}
+
+            {/* Subject for messages */}
+            {subject && (
+              <DetailRow icon={MessageSquare}>
+                <span className="text-sm text-slate-700">{subject}</span>
+              </DetailRow>
+            )}
+
+            {/* Description or content */}
+            {(description || content) && (
+              <DetailRow icon={FileText}>
+                <p className="text-sm text-slate-600 leading-relaxed">{description || content}</p>
+              </DetailRow>
+            )}
+
+            {/* Program for enrollments */}
+            {program && (
+              <DetailRow icon={GraduationCap}>
+                <span className="text-sm text-slate-700">{program}</span>
               </DetailRow>
             )}
 
@@ -266,27 +300,18 @@ function RecordPreview({ record }: { record: RecordItem | null }) {
               </DetailRow>
             )}
 
-            {city && (
+            {/* Location */}
+            {(address || city || state || country) && (
               <DetailRow icon={MapPin}>
-                <span className="text-sm text-slate-700">{city}</span>
+                <span className="text-sm text-slate-700">
+                  {[address, city, state, country].filter(Boolean).join(", ")}
+                </span>
               </DetailRow>
             )}
 
-            {state && (
-              <DetailRow icon={MapPin}>
-                <span className="text-sm text-slate-700">{state}</span>
-              </DetailRow>
-            )}
-
-            {country && (
-              <DetailRow icon={MapPin}>
-                <span className="text-sm text-slate-700">{country}</span>
-              </DetailRow>
-            )}
-
-            {/* Show record ID */}
+            {/* Record ID */}
             <DetailRow icon={FileText}>
-              <span className="text-sm text-slate-500">{record.name}</span>
+              <span className="text-xs text-slate-400 font-mono">{record.name}</span>
             </DetailRow>
           </div>
         )}
@@ -321,6 +346,45 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     }
   }, [open]);
 
+  // Fields to fetch for each DocType to get display name
+  const DOCTYPE_FIELDS: Record<string, string[]> = {
+    Student: ["name", "full_name", "first_name", "last_name"],
+    Guardian: ["name", "guardian_name", "full_name"],
+    Institution: ["name", "institution_name", "title"],
+    Message: ["name", "subject", "title"],
+    News: ["name", "title", "headline"],
+    "School Event": ["name", "title", "event_name"],
+    Grade: ["name", "title", "grade_name"],
+    Enrollment: ["name", "student_name", "program"],
+    "Guardian Invite": ["name", "guardian_name", "email"],
+  };
+
+  // Get display label from item based on doctype
+  const getDisplayLabel = (doctype: string, item: Record<string, string>): string => {
+    switch (doctype) {
+      case "Student":
+        return item.full_name || `${item.first_name || ""} ${item.last_name || ""}`.trim() || item.name;
+      case "Guardian":
+        return item.guardian_name || item.full_name || item.name;
+      case "Institution":
+        return item.institution_name || item.title || item.name;
+      case "Message":
+        return item.subject || item.title || item.name;
+      case "News":
+        return item.title || item.headline || item.name;
+      case "School Event":
+        return item.title || item.event_name || item.name;
+      case "Grade":
+        return item.title || item.grade_name || item.name;
+      case "Enrollment":
+        return item.student_name || item.program || item.name;
+      case "Guardian Invite":
+        return item.guardian_name || item.email || item.name;
+      default:
+        return item.title || item.name;
+    }
+  };
+
   // Load records using the /api/frappe proxy
   const loadRecords = async () => {
     setIsLoading(true);
@@ -331,6 +395,8 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
 
       const promises = SEARCHABLE_DOCTYPES.map(async (doctype) => {
         try {
+          const fields = DOCTYPE_FIELDS[doctype] || ["name", "title"];
+
           const response = await fetch("/api/frappe/api/method/frappe.client.get_list", {
             method: "POST",
             credentials: "include",
@@ -340,7 +406,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
             },
             body: JSON.stringify({
               doctype,
-              fields: ["name"],
+              fields,
               limit_page_length: 15,
               order_by: "modified desc",
             }),
@@ -349,9 +415,10 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
           const data = await response.json();
 
           if (response.ok && data.message) {
-            return data.message.map((item: { name: string }) => ({
+            return data.message.map((item: Record<string, string>) => ({
               doctype,
               name: item.name,
+              label: getDisplayLabel(doctype, item),
             }));
           }
 
@@ -381,7 +448,8 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   // Filter records
   const filteredRecords = records.filter((record) =>
     record.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    record.doctype.toLowerCase().includes(searchQuery.toLowerCase())
+    record.doctype.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (record.label && record.label.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   // Update selection when filtered records change
