@@ -1,7 +1,7 @@
 [
  {
   "charts": [],
-  "content": "[]",
+  "content": "[{\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Accesos R\\u00e1pidos</b></span>\", \"col\": 12}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Instituciones\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Estudiantes\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Padres\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Mensajes\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Noticias\", \"col\": 3}}, {\"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Eventos\", \"col\": 3}}, {\"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>M\\u00f3dulos</b></span>\", \"col\": 12}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Estructura Acad\\u00e9mica\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Personas\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Comunicaci\\u00f3n\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Noticias y Eventos\", \"col\": 4}}]",
   "custom_blocks": [],
   "docstatus": 0,
   "doctype": "Workspace",
@@ -355,7 +355,7 @@
     "type": "Link"
    }
   ],
-  "modified": "2026-01-04 09:39:41.657699",
+  "modified": "2026-01-04 09:46:23.684960",
   "module": "Kairos",
   "name": "Kairos",
   "number_cards": [],
