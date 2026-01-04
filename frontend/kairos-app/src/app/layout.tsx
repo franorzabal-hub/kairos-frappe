@@ -10,6 +10,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { FrappeProvider } from "@/lib/frappe-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
+import { DialogProvider } from "@/providers/dialog-provider";
+import { RealtimeProvider } from "@/providers/realtime-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
@@ -39,10 +42,21 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <FrappeProvider>
-          {children}
-          <Toaster position="top-right" richColors closeButton />
-        </FrappeProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange={false}
+        >
+          <FrappeProvider>
+            <RealtimeProvider autoConnect>
+              <DialogProvider>
+                {children}
+                <Toaster position="top-right" richColors closeButton />
+              </DialogProvider>
+            </RealtimeProvider>
+          </FrappeProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

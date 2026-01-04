@@ -1,17 +1,17 @@
 /**
  * Header Component
  *
- * Top navigation bar with logo, search bar (awesomebar), and user dropdown menu
+ * Top navigation bar with logo, search bar (awesomebar), notifications, theme toggle, and user dropdown menu
  */
 
 "use client";
 
 import Link from "next/link";
-import { LogOut, Search, Settings, User } from "lucide-react";
+import { LogOut, Settings, User, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Awesomebar } from "@/components/awesomebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -22,23 +22,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { NotificationBell } from "@/components/notifications";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
 
 interface HeaderProps {
   className?: string;
 }
 
 export function Header({ className }: HeaderProps) {
-  // TODO: Get user data from auth context/session
-  const user = {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    avatar: "",
-    initials: "JD",
-  };
+  const { user, isLoading, logout } = useCurrentUser();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = () => {
-    // TODO: Implement logout logic with Frappe
-    console.log("Logout clicked");
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await logout();
   };
 
   return (
@@ -61,71 +61,78 @@ export function Header({ className }: HeaderProps) {
           </Link>
         </div>
 
-        {/* Search Bar (Awesomebar) - Centered */}
+        {/* Awesomebar - Global Search */}
         <div className="flex-1 flex justify-center max-w-2xl mx-auto">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search students, guardians, messages..."
-              className="w-full pl-10 pr-4 bg-muted/50 border-muted-foreground/20 focus:bg-background"
-            />
-            <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-              <span className="text-xs">Cmd</span>K
-            </kbd>
-          </div>
+          <Awesomebar className="w-full" />
         </div>
 
-        {/* User Dropdown */}
+        {/* Notifications, Theme Toggle & User Dropdown */}
         <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="relative h-9 w-9 rounded-full"
-              >
-                <Avatar className="h-9 w-9">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                    {user.initials}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user.name}</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {user.email}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem asChild>
-                  <Link href="/profile" className="cursor-pointer">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </Link>
+          {/* Notifications */}
+          <NotificationBell />
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
+          {/* User Dropdown */}
+          {isLoading ? (
+            <Skeleton className="h-9 w-9 rounded-full" />
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="relative h-9 w-9 rounded-full"
+                  disabled={isLoggingOut}
+                >
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src={user?.avatar || ""} alt={user?.fullName || "User"} />
+                    <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                      {user?.initials || "??"}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user?.fullName || "User"}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.email || ""}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link href="/User" className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings" className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="cursor-pointer text-destructive focus:text-destructive"
+                >
+                  {isLoggingOut ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogOut className="mr-2 h-4 w-4" />
+                  )}
+                  <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings" className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleLogout}
-                className="cursor-pointer text-destructive focus:text-destructive"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     </header>

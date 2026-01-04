@@ -4,6 +4,7 @@
  * Dynamic page that displays a single document for any DocType
  * Handles both creation (id === "new") and editing modes
  * Uses dynamic form rendering based on DocType metadata
+ * Includes activity timeline sidebar for existing documents
  */
 
 "use client";
@@ -16,10 +17,11 @@ import {
   useFrappeCreateDoc,
   useFrappeUpdateDoc,
   useFrappeDeleteDoc,
-  useFrappeGetCall,
 } from "frappe-react-sdk";
 import { useNotification } from "@/hooks/use-notification";
+import { useFrappeDocMeta } from "@/hooks/use-frappe-meta";
 import { DynamicForm } from "@/components/forms/dynamic-form";
+import { Timeline } from "@/components/timeline";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -40,7 +42,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { slugToDoctype } from "@/lib/utils";
 import { ChevronRight, ArrowLeft, Save, Trash2, Loader2 } from "lucide-react";
-import { DocTypeMeta } from "@/types/frappe";
 
 interface DocTypeDetailPageProps {
   params: Promise<{
@@ -58,18 +59,16 @@ export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
   const doctype = slugToDoctype(doctypeSlug);
   const isNew = id === "new";
 
-  // Fetch DocType metadata using frappe.desk.form.load.getdoctype
+  // Fetch DocType metadata with permissions applied
   const {
-    data: metaResponse,
+    meta: docMeta,
     isLoading: metaLoading,
     error: metaError,
-  } = useFrappeGetCall<{ docs: DocTypeMeta[] }>(
-    "frappe.desk.form.load.getdoctype",
-    { doctype, with_parent: 0 },
-    `doctype_meta_${doctype}`
-  );
-
-  const docMeta = metaResponse?.docs?.[0];
+    permissions,
+  } = useFrappeDocMeta({
+    doctype,
+    isNewDoc: isNew,
+  });
 
   // Fetch existing document (only if not creating new)
   const {
@@ -172,7 +171,16 @@ export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
           isDeleting={false}
           onBack={handleBack}
         />
-        <LoadingSkeleton />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <LoadingSkeleton />
+          </div>
+          {!isNew && (
+            <div className="lg:col-span-1">
+              <TimelineSkeleton />
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -192,15 +200,37 @@ export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
         onDelete={handleDelete}
       />
 
-      {docMeta && (
-        <DynamicForm
-          docMeta={docMeta}
-          initialData={isNew ? undefined : doc}
-          onSubmit={handleSubmit}
-          isLoading={isSaving}
-          formId="doctype-form"
-        />
-      )}
+      {/* Main content with sidebar layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Form - takes 2/3 on large screens */}
+        <div className="lg:col-span-2">
+          {docMeta && (
+            <DynamicForm
+              docMeta={docMeta}
+              initialData={isNew ? undefined : doc}
+              onSubmit={handleSubmit}
+              isLoading={isSaving}
+              formId="doctype-form"
+            />
+          )}
+        </div>
+
+        {/* Timeline Sidebar - only shown for existing documents */}
+        {!isNew && (
+          <div className="lg:col-span-1">
+            <Card className="sticky top-6">
+              <CardContent className="pt-6">
+                <Timeline
+                  doctype={doctype}
+                  docname={id}
+                  maxItems={10}
+                  showInput={true}
+                />
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -326,7 +356,7 @@ function Header({
 }
 
 /**
- * Loading Skeleton
+ * Loading Skeleton for Form
  */
 function LoadingSkeleton() {
   return (
@@ -359,5 +389,39 @@ function LoadingSkeleton() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+/**
+ * Loading Skeleton for Timeline
+ */
+function TimelineSkeleton() {
+  return (
+    <Card className="sticky top-6">
+      <CardContent className="pt-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-5 w-20" />
+          <Skeleton className="h-8 w-8 rounded" />
+        </div>
+        <Skeleton className="h-20 w-full" />
+        <div className="flex gap-2 border-b pb-2">
+          <Skeleton className="h-8 w-12" />
+          <Skeleton className="h-8 w-20" />
+          <Skeleton className="h-8 w-18" />
+        </div>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="flex gap-3">
+            <Skeleton className="h-8 w-8 rounded-full flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+              <Skeleton className="h-12 w-full rounded-lg" />
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }

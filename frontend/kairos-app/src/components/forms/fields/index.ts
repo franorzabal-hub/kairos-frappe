@@ -15,6 +15,7 @@ export { CurrencyField } from "./currency-field";
 export { SelectField } from "./select-field";
 export { CheckField } from "./check-field";
 export { LinkField } from "./link-field";
+export { MultiSelectField } from "./multiselect-field";
 
 // Date/Time fields
 export { DateField } from "./date-field";
@@ -31,6 +32,9 @@ export { AttachImageField } from "./attach-image-field";
 // Table fields
 export { TableField } from "./table-field";
 
+// Rich text fields
+export { TextEditorField } from "./text-editor-field";
+
 // Field type to component mapping for Frappe field types
 export const FieldComponents = {
   Data: DataField,
@@ -44,12 +48,13 @@ export const FieldComponents = {
   Text: TextField,
   "Small Text": TextField,
   "Long Text": TextField,
-  "Text Editor": TextField,
+  "Text Editor": TextEditorField,
   Datetime: DatetimeField,
   Email: EmailField,
   Phone: PhoneField,
   Table: TableField,
   "Table MultiSelect": TableField,
+  MultiSelect: MultiSelectField,
   Attach: AttachField,
   "Attach Image": AttachImageField,
   // Password field can use DataField with type="password" styling
@@ -77,12 +82,13 @@ export const fieldComponentMap = {
   Text: "TextField",
   "Small Text": "TextField",
   "Long Text": "TextField",
-  "Text Editor": "TextField",
+  "Text Editor": "TextEditorField",
   Datetime: "DatetimeField",
   Email: "EmailField",
   Phone: "PhoneField",
   Table: "TableField",
   "Table MultiSelect": "TableField",
+  MultiSelect: "MultiSelectField",
   Attach: "AttachField",
   "Attach Image": "AttachImageField",
 } as const;
@@ -103,3 +109,5 @@ import { PhoneField } from "./phone-field";
 import { AttachField } from "./attach-field";
 import { AttachImageField } from "./attach-image-field";
 import { TableField } from "./table-field";
+import { TextEditorField } from "./text-editor-field";
+import { MultiSelectField } from "./multiselect-field";
