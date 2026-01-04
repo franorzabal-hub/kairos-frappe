@@ -17,6 +17,12 @@
   "tax_id",
   "founded_date",
   "is_active",
+  "trial_section",
+  "is_trial",
+  "trial_status",
+  "column_break_trial",
+  "trial_started_at",
+  "trial_expires_at",
   "branding_section",
   "logo",
   "website",
@@ -88,6 +94,45 @@
    "fieldtype": "Check",
    "in_list_view": 1,
    "label": "Is Active"
+  },
+  {
+   "fieldname": "trial_section",
+   "fieldtype": "Section Break",
+   "label": "Trial Information",
+   "collapsible": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_trial",
+   "fieldtype": "Check",
+   "label": "Is Trial Account",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "trial_status",
+   "fieldtype": "Select",
+   "label": "Trial Status",
+   "options": "\nActive\nExpired\nConverted",
+   "in_standard_filter": 1,
+   "depends_on": "eval:doc.is_trial"
+  },
+  {
+   "fieldname": "column_break_trial",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "trial_started_at",
+   "fieldtype": "Datetime",
+   "label": "Trial Started At",
+   "read_only": 1,
+   "depends_on": "eval:doc.is_trial"
+  },
+  {
+   "fieldname": "trial_expires_at",
+   "fieldtype": "Datetime",
+   "label": "Trial Expires At",
+   "depends_on": "eval:doc.is_trial"
   },
   {
    "fieldname": "branding_section",

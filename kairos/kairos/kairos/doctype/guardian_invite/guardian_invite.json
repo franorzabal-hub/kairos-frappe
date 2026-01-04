@@ -1,0 +1,166 @@
+{
+	"actions": [],
+	"allow_rename": 0,
+	"autoname": "naming_series:",
+	"creation": "2025-01-03 00:00:00.000000",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"naming_series",
+		"token",
+		"email",
+		"column_break_basic",
+		"institution",
+		"guardian",
+		"section_break_students",
+		"student_ids",
+		"section_break_expiration",
+		"expires",
+		"column_break_expiration",
+		"used",
+		"used_at",
+		"section_break_audit",
+		"created_by_user"
+	],
+	"fields": [
+		{
+			"default": "GINV-.#####",
+			"fieldname": "naming_series",
+			"fieldtype": "Select",
+			"hidden": 1,
+			"label": "Naming Series",
+			"options": "GINV-.#####",
+			"reqd": 1
+		},
+		{
+			"fieldname": "token",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Token",
+			"read_only": 1,
+			"unique": 1
+		},
+		{
+			"fieldname": "email",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Email",
+			"options": "Email",
+			"reqd": 1
+		},
+		{
+			"fieldname": "column_break_basic",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "institution",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Institution",
+			"options": "Institution",
+			"reqd": 1
+		},
+		{
+			"fieldname": "guardian",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Guardian",
+			"options": "Guardian"
+		},
+		{
+			"fieldname": "section_break_students",
+			"fieldtype": "Section Break",
+			"label": "Students"
+		},
+		{
+			"fieldname": "student_ids",
+			"fieldtype": "Table",
+			"label": "Students",
+			"options": "Guardian Invite Student",
+			"reqd": 1
+		},
+		{
+			"fieldname": "section_break_expiration",
+			"fieldtype": "Section Break",
+			"label": "Expiration & Usage"
+		},
+		{
+			"fieldname": "expires",
+			"fieldtype": "Datetime",
+			"in_list_view": 1,
+			"label": "Expires"
+		},
+		{
+			"fieldname": "column_break_expiration",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "0",
+			"fieldname": "used",
+			"fieldtype": "Check",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Used"
+		},
+		{
+			"fieldname": "used_at",
+			"fieldtype": "Datetime",
+			"label": "Used At",
+			"read_only": 1
+		},
+		{
+			"fieldname": "section_break_audit",
+			"fieldtype": "Section Break",
+			"label": "Audit"
+		},
+		{
+			"fieldname": "created_by_user",
+			"fieldtype": "Link",
+			"label": "Created By User",
+			"options": "User",
+			"read_only": 1
+		}
+	],
+	"index_web_pages_for_search": 1,
+	"links": [],
+	"modified": "2025-01-03 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "Kairos",
+	"name": "Guardian Invite",
+	"naming_rule": "By \"Naming Series\" field",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "System Manager",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 0,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "School Admin",
+			"share": 0,
+			"write": 1
+		}
+	],
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"track_changes": 1
+}
