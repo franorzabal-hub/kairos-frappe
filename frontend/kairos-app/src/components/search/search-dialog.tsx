@@ -142,12 +142,7 @@ function RecordRow({
       <Avatar name={displayName} className="w-9 h-9" />
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-slate-900 text-sm truncate">{displayName}</span>
-          {record.label && (
-            <span className="text-slate-400 text-xs truncate">{record.name}</span>
-          )}
-        </div>
+        <span className="font-medium text-slate-900 text-sm truncate block">{displayName}</span>
       </div>
 
       <Badge variant="company">
@@ -176,11 +171,49 @@ function DetailRow({
 }
 
 function RecordPreview({ record }: { record: RecordItem | null }) {
-  const { data: docData, isLoading, error } = useFrappeGetDoc(
-    record?.doctype || "",
-    record?.name || "",
-    record ? undefined : null
-  );
+  const [doc, setDoc] = useState<Record<string, unknown> | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch document when record changes
+  useEffect(() => {
+    if (!record) {
+      setDoc(null);
+      return;
+    }
+
+    const fetchDoc = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const encodedName = encodeURIComponent(record.name);
+        const response = await fetch(
+          `/api/frappe/api/resource/${record.doctype}/${encodedName}`,
+          {
+            method: "GET",
+            credentials: "include",
+            headers: { Accept: "application/json" },
+          }
+        );
+
+        const result = await response.json();
+
+        if (response.ok && result.data) {
+          setDoc(result.data);
+        } else {
+          setError("Failed to load");
+        }
+      } catch (err) {
+        console.error("[Preview] Error:", err);
+        setError("Failed to load");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDoc();
+  }, [record?.doctype, record?.name]);
 
   if (!record) {
     return (
@@ -194,11 +227,12 @@ function RecordPreview({ record }: { record: RecordItem | null }) {
     );
   }
 
-  const doc = docData as Record<string, unknown> | undefined;
   const displayName = record.label || record.name;
 
-  // Extract all possible fields
+  // Extract all possible fields from the document
   const fullName = (doc?.full_name || doc?.student_name || doc?.guardian_name || doc?.institution_name) as string | undefined;
+  const firstName = doc?.first_name as string | undefined;
+  const lastName = doc?.last_name as string | undefined;
   const title = doc?.title as string | undefined;
   const description = doc?.description as string | undefined;
   const email = doc?.email as string | undefined;
@@ -212,6 +246,12 @@ function RecordPreview({ record }: { record: RecordItem | null }) {
   const program = doc?.program as string | undefined;
   const subject = doc?.subject as string | undefined;
   const content = doc?.content as string | undefined;
+  const dateOfBirth = doc?.date_of_birth as string | undefined;
+  const gender = doc?.gender as string | undefined;
+
+  // Check if we have any details to show
+  const hasDetails = fullName || firstName || title || description || email || phone ||
+    website || address || city || program || subject || content || dateOfBirth || gender;
 
   return (
     <div className="flex flex-col h-full">
@@ -236,16 +276,26 @@ function RecordPreview({ record }: { record: RecordItem | null }) {
             <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
           </div>
         ) : error ? (
-          <div className="text-sm text-red-500">Failed to load details</div>
+          <div className="text-sm text-red-500">{error}</div>
+        ) : !hasDetails ? (
+          <div className="space-y-4">
+            <DetailRow icon={FileText}>
+              <span className="text-sm text-slate-500">No additional details available</span>
+            </DetailRow>
+            <DetailRow icon={FileText}>
+              <span className="text-xs text-slate-400 font-mono">{record.name}</span>
+            </DetailRow>
+          </div>
         ) : (
           <div className="space-y-4">
-            {/* Name/Title if different from displayName */}
-            {fullName && fullName !== displayName && (
+            {/* Full name if different */}
+            {firstName && lastName && (
               <DetailRow icon={User}>
-                <span className="text-sm text-slate-700">{fullName}</span>
+                <span className="text-sm text-slate-700">{firstName} {lastName}</span>
               </DetailRow>
             )}
 
+            {/* Title */}
             {title && title !== displayName && (
               <DetailRow icon={FileText}>
                 <span className="text-sm text-slate-700">{title}</span>
@@ -266,34 +316,51 @@ function RecordPreview({ record }: { record: RecordItem | null }) {
               </DetailRow>
             )}
 
-            {/* Program for enrollments */}
+            {/* Date of birth */}
+            {dateOfBirth && (
+              <DetailRow icon={Calendar}>
+                <span className="text-sm text-slate-700">{dateOfBirth}</span>
+              </DetailRow>
+            )}
+
+            {/* Gender */}
+            {gender && (
+              <DetailRow icon={User}>
+                <span className="text-sm text-slate-700">{gender}</span>
+              </DetailRow>
+            )}
+
+            {/* Program */}
             {program && (
               <DetailRow icon={GraduationCap}>
                 <span className="text-sm text-slate-700">{program}</span>
               </DetailRow>
             )}
 
+            {/* Email */}
             {email && (
               <DetailRow icon={Mail}>
-                <a href={`mailto:${email}`} className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
+                <a href={`mailto:${email}`} className="text-sm font-medium text-blue-600 hover:text-blue-700">
                   {email}
                 </a>
               </DetailRow>
             )}
 
+            {/* Phone */}
             {phone && (
               <DetailRow icon={MessageSquare}>
                 <span className="text-sm text-slate-700">{phone}</span>
               </DetailRow>
             )}
 
+            {/* Website */}
             {website && (
               <DetailRow icon={Globe}>
                 <a
                   href={website.startsWith("http") ? website : `https://${website}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                  className="text-sm font-medium text-blue-600 hover:text-blue-700"
                 >
                   {website.replace(/^https?:\/\//, "")}
                 </a>
