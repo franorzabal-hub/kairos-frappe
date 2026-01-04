@@ -8,12 +8,21 @@ app_license = "MIT"
 # Apps to install for new sites
 # required_apps = []
 
+# CLI Commands
+# ------------
+# Custom bench commands for Kairos
+# Usage: bench --site <site> kairos setup-demo
+# Usage: bench --site <site> execute kairos.kairos.fixtures.demo_data.setup_demo_data
+
+# Register custom commands (for bench kairos ...)
+# Note: Commands are also accessible via bench execute
+
 # Includes in <head>
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/kairos/css/kairos.css"
-# app_include_js = "/assets/kairos/js/kairos.js"
+app_include_css = "kairos.bundle.css"
+app_include_js = "kairos.bundle.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/kairos/css/kairos.css"
@@ -44,6 +53,11 @@ app_license = "MIT"
 
 fixtures = [
     "Role",
+    "Client Script",
+    "Server Script",
+    "Custom Field",
+    "Property Setter",
+    {"dt": "Workspace", "filters": [["module", "=", "Kairos"]]},
     {"dt": "Custom DocPerm", "filters": [
         ["role", "in", ["School Admin", "School Manager", "Teacher", "Secretary", "Parent", "Student"]]
     ]}
@@ -64,34 +78,27 @@ fixtures = [
 # DocType Events
 # ----------------
 
-# doc_events = {
-#     "*": {
-#         "on_update": "method",
-#         "on_cancel": "method",
-#         "on_trash": "method"
-#     }
-# }
+doc_events = {
+    "*": {
+        # Check trial access before any write operation
+        "before_insert": "kairos.kairos.middleware.trial_access.check_trial_write_access",
+        "before_save": "kairos.kairos.middleware.trial_access.check_trial_write_access",
+        "before_submit": "kairos.kairos.middleware.trial_access.check_trial_write_access",
+        "before_cancel": "kairos.kairos.middleware.trial_access.check_trial_write_access",
+        "on_trash": "kairos.kairos.middleware.trial_access.check_trial_write_access",
+    }
+}
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-#     "all": [
-#         "kairos.tasks.all"
-#     ],
-#     "daily": [
-#         "kairos.tasks.daily"
-#     ],
-#     "hourly": [
-#         "kairos.tasks.hourly"
-#     ],
-#     "weekly": [
-#         "kairos.tasks.weekly"
-#     ],
-#     "monthly": [
-#         "kairos.tasks.monthly"
-#     ],
-# }
+scheduler_events = {
+    "daily": [
+        # Trial expiration checks - runs once per day
+        "kairos.kairos.tasks.trial_expiration.check_trial_expirations",
+        "kairos.kairos.tasks.trial_expiration.send_trial_warning_notifications"
+    ],
+}
 
 # Testing
 # -------

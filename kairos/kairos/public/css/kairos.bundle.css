@@ -1,0 +1,485 @@
+/**
+ * Kairos - Modern UI Styles
+ * Overrides Frappe's CSS variables for a modern look
+ */
+
+/* ==========================================================================
+   TEST: Si ves esto, el CSS está cargando correctamente
+   ========================================================================== */
+
+/* TEST OBVIO - navbar roja para verificar que el CSS carga */
+.navbar {
+  background-color: #dc2626 !important;
+  background: #dc2626 !important;
+}
+
+/* TEST OBVIO - botones verdes */
+.btn-primary {
+  background-color: #16a34a !important;
+  background: #16a34a !important;
+  border-color: #16a34a !important;
+}
+
+/* ==========================================================================
+   Override Frappe CSS Variables (Most effective approach)
+   ========================================================================== */
+
+:root {
+  /* Primary colors - override Frappe's defaults */
+  --primary: #2563eb !important;
+  --primary-color: #2563eb !important;
+  --btn-primary-bg: #2563eb !important;
+  --blue-500: #2563eb !important;
+
+  /* Text colors */
+  --text-color: #18181b !important;
+  --text-muted: #71717a !important;
+  --text-light: #a1a1aa !important;
+  --heading-color: #18181b !important;
+
+  /* Background colors */
+  --bg-color: #ffffff !important;
+  --fg-color: #fafafa !important;
+  --card-bg: #ffffff !important;
+
+  /* Border colors */
+  --border-color: #e4e4e7 !important;
+  --dark-border-color: #d4d4d8 !important;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+  --shadow-base: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important;
+
+  /* Border radius */
+  --border-radius: 6px !important;
+  --border-radius-sm: 4px !important;
+  --border-radius-md: 8px !important;
+  --border-radius-lg: 12px !important;
+  --border-radius-full: 9999px !important;
+
+  /* Sidebar */
+  --sidebar-bg: #fafafa !important;
+}
+
+/* ==========================================================================
+   Global Overrides with !important
+   ========================================================================== */
+
+/* Sidebar - make it cleaner */
+.desk-sidebar {
+  background-color: #fafafa !important;
+  border-right: 1px solid #f4f4f5 !important;
+}
+
+.desk-sidebar .sidebar-menu .sidebar-item {
+  border-radius: 6px !important;
+  margin: 2px 8px !important;
+  padding: 8px 12px !important;
+  transition: all 0.15s ease !important;
+}
+
+.desk-sidebar .sidebar-menu .sidebar-item:hover {
+  background-color: #f0f0f1 !important;
+}
+
+.desk-sidebar .sidebar-menu .sidebar-item.active {
+  background-color: #eff6ff !important;
+  color: #2563eb !important;
+}
+
+.desk-sidebar .standard-sidebar-label {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+/* Page container */
+.page-container {
+  background-color: #ffffff !important;
+}
+
+.layout-main-section {
+  background-color: #ffffff !important;
+}
+
+/* Navbar */
+.navbar {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #f4f4f5 !important;
+  box-shadow: none !important;
+}
+
+/* Buttons - Primary */
+.btn-primary,
+.btn-primary-dark,
+.primary-btn,
+button.btn-primary {
+  background-color: #2563eb !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+  transition: all 0.15s ease !important;
+}
+
+.btn-primary:hover,
+.btn-primary-dark:hover,
+.primary-btn:hover,
+button.btn-primary:hover {
+  background-color: #1d4ed8 !important;
+  border-color: #1d4ed8 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+}
+
+/* Buttons - Default/Secondary */
+.btn-default,
+.btn-secondary,
+button.btn-default {
+  background-color: #ffffff !important;
+  border: 1px solid #e4e4e7 !important;
+  color: #18181b !important;
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+}
+
+.btn-default:hover,
+.btn-secondary:hover,
+button.btn-default:hover {
+  background-color: #f4f4f5 !important;
+  border-color: #d4d4d8 !important;
+}
+
+/* Form controls */
+.form-control,
+.frappe-control input,
+.frappe-control select,
+.frappe-control textarea {
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  font-size: 14px !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+}
+
+.form-control:focus,
+.frappe-control input:focus,
+.frappe-control select:focus,
+.frappe-control textarea:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+  outline: none !important;
+}
+
+/* Cards and sections */
+.frappe-card,
+.form-section {
+  background-color: #ffffff !important;
+  border: 1px solid #f4f4f5 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important;
+}
+
+.form-section {
+  margin-bottom: 16px !important;
+  padding: 20px !important;
+}
+
+.section-head {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #18181b !important;
+  border-bottom: none !important;
+  padding-bottom: 12px !important;
+}
+
+/* List view */
+.frappe-list {
+  background-color: #ffffff !important;
+  border: 1px solid #f4f4f5 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+.frappe-list .list-row {
+  border-bottom: 1px solid #f4f4f5 !important;
+  padding: 12px 16px !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.frappe-list .list-row:hover {
+  background-color: #fafafa !important;
+}
+
+.frappe-list .list-row:last-child {
+  border-bottom: none !important;
+}
+
+.frappe-list .list-row-container .level-left {
+  font-weight: 500 !important;
+}
+
+/* Status indicators */
+.indicator-pill {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 2px 10px !important;
+  border-radius: 9999px !important;
+}
+
+.indicator-pill.green,
+.indicator-pill[data-indicator="green"] {
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.indicator-pill.blue,
+.indicator-pill[data-indicator="blue"] {
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
+}
+
+.indicator-pill.orange,
+.indicator-pill[data-indicator="orange"] {
+  background-color: #fef3c7 !important;
+  color: #b45309 !important;
+}
+
+.indicator-pill.red,
+.indicator-pill[data-indicator="red"] {
+  background-color: #fee2e2 !important;
+  color: #b91c1c !important;
+}
+
+.indicator-pill.gray,
+.indicator-pill.grey,
+.indicator-pill[data-indicator="gray"],
+.indicator-pill[data-indicator="grey"] {
+  background-color: #f4f4f5 !important;
+  color: #52525b !important;
+}
+
+/* Modals */
+.modal-content {
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important;
+}
+
+.modal-header {
+  border-bottom: 1px solid #f4f4f5 !important;
+  padding: 16px 20px !important;
+}
+
+.modal-title {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+
+.modal-body {
+  padding: 20px !important;
+}
+
+.modal-footer {
+  border-top: 1px solid #f4f4f5 !important;
+  padding: 12px 20px !important;
+  background-color: #fafafa !important;
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* Dropdowns */
+.dropdown-menu {
+  border: 1px solid #f4f4f5 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1) !important;
+  padding: 4px !important;
+}
+
+.dropdown-menu .dropdown-item {
+  border-radius: 4px !important;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background-color: #f4f4f5 !important;
+}
+
+/* Awesomebar */
+.awesomebar-container input.awesomebar {
+  background-color: #f4f4f5 !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  padding: 8px 16px !important;
+  transition: all 0.15s ease !important;
+}
+
+.awesomebar-container input.awesomebar:focus {
+  background-color: #ffffff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}
+
+/* Alerts */
+.alert {
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 12px 16px !important;
+}
+
+.alert-info {
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
+}
+
+.alert-success {
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.alert-warning {
+  background-color: #fef3c7 !important;
+  color: #b45309 !important;
+}
+
+.alert-danger {
+  background-color: #fee2e2 !important;
+  color: #b91c1c !important;
+}
+
+/* Page head */
+.page-head {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #f4f4f5 !important;
+}
+
+.page-head .page-title .title-text {
+  font-weight: 600 !important;
+  font-size: 18px !important;
+  color: #18181b !important;
+}
+
+/* Links */
+a {
+  color: #2563eb !important;
+  text-decoration: none !important;
+}
+
+a:hover {
+  color: #1d4ed8 !important;
+  text-decoration: underline !important;
+}
+
+/* Tables */
+.frappe-control[data-fieldtype="Table"] .form-grid {
+  border: 1px solid #f4f4f5 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+.frappe-control[data-fieldtype="Table"] .grid-heading-row {
+  background-color: #fafafa !important;
+}
+
+.frappe-control[data-fieldtype="Table"] .grid-row {
+  border-bottom: 1px solid #f4f4f5 !important;
+}
+
+.frappe-control[data-fieldtype="Table"] .grid-row:hover {
+  background-color: #fafafa !important;
+}
+
+/* Workspace */
+.workspace-sidebar-item {
+  border-radius: 6px !important;
+  margin: 2px 0 !important;
+}
+
+.workspace-sidebar-item:hover {
+  background-color: #f4f4f5 !important;
+}
+
+.workspace-sidebar-item.selected {
+  background-color: #eff6ff !important;
+  color: #2563eb !important;
+}
+
+/* Comment box */
+.comment-input-wrapper {
+  border: 1px solid #e4e4e7 !important;
+  border-radius: 8px !important;
+}
+
+.comment-input-wrapper:focus-within {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
+}
+
+/* Timeline */
+.timeline-item .timeline-content {
+  background-color: #fafafa !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+  border: 1px solid #f4f4f5 !important;
+}
+
+/* Avatar */
+.avatar {
+  border-radius: 9999px !important;
+}
+
+/* Tooltip */
+.tooltip-inner {
+  background-color: #18181b !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+::-webkit-scrollbar-track {
+  background: #f4f4f5 !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d8 !important;
+  border-radius: 4px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa !important;
+}
+
+/* Focus states for accessibility */
+*:focus-visible {
+  outline: 2px solid #2563eb !important;
+  outline-offset: 2px !important;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: background-color, border-color, color, box-shadow !important;
+  transition-duration: 0.15s !important;
+  transition-timing-function: ease !important;
+}
+
+/* Remove aggressive transitions from elements that shouldn't have them */
+input, textarea, select, .modal, .dropdown-menu {
+  transition-property: none !important;
+}
+
+input:focus, textarea:focus, select:focus {
+  transition-property: border-color, box-shadow !important;
+}

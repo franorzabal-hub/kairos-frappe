@@ -1,0 +1,923 @@
+/**
+ * Kairos - Modern UI Styles
+ * Inspired by Notion, Slack, and Linear
+ *
+ * This file customizes Frappe's default UI to be more modern and clean.
+ * All styles use specific selectors to avoid breaking Frappe updates.
+ */
+
+/* ==========================================================================
+   CSS Custom Properties (Design Tokens)
+   ========================================================================== */
+
+:root {
+  /* Primary Colors */
+  --kairos-primary: #2563eb;
+  --kairos-primary-hover: #1d4ed8;
+  --kairos-primary-light: #dbeafe;
+  --kairos-primary-subtle: #eff6ff;
+
+  /* Neutral Colors (Notion-inspired) */
+  --kairos-bg: #ffffff;
+  --kairos-bg-subtle: #fafafa;
+  --kairos-bg-muted: #f4f4f5;
+  --kairos-bg-hover: #f0f0f1;
+
+  --kairos-border: #e4e4e7;
+  --kairos-border-light: #f4f4f5;
+  --kairos-border-focus: #a1a1aa;
+
+  --kairos-text: #18181b;
+  --kairos-text-secondary: #52525b;
+  --kairos-text-muted: #a1a1aa;
+  --kairos-text-placeholder: #a1a1aa;
+
+  /* Semantic Colors */
+  --kairos-success: #22c55e;
+  --kairos-success-bg: #dcfce7;
+  --kairos-warning: #f59e0b;
+  --kairos-warning-bg: #fef3c7;
+  --kairos-error: #ef4444;
+  --kairos-error-bg: #fee2e2;
+  --kairos-info: #3b82f6;
+  --kairos-info-bg: #dbeafe;
+
+  /* Shadows (Notion-style, very subtle) */
+  --kairos-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --kairos-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --kairos-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --kairos-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+  --kairos-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
+
+  /* Border Radius */
+  --kairos-radius-sm: 4px;
+  --kairos-radius-md: 6px;
+  --kairos-radius-lg: 8px;
+  --kairos-radius-xl: 12px;
+
+  /* Transitions */
+  --kairos-transition-fast: 150ms ease;
+  --kairos-transition-normal: 200ms ease;
+  --kairos-transition-slow: 300ms ease;
+
+  /* Typography */
+  --kairos-font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --kairos-font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+
+  /* Spacing */
+  --kairos-space-1: 4px;
+  --kairos-space-2: 8px;
+  --kairos-space-3: 12px;
+  --kairos-space-4: 16px;
+  --kairos-space-5: 20px;
+  --kairos-space-6: 24px;
+  --kairos-space-8: 32px;
+}
+
+/* ==========================================================================
+   Base & Typography
+   ========================================================================== */
+
+body[data-page-container="true"],
+body.frappe-web {
+  font-family: var(--kairos-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--kairos-bg-subtle);
+  color: var(--kairos-text);
+}
+
+/* Improve heading hierarchy */
+.page-head .title-text,
+.page-title .title-text {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* ==========================================================================
+   Sidebar (Notion-style)
+   ========================================================================== */
+
+.desk-sidebar {
+  background-color: var(--kairos-bg-subtle);
+  border-right: 1px solid var(--kairos-border-light);
+}
+
+.desk-sidebar .sidebar-menu {
+  padding: var(--kairos-space-2);
+}
+
+.desk-sidebar .sidebar-menu .sidebar-item {
+  border-radius: var(--kairos-radius-md);
+  margin-bottom: 2px;
+  padding: var(--kairos-space-2) var(--kairos-space-3);
+  transition: background-color var(--kairos-transition-fast);
+}
+
+.desk-sidebar .sidebar-menu .sidebar-item:hover {
+  background-color: var(--kairos-bg-hover);
+}
+
+.desk-sidebar .sidebar-menu .sidebar-item.active {
+  background-color: var(--kairos-primary-subtle);
+  color: var(--kairos-primary);
+}
+
+.desk-sidebar .sidebar-menu .sidebar-item.active::before {
+  content: none;
+}
+
+.desk-sidebar .sidebar-item .sidebar-label {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Workspace category headers */
+.desk-sidebar .sidebar-menu .divider {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--kairos-text-muted);
+  padding: var(--kairos-space-4) var(--kairos-space-3) var(--kairos-space-2);
+  margin-top: var(--kairos-space-2);
+}
+
+/* ==========================================================================
+   Page Container & Layout
+   ========================================================================== */
+
+.page-container {
+  background-color: var(--kairos-bg);
+}
+
+.container.page-body {
+  padding: var(--kairos-space-6);
+}
+
+/* Page head - cleaner design */
+.page-head {
+  background-color: var(--kairos-bg);
+  border-bottom: 1px solid var(--kairos-border-light);
+  padding: var(--kairos-space-4) var(--kairos-space-6);
+}
+
+.page-head .page-head-content {
+  padding: 0;
+}
+
+/* ==========================================================================
+   Cards & Sections (Notion-style)
+   ========================================================================== */
+
+.frappe-card,
+.form-section,
+.section-body,
+.frappe-list .list-row-container {
+  background-color: var(--kairos-bg);
+  border: 1px solid var(--kairos-border-light);
+  border-radius: var(--kairos-radius-lg);
+  box-shadow: var(--kairos-shadow-xs);
+}
+
+.form-section {
+  margin-bottom: var(--kairos-space-4);
+  padding: var(--kairos-space-5);
+}
+
+.form-section .section-head {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--kairos-text);
+  border-bottom: none;
+  padding-bottom: var(--kairos-space-3);
+  margin-bottom: var(--kairos-space-4);
+}
+
+/* Collapsible sections */
+.form-section.collapsed {
+  padding-bottom: var(--kairos-space-3);
+}
+
+.section-head .collapse-indicator {
+  color: var(--kairos-text-muted);
+  transition: transform var(--kairos-transition-fast);
+}
+
+/* ==========================================================================
+   Form Controls (Modern inputs)
+   ========================================================================== */
+
+/* Text inputs, selects, textareas */
+.frappe-control input[type="text"],
+.frappe-control input[type="password"],
+.frappe-control input[type="email"],
+.frappe-control input[type="number"],
+.frappe-control input[type="date"],
+.frappe-control input[type="time"],
+.frappe-control input[type="datetime-local"],
+.frappe-control select,
+.frappe-control textarea,
+.form-control {
+  font-family: var(--kairos-font-sans);
+  font-size: 14px;
+  padding: var(--kairos-space-2) var(--kairos-space-3);
+  border: 1px solid var(--kairos-border);
+  border-radius: var(--kairos-radius-md);
+  background-color: var(--kairos-bg);
+  color: var(--kairos-text);
+  transition: border-color var(--kairos-transition-fast),
+              box-shadow var(--kairos-transition-fast);
+  box-shadow: var(--kairos-shadow-xs);
+}
+
+.frappe-control input:focus,
+.frappe-control select:focus,
+.frappe-control textarea:focus,
+.form-control:focus {
+  outline: none;
+  border-color: var(--kairos-primary);
+  box-shadow: 0 0 0 3px var(--kairos-primary-light);
+}
+
+.frappe-control input::placeholder,
+.frappe-control textarea::placeholder {
+  color: var(--kairos-text-placeholder);
+}
+
+/* Labels */
+.frappe-control .control-label,
+.form-group label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--kairos-text-secondary);
+  margin-bottom: var(--kairos-space-1);
+  text-transform: none;
+}
+
+/* Required field indicator */
+.frappe-control .control-label .reqd {
+  color: var(--kairos-error);
+}
+
+/* Read-only fields */
+.frappe-control .control-value,
+.frappe-control input[readonly],
+.like-disabled-input {
+  background-color: var(--kairos-bg-muted);
+  color: var(--kairos-text-secondary);
+  border-color: var(--kairos-border-light);
+}
+
+/* ==========================================================================
+   Buttons (Slack-inspired)
+   ========================================================================== */
+
+.btn {
+  font-family: var(--kairos-font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  padding: var(--kairos-space-2) var(--kairos-space-4);
+  border-radius: var(--kairos-radius-md);
+  border: 1px solid transparent;
+  transition: all var(--kairos-transition-fast);
+  cursor: pointer;
+}
+
+/* Primary button */
+.btn-primary,
+.btn-primary-dark {
+  background-color: var(--kairos-primary);
+  border-color: var(--kairos-primary);
+  color: white;
+  box-shadow: var(--kairos-shadow-sm);
+}
+
+.btn-primary:hover,
+.btn-primary-dark:hover {
+  background-color: var(--kairos-primary-hover);
+  border-color: var(--kairos-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--kairos-shadow-md);
+}
+
+.btn-primary:active,
+.btn-primary-dark:active {
+  transform: translateY(0);
+  box-shadow: var(--kairos-shadow-xs);
+}
+
+/* Secondary button */
+.btn-secondary,
+.btn-default {
+  background-color: var(--kairos-bg);
+  border-color: var(--kairos-border);
+  color: var(--kairos-text);
+  box-shadow: var(--kairos-shadow-xs);
+}
+
+.btn-secondary:hover,
+.btn-default:hover {
+  background-color: var(--kairos-bg-muted);
+  border-color: var(--kairos-border-focus);
+}
+
+/* Success button */
+.btn-success {
+  background-color: var(--kairos-success);
+  border-color: var(--kairos-success);
+  color: white;
+}
+
+/* Danger button */
+.btn-danger {
+  background-color: var(--kairos-error);
+  border-color: var(--kairos-error);
+  color: white;
+}
+
+/* Small buttons */
+.btn-sm,
+.btn-xs {
+  font-size: 12px;
+  padding: var(--kairos-space-1) var(--kairos-space-3);
+}
+
+/* Icon buttons */
+.btn-icon {
+  padding: var(--kairos-space-2);
+  background: transparent;
+  border: none;
+  color: var(--kairos-text-secondary);
+  border-radius: var(--kairos-radius-md);
+}
+
+.btn-icon:hover {
+  background-color: var(--kairos-bg-muted);
+  color: var(--kairos-text);
+}
+
+/* Action buttons in page head */
+.page-actions .btn {
+  margin-left: var(--kairos-space-2);
+}
+
+/* ==========================================================================
+   List View (Clean table design)
+   ========================================================================== */
+
+.frappe-list {
+  background-color: var(--kairos-bg);
+  border-radius: var(--kairos-radius-lg);
+  border: 1px solid var(--kairos-border-light);
+  overflow: hidden;
+}
+
+/* List header */
+.frappe-list .list-headers {
+  background-color: var(--kairos-bg-subtle);
+  border-bottom: 1px solid var(--kairos-border);
+  padding: var(--kairos-space-3) var(--kairos-space-4);
+}
+
+.frappe-list .list-headers .list-header-subject {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--kairos-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* List rows */
+.frappe-list .list-row {
+  border-bottom: 1px solid var(--kairos-border-light);
+  padding: var(--kairos-space-3) var(--kairos-space-4);
+  transition: background-color var(--kairos-transition-fast);
+}
+
+.frappe-list .list-row:hover {
+  background-color: var(--kairos-bg-subtle);
+}
+
+.frappe-list .list-row:last-child {
+  border-bottom: none;
+}
+
+/* List row title */
+.frappe-list .list-row .level-left .list-row-title,
+.frappe-list .list-row .list-subject a {
+  font-weight: 500;
+  color: var(--kairos-text);
+}
+
+.frappe-list .list-row .list-subject a:hover {
+  color: var(--kairos-primary);
+}
+
+/* Status indicators in list */
+.frappe-list .indicator-pill {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+/* ==========================================================================
+   Indicators & Status Pills
+   ========================================================================== */
+
+.indicator-pill {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 10px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.indicator-pill.green,
+.indicator-pill[data-indicator="green"] {
+  background-color: var(--kairos-success-bg);
+  color: #166534;
+}
+
+.indicator-pill.blue,
+.indicator-pill[data-indicator="blue"] {
+  background-color: var(--kairos-info-bg);
+  color: #1e40af;
+}
+
+.indicator-pill.orange,
+.indicator-pill[data-indicator="orange"] {
+  background-color: var(--kairos-warning-bg);
+  color: #b45309;
+}
+
+.indicator-pill.red,
+.indicator-pill[data-indicator="red"] {
+  background-color: var(--kairos-error-bg);
+  color: #b91c1c;
+}
+
+.indicator-pill.gray,
+.indicator-pill[data-indicator="gray"] {
+  background-color: var(--kairos-bg-muted);
+  color: var(--kairos-text-secondary);
+}
+
+/* ==========================================================================
+   Modals & Dialogs (Notion-style)
+   ========================================================================== */
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+}
+
+.modal-content {
+  border: none;
+  border-radius: var(--kairos-radius-xl);
+  box-shadow: var(--kairos-shadow-xl);
+  overflow: hidden;
+}
+
+.modal-header {
+  background-color: var(--kairos-bg);
+  border-bottom: 1px solid var(--kairos-border-light);
+  padding: var(--kairos-space-4) var(--kairos-space-5);
+}
+
+.modal-header .modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--kairos-text);
+}
+
+.modal-body {
+  padding: var(--kairos-space-5);
+}
+
+.modal-footer {
+  background-color: var(--kairos-bg-subtle);
+  border-top: 1px solid var(--kairos-border-light);
+  padding: var(--kairos-space-3) var(--kairos-space-5);
+}
+
+/* Close button */
+.modal-header .close,
+.modal-header .btn-close {
+  opacity: 0.5;
+  transition: opacity var(--kairos-transition-fast);
+}
+
+.modal-header .close:hover,
+.modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Dropdowns & Menus
+   ========================================================================== */
+
+.dropdown-menu {
+  border: 1px solid var(--kairos-border-light);
+  border-radius: var(--kairos-radius-lg);
+  box-shadow: var(--kairos-shadow-lg);
+  padding: var(--kairos-space-1);
+  min-width: 180px;
+}
+
+.dropdown-menu .dropdown-item {
+  font-size: 13px;
+  padding: var(--kairos-space-2) var(--kairos-space-3);
+  border-radius: var(--kairos-radius-sm);
+  color: var(--kairos-text);
+  transition: background-color var(--kairos-transition-fast);
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background-color: var(--kairos-bg-muted);
+  color: var(--kairos-text);
+}
+
+.dropdown-menu .dropdown-item.active,
+.dropdown-menu .dropdown-item:active {
+  background-color: var(--kairos-primary-subtle);
+  color: var(--kairos-primary);
+}
+
+.dropdown-menu .dropdown-divider {
+  margin: var(--kairos-space-1) 0;
+  border-top-color: var(--kairos-border-light);
+}
+
+/* ==========================================================================
+   Awesomebar (Command Palette style)
+   ========================================================================== */
+
+.awesomebar-container input.awesomebar {
+  background-color: var(--kairos-bg-muted);
+  border: 1px solid transparent;
+  border-radius: var(--kairos-radius-md);
+  padding: var(--kairos-space-2) var(--kairos-space-4);
+  font-size: 13px;
+  transition: all var(--kairos-transition-fast);
+}
+
+.awesomebar-container input.awesomebar:focus {
+  background-color: var(--kairos-bg);
+  border-color: var(--kairos-primary);
+  box-shadow: 0 0 0 3px var(--kairos-primary-light);
+}
+
+.awesomebar-container input.awesomebar::placeholder {
+  color: var(--kairos-text-muted);
+}
+
+/* Awesomebar dropdown */
+.awesomebar-container .awesomebar-dropdown {
+  border-radius: var(--kairos-radius-lg);
+  box-shadow: var(--kairos-shadow-xl);
+  border: 1px solid var(--kairos-border-light);
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   Notifications & Alerts
+   ========================================================================== */
+
+.msgprint,
+.alert {
+  border-radius: var(--kairos-radius-md);
+  border: none;
+  padding: var(--kairos-space-3) var(--kairos-space-4);
+}
+
+.alert-success {
+  background-color: var(--kairos-success-bg);
+  color: #166534;
+}
+
+.alert-warning {
+  background-color: var(--kairos-warning-bg);
+  color: #b45309;
+}
+
+.alert-danger {
+  background-color: var(--kairos-error-bg);
+  color: #b91c1c;
+}
+
+.alert-info {
+  background-color: var(--kairos-info-bg);
+  color: #1e40af;
+}
+
+/* Toast notifications */
+.toast {
+  border-radius: var(--kairos-radius-lg);
+  box-shadow: var(--kairos-shadow-lg);
+  border: none;
+}
+
+/* ==========================================================================
+   Links & Anchors (Notion-style underlines)
+   ========================================================================== */
+
+.frappe-control a:not(.btn),
+.form-links a,
+.like-disabled-input a {
+  color: var(--kairos-primary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--kairos-transition-fast);
+}
+
+.frappe-control a:not(.btn):hover,
+.form-links a:hover {
+  border-bottom-color: var(--kairos-primary);
+}
+
+/* ==========================================================================
+   Timeline & Comments (Slack-style)
+   ========================================================================== */
+
+.timeline {
+  border-left: 2px solid var(--kairos-border-light);
+  margin-left: var(--kairos-space-4);
+  padding-left: var(--kairos-space-5);
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: var(--kairos-space-4);
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: calc(-1 * var(--kairos-space-5) - 5px);
+  top: 4px;
+  width: 10px;
+  height: 10px;
+  background-color: var(--kairos-bg);
+  border: 2px solid var(--kairos-border);
+  border-radius: 50%;
+}
+
+.timeline-item .timeline-message-box {
+  background-color: var(--kairos-bg-subtle);
+  border-radius: var(--kairos-radius-lg);
+  padding: var(--kairos-space-3) var(--kairos-space-4);
+  border: 1px solid var(--kairos-border-light);
+}
+
+.comment-input-wrapper {
+  background-color: var(--kairos-bg);
+  border: 1px solid var(--kairos-border);
+  border-radius: var(--kairos-radius-lg);
+  padding: var(--kairos-space-2);
+}
+
+.comment-input-wrapper:focus-within {
+  border-color: var(--kairos-primary);
+  box-shadow: 0 0 0 3px var(--kairos-primary-light);
+}
+
+/* ==========================================================================
+   Data Tables
+   ========================================================================== */
+
+.frappe-control[data-fieldtype="Table"] .form-grid {
+  border: 1px solid var(--kairos-border-light);
+  border-radius: var(--kairos-radius-lg);
+  overflow: hidden;
+}
+
+.frappe-control[data-fieldtype="Table"] .grid-heading-row {
+  background-color: var(--kairos-bg-subtle);
+  border-bottom: 1px solid var(--kairos-border);
+}
+
+.frappe-control[data-fieldtype="Table"] .grid-heading-row .grid-row {
+  background: transparent;
+}
+
+.frappe-control[data-fieldtype="Table"] .grid-row {
+  border-bottom: 1px solid var(--kairos-border-light);
+}
+
+.frappe-control[data-fieldtype="Table"] .grid-row:last-child {
+  border-bottom: none;
+}
+
+.frappe-control[data-fieldtype="Table"] .grid-row:hover {
+  background-color: var(--kairos-bg-subtle);
+}
+
+/* ==========================================================================
+   Loading States
+   ========================================================================== */
+
+.loading-state,
+.frappe-control.loading {
+  position: relative;
+}
+
+.loading-state::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Spinner */
+.frappe-spinner,
+.loading-indicator {
+  border-color: var(--kairos-border);
+  border-top-color: var(--kairos-primary);
+}
+
+/* ==========================================================================
+   Empty States
+   ========================================================================== */
+
+.no-result-message,
+.empty-state {
+  text-align: center;
+  padding: var(--kairos-space-8);
+  color: var(--kairos-text-muted);
+}
+
+.no-result-message .icon,
+.empty-state .icon {
+  font-size: 48px;
+  margin-bottom: var(--kairos-space-4);
+  opacity: 0.3;
+}
+
+/* ==========================================================================
+   Print Styles (for reports)
+   ========================================================================== */
+
+@media print {
+  .desk-sidebar,
+  .page-head,
+  .page-actions,
+  .navbar {
+    display: none !important;
+  }
+
+  .page-container {
+    margin: 0;
+    padding: 0;
+  }
+
+  .frappe-card,
+  .form-section {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}
+
+/* ==========================================================================
+   Responsive Adjustments
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .container.page-body {
+    padding: var(--kairos-space-3);
+  }
+
+  .form-section {
+    padding: var(--kairos-space-3);
+    margin-bottom: var(--kairos-space-3);
+  }
+
+  .btn {
+    width: 100%;
+    margin-bottom: var(--kairos-space-2);
+  }
+
+  .page-actions {
+    flex-wrap: wrap;
+  }
+
+  .modal-dialog {
+    margin: var(--kairos-space-2);
+  }
+}
+
+/* ==========================================================================
+   Kairos-Specific Styles
+   ========================================================================== */
+
+/* Institution card styling */
+[data-doctype="Institution"] .form-section:first-child {
+  background: linear-gradient(135deg, var(--kairos-primary-subtle) 0%, var(--kairos-bg) 100%);
+}
+
+/* Message status indicators */
+[data-doctype="Message"] .indicator-pill.sent {
+  background-color: var(--kairos-info-bg);
+  color: #1e40af;
+}
+
+[data-doctype="Message"] .indicator-pill.delivered {
+  background-color: var(--kairos-success-bg);
+  color: #166534;
+}
+
+/* Student/Guardian cards - subtle accent */
+[data-doctype="Student"] .page-head,
+[data-doctype="Guardian"] .page-head {
+  border-left: 3px solid var(--kairos-primary);
+}
+
+/* Event RSVP status styling */
+.rsvp-status-attending {
+  color: var(--kairos-success);
+}
+
+.rsvp-status-not-attending {
+  color: var(--kairos-error);
+}
+
+.rsvp-status-maybe {
+  color: var(--kairos-warning);
+}
+
+/* Trial status banner */
+.trial-banner {
+  background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
+  border-radius: var(--kairos-radius-md);
+  padding: var(--kairos-space-3) var(--kairos-space-4);
+  margin-bottom: var(--kairos-space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.trial-banner .trial-days-left {
+  font-weight: 600;
+  color: #b45309;
+}
+
+/* ==========================================================================
+   Animations & Micro-interactions
+   ========================================================================== */
+
+/* Subtle hover lift effect */
+.frappe-card:hover,
+.list-row:hover {
+  transform: translateY(-1px);
+  transition: transform var(--kairos-transition-fast);
+}
+
+/* Focus visible for accessibility */
+:focus-visible {
+  outline: 2px solid var(--kairos-primary);
+  outline-offset: 2px;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Button press effect */
+.btn:active {
+  transform: scale(0.98);
+}
+
+/* Link hover underline animation */
+a.animated-underline {
+  position: relative;
+}
+
+a.animated-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--kairos-primary);
+  transition: width var(--kairos-transition-normal);
+}
+
+a.animated-underline:hover::after {
+  width: 100%;
+}
