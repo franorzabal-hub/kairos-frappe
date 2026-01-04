@@ -1,0 +1,402 @@
+/**
+ * Dynamic Form Component
+ *
+ * Renders a form dynamically based on Frappe DocType metadata
+ * Handles field rendering, validation, and submission
+ * Groups fields by Section Break
+ */
+
+"use client";
+
+import { useForm, FieldValues, DefaultValues } from "react-hook-form";
+import { useMemo } from "react";
+import { DocTypeMeta, DocTypeField, FieldType } from "@/types/frappe";
+import { DataField } from "@/components/forms/fields/data-field";
+import { SelectField } from "@/components/forms/fields/select-field";
+import { DateField } from "@/components/forms/fields/date-field";
+import { LinkField } from "@/components/forms/fields/link-field";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+interface DynamicFormProps<T extends FieldValues> {
+  docMeta: DocTypeMeta;
+  initialData?: Partial<T>;
+  onSubmit: (data: T) => void | Promise<void>;
+  isLoading?: boolean;
+  formId?: string;
+}
+
+interface Section {
+  label: string;
+  fields: DocTypeField[];
+  columns: Column[];
+}
+
+interface Column {
+  fields: DocTypeField[];
+}
+
+/**
+ * Parse options string from Frappe Select field to array of options
+ * Options are newline-separated in Frappe
+ */
+function parseSelectOptions(options?: string): { value: string; label: string }[] {
+  if (!options) return [];
+  return options
+    .split("\n")
+    .filter((opt) => opt.trim())
+    .map((opt) => ({
+      value: opt.trim(),
+      label: opt.trim(),
+    }));
+}
+
+/**
+ * Group fields by Section Break and Column Break
+ */
+function groupFieldsBySections(fields: DocTypeField[]): Section[] {
+  const sections: Section[] = [];
+  let currentSection: Section = {
+    label: "",
+    fields: [],
+    columns: [{ fields: [] }],
+  };
+  let currentColumnIndex = 0;
+
+  for (const field of fields) {
+    // Skip hidden fields
+    if (field.hidden === 1) continue;
+
+    if (field.fieldtype === "Section Break") {
+      // Save current section if it has fields
+      if (currentSection.columns.some((col) => col.fields.length > 0)) {
+        sections.push(currentSection);
+      }
+      // Start new section
+      currentSection = {
+        label: field.label || "",
+        fields: [],
+        columns: [{ fields: [] }],
+      };
+      currentColumnIndex = 0;
+    } else if (field.fieldtype === "Column Break") {
+      // Start new column in current section
+      currentColumnIndex++;
+      currentSection.columns.push({ fields: [] });
+    } else if (field.fieldtype === "Tab Break") {
+      // For now, treat Tab Break like Section Break
+      if (currentSection.columns.some((col) => col.fields.length > 0)) {
+        sections.push(currentSection);
+      }
+      currentSection = {
+        label: field.label || "",
+        fields: [],
+        columns: [{ fields: [] }],
+      };
+      currentColumnIndex = 0;
+    } else if (!isLayoutField(field.fieldtype)) {
+      // Add field to current column
+      if (currentSection.columns[currentColumnIndex]) {
+        currentSection.columns[currentColumnIndex].fields.push(field);
+      }
+    }
+  }
+
+  // Add the last section if it has fields
+  if (currentSection.columns.some((col) => col.fields.length > 0)) {
+    sections.push(currentSection);
+  }
+
+  // If no sections were created, create a default one
+  if (sections.length === 0 && fields.length > 0) {
+    const defaultSection: Section = {
+      label: "",
+      fields: [],
+      columns: [{ fields: fields.filter((f) => !isLayoutField(f.fieldtype) && f.hidden !== 1) }],
+    };
+    sections.push(defaultSection);
+  }
+
+  return sections;
+}
+
+/**
+ * Check if field type is a layout field (not a data field)
+ */
+function isLayoutField(fieldtype: FieldType): boolean {
+  return ["Section Break", "Column Break", "Tab Break"].includes(fieldtype);
+}
+
+/**
+ * Build default values from fields and initial data
+ */
+function buildDefaultValues<T extends FieldValues>(
+  fields: DocTypeField[],
+  initialData?: Partial<T>
+): DefaultValues<T> {
+  const defaults: Record<string, unknown> = {};
+
+  for (const field of fields) {
+    if (isLayoutField(field.fieldtype) || field.hidden === 1) continue;
+
+    // Use initial data if available, otherwise use field default
+    if (initialData && field.fieldname in initialData) {
+      defaults[field.fieldname] = initialData[field.fieldname];
+    } else if (field.default) {
+      defaults[field.fieldname] = field.default;
+    } else {
+      defaults[field.fieldname] = "";
+    }
+  }
+
+  return defaults as DefaultValues<T>;
+}
+
+export function DynamicForm<T extends FieldValues>({
+  docMeta,
+  initialData,
+  onSubmit,
+  isLoading = false,
+  formId = "dynamic-form",
+}: DynamicFormProps<T>) {
+  const sections = useMemo(
+    () => groupFieldsBySections(docMeta.fields),
+    [docMeta.fields]
+  );
+
+  const defaultValues = useMemo(
+    () => buildDefaultValues<T>(docMeta.fields, initialData),
+    [docMeta.fields, initialData]
+  );
+
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<T>({
+    defaultValues,
+  });
+
+  const renderField = (field: DocTypeField) => {
+    const isRequired = field.reqd === 1;
+    const isReadOnly = field.read_only === 1 || isLoading;
+
+    switch (field.fieldtype) {
+      case "Data":
+      case "Small Text":
+      case "Password":
+      case "Read Only":
+        return (
+          <DataField
+            key={field.fieldname}
+            name={field.fieldname as never}
+            control={control}
+            label={field.label}
+            placeholder={field.description}
+            required={isRequired}
+            readOnly={isReadOnly}
+            description={field.description}
+          />
+        );
+
+      case "Select":
+        return (
+          <SelectField
+            key={field.fieldname}
+            name={field.fieldname as never}
+            control={control}
+            label={field.label}
+            options={parseSelectOptions(field.options)}
+            required={isRequired}
+            readOnly={isReadOnly}
+            description={field.description}
+          />
+        );
+
+      case "Date":
+        return (
+          <DateField
+            key={field.fieldname}
+            name={field.fieldname as never}
+            control={control}
+            label={field.label}
+            required={isRequired}
+            readOnly={isReadOnly}
+            description={field.description}
+          />
+        );
+
+      case "Link":
+        return (
+          <LinkField
+            key={field.fieldname}
+            name={field.fieldname as never}
+            control={control}
+            label={field.label}
+            doctype={field.options || ""}
+            required={isRequired}
+            readOnly={isReadOnly}
+            description={field.description}
+          />
+        );
+
+      case "Int":
+      case "Float":
+      case "Currency":
+        return (
+          <DataField
+            key={field.fieldname}
+            name={field.fieldname as never}
+            control={control}
+            label={field.label}
+            placeholder={field.description}
+            required={isRequired}
+            readOnly={isReadOnly}
+            description={field.description}
+          />
+        );
+
+      case "Check":
+        // TODO: Implement CheckField component
+        return (
+          <DataField
+            key={field.fieldname}
+            name={field.fieldname as never}
+            control={control}
+            label={field.label}
+            placeholder="0 or 1"
+            required={isRequired}
+            readOnly={isReadOnly}
+            description={field.description}
+          />
+        );
+
+      case "Text":
+      case "Long Text":
+      case "Text Editor":
+      case "HTML":
+        // TODO: Implement TextareaField component
+        return (
+          <DataField
+            key={field.fieldname}
+            name={field.fieldname as never}
+            control={control}
+            label={field.label}
+            placeholder={field.description}
+            required={isRequired}
+            readOnly={isReadOnly}
+            description={field.description}
+          />
+        );
+
+      case "Datetime":
+      case "Time":
+        // TODO: Implement DateTimeField and TimeField components
+        return (
+          <DataField
+            key={field.fieldname}
+            name={field.fieldname as never}
+            control={control}
+            label={field.label}
+            placeholder={field.description}
+            required={isRequired}
+            readOnly={isReadOnly}
+            description={field.description}
+          />
+        );
+
+      case "Attach":
+      case "Attach Image":
+        // TODO: Implement AttachField component
+        return (
+          <DataField
+            key={field.fieldname}
+            name={field.fieldname as never}
+            control={control}
+            label={field.label}
+            placeholder="File path"
+            required={isRequired}
+            readOnly={isReadOnly}
+            description={field.description}
+          />
+        );
+
+      case "Table":
+      case "Table MultiSelect":
+        // TODO: Implement TableField component
+        return (
+          <div key={field.fieldname} className="space-y-2">
+            <p className="text-sm font-medium">{field.label}</p>
+            <p className="text-sm text-muted-foreground">
+              Table field for: {field.options}
+            </p>
+          </div>
+        );
+
+      default:
+        // Fallback to Data field for unknown types
+        return (
+          <DataField
+            key={field.fieldname}
+            name={field.fieldname as never}
+            control={control}
+            label={field.label}
+            placeholder={field.description}
+            required={isRequired}
+            readOnly={isReadOnly}
+            description={field.description}
+          />
+        );
+    }
+  };
+
+  return (
+    <form
+      id={formId}
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-6"
+    >
+      {sections.map((section, sectionIndex) => (
+        <Card key={sectionIndex} className="overflow-hidden">
+          {section.label && (
+            <CardHeader className="border-b bg-muted/50 py-4">
+              <CardTitle className="text-lg">{section.label}</CardTitle>
+            </CardHeader>
+          )}
+          <CardContent className={cn("pt-6", !section.label && "pt-6")}>
+            <div
+              className={cn(
+                "grid gap-6",
+                section.columns.length > 1 &&
+                  `grid-cols-1 md:grid-cols-${section.columns.length}`
+              )}
+              style={
+                section.columns.length > 1
+                  ? {
+                      gridTemplateColumns: `repeat(${section.columns.length}, minmax(0, 1fr))`,
+                    }
+                  : undefined
+              }
+            >
+              {section.columns.map((column, columnIndex) => (
+                <div key={columnIndex} className="space-y-4">
+                  {column.fields.map((field) => renderField(field))}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+
+      {/* Hidden submit button - form is submitted via external button */}
+      <button
+        type="submit"
+        disabled={isSubmitting || isLoading}
+        className="sr-only"
+        aria-hidden="true"
+      >
+        Submit
+      </button>
+    </form>
+  );
+}
