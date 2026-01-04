@@ -33,6 +33,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -443,6 +444,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl h-[500px] p-0 gap-0 overflow-hidden">
+        <DialogTitle className="sr-only">Search records</DialogTitle>
         <div className="flex h-full">
           {/* Left Panel - Search & Results */}
           <div className="w-[400px] flex flex-col border-r">
