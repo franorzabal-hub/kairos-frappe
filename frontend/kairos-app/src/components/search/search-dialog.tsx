@@ -479,12 +479,16 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[700px] p-0 gap-0 overflow-hidden bg-white rounded-2xl">
+      <DialogContent
+        className="max-w-5xl p-0 gap-0 overflow-hidden bg-white rounded-2xl"
+        showCloseButton={false}
+        style={{ height: "700px" }}
+      >
         <DialogTitle className="sr-only">Search records</DialogTitle>
 
-        <div className="flex flex-col h-full">
+        <div className="grid grid-rows-[auto_1fr_auto] h-full">
           {/* 1. Search Header - Full width */}
-          <div className="p-4 border-b border-slate-100 flex-shrink-0">
+          <div className="p-4 border-b border-slate-100">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
@@ -502,9 +506,9 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
           </div>
 
           {/* 2. Content Area - Two columns */}
-          <div className="flex flex-1 min-h-0">
+          <div className="flex min-h-0 overflow-hidden">
             {/* Left Panel - Records List */}
-            <div className="w-[400px] border-r border-slate-100 flex flex-col min-h-0">
+            <div className="w-[400px] border-r border-slate-100 flex flex-col overflow-hidden">
               <div className="px-4 py-3 border-b border-slate-50 flex-shrink-0">
                 <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                   Records
@@ -551,13 +555,13 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
             </div>
 
             {/* Right Panel - Details */}
-            <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex-1 flex flex-col overflow-hidden">
               <RecordPreview record={selectedRecord} />
             </div>
           </div>
 
           {/* 3. Actions Footer - Full width */}
-          <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-between flex-shrink-0 bg-white">
+          <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-between bg-white">
             {/* Left - Navigation */}
             <div className="flex items-center gap-2">
               <button
@@ -598,3 +602,5 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     </Dialog>
   );
 }
+
+export default SearchDialog;
