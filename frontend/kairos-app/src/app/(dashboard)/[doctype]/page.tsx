@@ -20,14 +20,54 @@
 import { useState, useMemo, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 import { useFrappeGetDocList, useFrappeDeleteDoc, useFrappeUpdateDoc } from "frappe-react-sdk";
-import { Plus, Search, RefreshCw, AlertCircle } from "lucide-react";
+import {
+  Plus,
+  AlertCircle,
+  Settings,
+  LayoutGrid,
+  ChevronDown,
+  Download,
+  Upload,
+  ArrowUpDown,
+  SlidersHorizontal,
+  GripVertical,
+  Check,
+  X,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { useFrappeDocMeta, getFieldDisplayValue } from "@/hooks/use-frappe-meta";
-import { FilterBuilder, ActiveFilters } from "@/components/filters/filter-builder";
+import { ActiveFilters } from "@/components/filters/filter-builder";
 import {
   FilterCondition,
   filtersToFrappe,
   getValidFilters,
+  createEmptyFilter,
 } from "@/lib/filters";
 import { useBulkSelection, usePageSelectionState } from "@/hooks/use-bulk-selection";
 import { useNotification } from "@/hooks/use-notification";
@@ -38,7 +78,6 @@ import {
   type PaginationState,
 } from "@/components/data-table/data-table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
@@ -50,9 +89,6 @@ import {
 import { HeaderCheckbox, RowCheckbox } from "@/components/list/selection-checkbox";
 import { BulkActionsBar, exportToCSV } from "@/components/list/bulk-actions-bar";
 import { DocTypeField } from "@/types/frappe";
-import { ViewSwitcher, type ViewType } from "@/components/views/view-switcher";
-import { CalendarView } from "@/components/views/calendar-view";
-import { KanbanView } from "@/components/views/kanban-view";
 
 // ============================================================================
 // Types
@@ -90,36 +126,6 @@ function formatCellValue(value: unknown, field: DocTypeField): string {
   return getFieldDisplayValue(value, field);
 }
 
-/**
- * Check if DocType has date fields (for calendar view availability)
- */
-function hasDateFields(fields: DocTypeField[]): boolean {
-  return fields.some(
-    (field) => field.fieldtype === "Date" || field.fieldtype === "Datetime"
-  );
-}
-
-/**
- * Find Select fields that can be used for Kanban grouping
- * Returns the first suitable Select field (typically "status")
- */
-function findKanbanField(fields: DocTypeField[]): DocTypeField | null {
-  // Priority: look for common status-like fields first
-  const priorityNames = ["status", "workflow_state", "state", "stage", "priority"];
-
-  for (const name of priorityNames) {
-    const field = fields.find(
-      (f) => f.fieldtype === "Select" && f.fieldname.toLowerCase() === name && f.options
-    );
-    if (field) return field;
-  }
-
-  // Fallback: any Select field with options
-  return fields.find(
-    (f) => f.fieldtype === "Select" && f.options && !f.hidden
-  ) || null;
-}
-
 // ============================================================================
 // Main Component
 // ============================================================================
@@ -134,13 +140,6 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
   // ============================================================================
   // State
   // ============================================================================
-
-  // View state
-  const [currentView, setCurrentView] = useState<ViewType>("list");
-
-  // Search state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   // Filter state
   const [filterConditions, setFilterConditions] = useState<FilterCondition[]>([]);
@@ -185,26 +184,6 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
     titleField,
   } = useFrappeDocMeta({ doctype: doctypeName });
 
-  // Find kanban field for Kanban view
-  const kanbanField = useMemo(() => {
-    if (!meta?.fields) return null;
-    return findKanbanField(meta.fields);
-  }, [meta?.fields]);
-
-  // Determine available views based on DocType fields
-  const availableViews = useMemo<ViewType[]>(() => {
-    const views: ViewType[] = ["list"];
-    // Add Kanban if there's a suitable Select field
-    if (kanbanField) {
-      views.push("kanban");
-    }
-    // Add Calendar if there are date fields
-    if (meta?.fields && hasDateFields(meta.fields)) {
-      views.push("calendar");
-    }
-    return views;
-  }, [meta?.fields, kanbanField]);
-
   // Determine fields to fetch - always include name and title_field
   const fieldsToFetch = useMemo(() => {
     const fields = new Set<string>(["name", "modified", "creation"]);
@@ -222,25 +201,14 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
     return Array.from(fields);
   }, [listViewFields, titleField]);
 
-  // Build filters for API - combines search and filter conditions
+  // Build filters for API
   const apiFilters = useMemo(() => {
-    const allFilters: [string, string, unknown][] = [];
-
-    // Add search filter
-    if (debouncedSearch && meta) {
-      const searchField = titleField || "name";
-      allFilters.push([searchField, "like", "%" + debouncedSearch + "%"]);
-    }
-
-    // Add filter conditions
     const validFilters = getValidFilters(filterConditions);
     if (validFilters.length > 0) {
-      const frappeFilters = filtersToFrappe(validFilters);
-      allFilters.push(...frappeFilters);
+      return filtersToFrappe(validFilters);
     }
-
-    return allFilters.length > 0 ? allFilters : undefined;
-  }, [debouncedSearch, meta, titleField, filterConditions]);
+    return undefined;
+  }, [filterConditions]);
 
   // Determine sort field and order
   const orderBy = useMemo(() => {
@@ -254,13 +222,12 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
     };
   }, [sorting]);
 
-  // Fetch document list (only when list view is active)
+  // Fetch document list
   // Using type assertion to handle dynamic field names
   const {
     data: documents,
     error: listError,
     isLoading: listLoading,
-    isValidating,
     mutate: refetchList,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useFrappeGetDocList<any>(
@@ -273,7 +240,7 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
       limit_start: pagination.pageIndex * pagination.pageSize,
       limit: pagination.pageSize,
     },
-    currentView === "list" && meta ? "doclist_" + doctypeName + "_" + pagination.pageIndex + "_" + pagination.pageSize + "_" + orderBy.field + "_" + orderBy.order + "_" + debouncedSearch + "_" + JSON.stringify(getValidFilters(filterConditions)) : null
+    meta ? "doclist_" + doctypeName + "_" + pagination.pageIndex + "_" + pagination.pageSize + "_" + orderBy.field + "_" + orderBy.order + "_" + JSON.stringify(getValidFilters(filterConditions)) : null
   );
 
   // Fetch total count for pagination
@@ -285,7 +252,7 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       filters: apiFilters as any,
     },
-    currentView === "list" && meta ? "doccount_" + doctypeName + "_" + debouncedSearch + "_" + JSON.stringify(getValidFilters(filterConditions)) : null
+    meta ? "doccount_" + doctypeName + "_" + JSON.stringify(getValidFilters(filterConditions)) : null
   );
 
   // Calculate total count and page count
@@ -429,34 +396,6 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
   // ============================================================================
   // Handlers
   // ============================================================================
-
-  // Handle view change
-  const handleViewChange = useCallback((view: ViewType) => {
-    setCurrentView(view);
-    // Clear selection when switching views
-    if (hasSelection) {
-      clearSelection();
-    }
-  }, [hasSelection, clearSelection]);
-
-  // Handle search with debounce
-  const handleSearchChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      setSearchQuery(value);
-
-      // Reset pagination when searching
-      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-
-      // Debounce the actual search
-      const timeoutId = setTimeout(() => {
-        setDebouncedSearch(value);
-      }, 300);
-
-      return () => clearTimeout(timeoutId);
-    },
-    []
-  );
 
   // Handle row click - navigate to document detail (only if not clicking checkbox)
   const handleRowClick = useCallback(
@@ -673,65 +612,233 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
   // Main Render
   // ============================================================================
 
+  // Get current sort field label
+  const currentSortField = sorting.length > 0 ? sorting[0] : null;
+  const currentSortFieldLabel = currentSortField
+    ? (listViewFields.find((f) => f.fieldname === currentSortField.id)?.label ||
+       (currentSortField.id === "modified" ? "Modified" : currentSortField.id))
+    : null;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{doctypeName}</h1>
-          <p className="text-muted-foreground">
-            Manage {doctypeName.toLowerCase()} records
-          </p>
+    <div className="h-full flex flex-col -m-6">
+      {/* Sub-header toolbar (Attio style) */}
+      <div className="flex items-center justify-between px-6 py-3 border-b bg-background">
+        <div className="flex items-center gap-2">
+          {/* Views dropdown with search */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1">
+                <LayoutGrid className="h-4 w-4" />
+                All {doctypeName}s
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Search views..." />
+                <CommandList>
+                  <CommandEmpty>No views found.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <LayoutGrid className="h-4 w-4" />
+                        All {doctypeName}s
+                      </div>
+                      <Check className="h-4 w-4 text-primary" />
+                    </CommandItem>
+                  </CommandGroup>
+                  <CommandGroup>
+                    <CommandItem className="text-muted-foreground">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create new view
+                    </CommandItem>
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          {/* View settings dropdown */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1">
+                <Settings className="h-4 w-4" />
+                View settings
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 p-0" align="start">
+              <div className="p-3 border-b">
+                <p className="text-sm font-medium">View settings</p>
+              </div>
+              <div className="max-h-64 overflow-auto">
+                {listViewFields.map((field) => (
+                  <div
+                    key={field.fieldname}
+                    className="flex items-center gap-2 px-3 py-2 hover:bg-accent cursor-pointer"
+                  >
+                    <GripVertical className="h-4 w-4 text-muted-foreground" />
+                    <Check className="h-4 w-4 text-primary" />
+                    <span className="text-sm flex-1">{field.label}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="p-2 border-t">
+                <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add column
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
-        <div className="flex items-center gap-3">
-          {/* View Switcher */}
-          <ViewSwitcher
-            currentView={currentView}
-            onViewChange={handleViewChange}
-            availableViews={availableViews}
-          />
-          <Button onClick={handleNewDocument}>
+
+        <div className="flex items-center gap-2">
+          {/* Import / Export */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1">
+                <Download className="h-4 w-4" />
+                Import / Export
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleBulkExport}>
+                <Download className="mr-2 h-4 w-4" />
+                Export to CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled>
+                <Upload className="mr-2 h-4 w-4" />
+                Import from CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* New document button */}
+          <Button size="sm" onClick={handleNewDocument}>
             <Plus className="mr-2 h-4 w-4" />
             New {doctypeName}
           </Button>
         </div>
       </div>
 
-      {/* List View */}
-      {currentView === "list" && (
-        <>
-          {/* Search, Filters, and Actions Bar */}
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder={"Search " + doctypeName.toLowerCase() + "..."}
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="pl-9"
-              />
-            </div>
-            <FilterBuilder
-              fields={visibleFields}
-              filters={filterConditions}
-              onFiltersChange={(newFilters) => {
-                setFilterConditions(newFilters);
-                setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-              }}
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => refetchList()}
-              disabled={isValidating}
-              aria-label="Refresh list"
-            >
-              <RefreshCw
-                className={"h-4 w-4 " + (isValidating ? "animate-spin" : "")}
-              />
+      {/* Secondary toolbar: Sort indicator + Filter (Attio style) */}
+      <div className="flex items-center gap-2 px-6 py-2 border-b bg-background">
+        {/* Sort indicator with dropdown */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
+              <ArrowUpDown className="h-4 w-4" />
+              Sorted by {currentSortFieldLabel || "Modified"}
             </Button>
-          </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-0" align="start">
+            <div className="p-3 border-b">
+              <div className="flex items-center gap-2">
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                <Select
+                  value={currentSortField?.id || "modified"}
+                  onValueChange={(value) => {
+                    const isDesc = currentSortField?.desc ?? true;
+                    setSorting([{ id: value, desc: isDesc }]);
+                    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                  }}
+                >
+                  <SelectTrigger className="flex-1 h-8">
+                    <SelectValue placeholder="Select field" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {listViewFields.map((field) => (
+                      <SelectItem key={field.fieldname} value={field.fieldname}>
+                        {field.label}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value="modified">Modified</SelectItem>
+                    <SelectItem value="creation">Created</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={currentSortField?.desc ? "desc" : "asc"}
+                  onValueChange={(value) => {
+                    const fieldId = currentSortField?.id || "modified";
+                    setSorting([{ id: fieldId, desc: value === "desc" }]);
+                    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                  }}
+                >
+                  <SelectTrigger className="w-32 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="asc">Ascending</SelectItem>
+                    <SelectItem value="desc">Descending</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => {
+                    setSorting([{ id: "modified", desc: true }]);
+                    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-2">
+              <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground">
+                <Plus className="mr-2 h-4 w-4" />
+                Add sort
+              </Button>
+              <p className="text-xs text-muted-foreground px-2 py-1">
+                Learn about sorting
+              </p>
+            </div>
+          </PopoverContent>
+        </Popover>
 
+        {/* Filter button with attribute search */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
+              <SlidersHorizontal className="h-4 w-4" />
+              Filter
+              {getValidFilters(filterConditions).length > 0 && (
+                <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+                  {getValidFilters(filterConditions).length}
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Search attributes..." />
+              <CommandList>
+                <CommandEmpty>No attributes found.</CommandEmpty>
+                <CommandGroup>
+                  {visibleFields.slice(0, 10).map((field) => (
+                    <CommandItem
+                      key={field.fieldname}
+                      onSelect={() => {
+                        // Add a new filter for this field
+                        const newFilter = createEmptyFilter(field);
+                        setFilterConditions((prev) => [...prev, newFilter]);
+                      }}
+                    >
+                      <span className="text-sm">{field.label}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {/* Content area */}
+      <div className="flex-1 overflow-auto p-6 space-y-4">
           {/* Active Filters */}
           {getValidFilters(filterConditions).length > 0 && (
             <ActiveFilters
@@ -781,11 +888,7 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
             sorting={sorting}
             onSortingChange={handleSortingChange}
             onRowClick={handleRowClick}
-            emptyMessage={
-              debouncedSearch
-                ? "No " + doctypeName.toLowerCase() + " found matching \"" + debouncedSearch + "\""
-                : "No " + doctypeName.toLowerCase() + " found. Click \"New " + doctypeName + "\" to create one."
-            }
+            emptyMessage={"No " + doctypeName.toLowerCase() + " found. Click \"New " + doctypeName + "\" to create one."}
             showPageSizeSelector={true}
             pageSizeOptions={PAGE_SIZE_OPTIONS}
           />
@@ -798,37 +901,19 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
             </p>
           )}
 
-          {/* Bulk Actions Bar */}
-          <BulkActionsBar
-            selectedCount={selectedCount}
-            hasSelection={hasSelection}
-            onClearSelection={clearSelection}
-            onBulkDelete={handleBulkDelete}
-            onBulkExport={handleBulkExport}
-            onBulkUpdate={handleBulkUpdate}
-            updateableFields={visibleFields}
-            doctypeName={doctypeName}
-            isLoading={isBulkOperating}
-          />
-        </>
-      )}
-
-      {/* Calendar View */}
-      {/* Kanban View */}
-      {currentView === "kanban" && kanbanField && (
-        <KanbanView
-          doctype={doctypeName}
-          columnField={kanbanField.fieldname}
+        {/* Bulk Actions Bar */}
+        <BulkActionsBar
+          selectedCount={selectedCount}
+          hasSelection={hasSelection}
+          onClearSelection={clearSelection}
+          onBulkDelete={handleBulkDelete}
+          onBulkExport={handleBulkExport}
+          onBulkUpdate={handleBulkUpdate}
+          updateableFields={visibleFields}
+          doctypeName={doctypeName}
+          isLoading={isBulkOperating}
         />
-      )}
-
-      {/* Calendar View */}
-      {currentView === "calendar" && (
-        <CalendarView
-          doctype={doctypeName}
-          doctypeSlug={doctypeSlug}
-        />
-      )}
+      </div>
     </div>
   );
 }

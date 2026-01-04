@@ -1,9 +1,10 @@
 /**
- * Main Layout Component (Attio-style)
+ * Settings Layout Component (Attio-style)
  *
- * Combines AppHeader and AppSidebar with responsive behavior
- * - Desktop: Fixed sidebar on the left, minimal header on top
- * - Mobile: Collapsible sidebar via sheet
+ * Full layout for settings pages combining:
+ * - SettingsHeader (top)
+ * - SettingsSidebar (left)
+ * - Content area (right)
  */
 
 "use client";
@@ -18,14 +19,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { AppHeader } from "./app-header";
-import { AppSidebar } from "./app-sidebar";
+import { SettingsHeader } from "./settings-header";
+import { SettingsSidebar } from "./settings-sidebar";
 
-interface MainLayoutProps {
+interface SettingsLayoutProps {
   children: React.ReactNode;
 }
 
-export function MainLayout({ children }: MainLayoutProps) {
+export function SettingsLayout({ children }: SettingsLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -34,9 +35,9 @@ export function MainLayout({ children }: MainLayoutProps) {
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="w-[280px] p-0">
           <SheetHeader className="sr-only">
-            <SheetTitle>Navigation</SheetTitle>
+            <SheetTitle>Settings Navigation</SheetTitle>
           </SheetHeader>
-          <AppSidebar className="w-full border-r-0" />
+          <SettingsSidebar className="w-full border-r-0" />
         </SheetContent>
       </Sheet>
 
@@ -50,17 +51,17 @@ export function MainLayout({ children }: MainLayoutProps) {
           onClick={() => setSidebarOpen(true)}
         >
           <Menu className="h-4 w-4" />
-          <span className="sr-only">Toggle navigation menu</span>
+          <span className="sr-only">Toggle settings menu</span>
         </Button>
 
         {/* Header component */}
-        <AppHeader className="flex-1" />
+        <SettingsHeader className="flex-1" />
       </div>
 
       {/* Main content area with sidebar */}
       <div className="flex flex-1 overflow-hidden">
         {/* Desktop Sidebar */}
-        <AppSidebar className="hidden md:flex flex-shrink-0" />
+        <SettingsSidebar className="hidden md:flex flex-shrink-0" />
 
         {/* Main content */}
         <main className="flex-1 overflow-y-auto">
