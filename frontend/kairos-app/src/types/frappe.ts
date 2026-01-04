@@ -72,7 +72,8 @@ export type FieldType =
   | "Column Break"
   | "Tab Break"
   | "Table MultiSelect"
-  | "MultiSelect";
+  | "MultiSelect"
+  | "Dynamic Link";
 
 /**
  * DocType metadata

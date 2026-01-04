@@ -25,6 +25,7 @@ import { TextEditorField } from "@/components/forms/fields/text-editor-field";
 import { MultiSelectField } from "@/components/forms/fields/multiselect-field";
 import { AttachField } from "@/components/forms/fields/attach-field";
 import { AttachImageField } from "@/components/forms/fields/attach-image-field";
+import { DynamicLinkField } from "@/components/forms/fields/dynamic-link-field";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -468,6 +469,20 @@ export function DynamicForm<T extends FieldValues>({
           />
         );
       }
+
+      case "Dynamic Link":
+        return (
+          <DynamicLinkField
+            key={field.fieldname}
+            name={field.fieldname as never}
+            control={control}
+            label={field.label}
+            options={field.options || ""}
+            required={isRequired}
+            readOnly={isReadOnly}
+            description={field.description}
+          />
+        );
 
       default:
         // Fallback to Data field for unknown types
