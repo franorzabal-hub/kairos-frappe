@@ -21,9 +21,7 @@
   "age_range_min",
   "age_range_max",
   "associations_section",
-  "coordinator",
-  "column_break_associations",
-  "program"
+  "coordinator"
  ],
  "fields": [
   {
@@ -116,17 +114,6 @@
    "fieldtype": "Link",
    "label": "Coordinator",
    "options": "User"
-  },
-  {
-   "fieldname": "column_break_associations",
-   "fieldtype": "Column Break"
-  },
-  {
-   "description": "Link to Education Program from Frappe Education",
-   "fieldname": "program",
-   "fieldtype": "Link",
-   "label": "Program",
-   "options": "Program"
   }
  ],
  "index_web_pages_for_search": 1,

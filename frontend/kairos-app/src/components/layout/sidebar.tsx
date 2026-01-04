@@ -9,7 +9,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Building2,
   Calendar,
+  GraduationCap,
   LayoutDashboard,
   MessageSquare,
   Newspaper,
@@ -30,38 +32,43 @@ interface NavItem {
 const navigationItems: NavItem[] = [
   {
     label: "Dashboard",
-    href: "/",
+    href: "/dashboard",
     icon: LayoutDashboard,
   },
   {
     label: "Students",
-    href: "/student",
+    href: "/Student",
     icon: Users,
   },
   {
     label: "Guardians",
-    href: "/guardian",
+    href: "/Guardian",
     icon: UserCheck,
   },
   {
+    label: "Institutions",
+    href: "/Institution",
+    icon: Building2,
+  },
+  {
     label: "Messages",
-    href: "/messages",
+    href: "/Message",
     icon: MessageSquare,
   },
   {
     label: "News",
-    href: "/news",
+    href: "/News",
     icon: Newspaper,
   },
   {
     label: "Events",
-    href: "/events",
+    href: "/School-Event",
     icon: Calendar,
   },
   {
-    label: "Settings",
-    href: "/settings",
-    icon: Settings,
+    label: "Grades",
+    href: "/Grade",
+    icon: GraduationCap,
   },
 ];
 
@@ -73,8 +80,8 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
-    if (href === "/") {
-      return pathname === "/";
+    if (href === "/dashboard") {
+      return pathname === "/dashboard" || pathname === "/";
     }
     return pathname.startsWith(href);
   };
@@ -112,7 +119,7 @@ export function Sidebar({ className }: SidebarProps) {
         </nav>
       </div>
 
-      {/* Footer section - can be used for app version or additional links */}
+      {/* Footer section */}
       <div className="border-t p-4">
         <p className="text-xs text-muted-foreground text-center">
           Kairos v0.1.0

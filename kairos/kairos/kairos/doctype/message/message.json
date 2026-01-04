@@ -26,7 +26,6 @@
   "column_break_scope",
   "grade",
   "section",
-  "student_group",
   "status_section",
   "status",
   "scheduled_time",
@@ -173,13 +172,6 @@
    "fieldtype": "Link",
    "label": "Section",
    "options": "Section"
-  },
-  {
-   "depends_on": "eval:doc.scope_type == 'Group'",
-   "fieldname": "student_group",
-   "fieldtype": "Link",
-   "label": "Student Group",
-   "options": "Student Group"
   },
   {
    "fieldname": "status_section",
