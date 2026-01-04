@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 const FRAPPE_URL = process.env.NEXT_PUBLIC_FRAPPE_URL || "http://kairos.localhost:8000";
 
+// Cookie durations
+const SESSION_DURATION = undefined; // Session cookie - expires when browser closes
+const REMEMBER_DURATION = 60 * 60 * 24 * 30; // 30 days in seconds
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { username, password } = body;
+    const { username, password, rememberMe = false } = body;
 
     // Make login request to Frappe
     const frappeResponse = await fetch(FRAPPE_URL + "/api/method/login", {
@@ -48,13 +52,25 @@ export async function POST(request: NextRequest) {
     });
 
     // Set the sid cookie for the client
+    // If rememberMe is true, set a 30-day cookie; otherwise, session cookie
     if (sidCookie) {
-      response.cookies.set("sid", sidCookie, {
+      const cookieOptions: {
+        httpOnly: boolean;
+        path: string;
+        sameSite: "lax";
+        maxAge?: number;
+      } = {
         httpOnly: false, // Allow JS access for API calls
         path: "/",
         sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      });
+      };
+
+      // Only set maxAge if rememberMe is true (otherwise it's a session cookie)
+      if (rememberMe) {
+        cookieOptions.maxAge = REMEMBER_DURATION;
+      }
+
+      response.cookies.set("sid", sidCookie, cookieOptions);
     }
 
     return response;

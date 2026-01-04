@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -54,6 +54,15 @@ export default function LoginPage() {
     },
   });
 
+  // Pre-fill username if user was remembered
+  useEffect(() => {
+    const rememberedUser = localStorage.getItem("kairos_remembered_user");
+    if (rememberedUser) {
+      form.setValue("username", rememberedUser);
+      form.setValue("rememberMe", true);
+    }
+  }, [form]);
+
   const onSubmit = async (data: LoginFormValues) => {
     setIsSubmitting(true);
     setLoginError(null);
@@ -65,6 +74,7 @@ export default function LoginPage() {
         body: JSON.stringify({
           username: data.username,
           password: data.password,
+          rememberMe: data.rememberMe,
         }),
       });
 
@@ -79,7 +89,15 @@ export default function LoginPage() {
         username: data.username,
         fullName: result.user,
         loggedInAt: new Date().toISOString(),
+        rememberMe: data.rememberMe,
       }));
+
+      // If remember me, save username for next visit
+      if (data.rememberMe) {
+        localStorage.setItem("kairos_remembered_user", data.username);
+      } else {
+        localStorage.removeItem("kairos_remembered_user");
+      }
 
       // Redirect to Student list
       window.location.href = "/Student";

@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSessionRefresh } from "@/hooks/use-session-refresh";
 
 function DashboardLoadingSkeleton() {
   return (
@@ -53,6 +54,14 @@ export default function DashboardLayout({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Session refresh - keeps session alive and redirects on expiry
+  useSessionRefresh({
+    enabled: isAuthenticated,
+    onExpire: () => {
+      setIsAuthenticated(false);
+    },
+  });
 
   useEffect(() => {
     // Check if user is logged in via localStorage
