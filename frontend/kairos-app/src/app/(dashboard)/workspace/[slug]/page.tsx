@@ -8,7 +8,7 @@
 
 import { use, useMemo } from "react";
 import Link from "next/link";
-import { useFrappeGetCall } from "frappe-react-sdk";
+import { useFrappeGetDoc } from "frappe-react-sdk";
 import {
   Card,
   CardContent,
@@ -220,16 +220,12 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   const { slug } = use(params);
   const workspaceName = slugToWorkspaceName(slug);
 
-  // Fetch workspace details
-  const { data, error, isLoading } = useFrappeGetCall<{
-    message: WorkspaceResponse;
-  }>(
-    "frappe.desk.desktop.get_desktop_page",
-    { page: workspaceName },
+  // Fetch workspace document directly
+  const { data: workspace, error, isLoading } = useFrappeGetDoc<WorkspaceData>(
+    "Workspace",
+    workspaceName,
     `workspace_${slug}`
   );
-
-  const workspace = data?.message?.workspace;
 
   // Group links by Card Break
   const linkGroups = useMemo(() => {
