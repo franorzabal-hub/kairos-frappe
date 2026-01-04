@@ -59,20 +59,25 @@ export function useSessionRefresh(options: UseSessionRefreshOptions = {}) {
   useEffect(() => {
     if (!enabled) return;
 
-    // Do an initial check
-    doRefresh();
-
-    // Set up periodic refresh
-    intervalRef.current = setInterval(doRefresh, interval);
+    // Skip initial check - trust localStorage on first load
+    // Only start periodic refresh after a delay to let the session stabilize
+    const startDelay = setTimeout(() => {
+      // Set up periodic refresh (don't check immediately)
+      intervalRef.current = setInterval(doRefresh, interval);
+    }, 5000); // Wait 5 seconds before starting refresh cycle
 
     // Also refresh on window focus (user returning to tab)
+    // But only after the initial delay
     const handleFocus = () => {
-      doRefresh();
+      if (intervalRef.current) {
+        doRefresh();
+      }
     };
 
     window.addEventListener("focus", handleFocus);
 
     return () => {
+      clearTimeout(startDelay);
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
