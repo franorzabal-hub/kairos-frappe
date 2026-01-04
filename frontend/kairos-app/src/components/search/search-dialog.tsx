@@ -10,7 +10,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useFrappeGetDoc } from "frappe-react-sdk";
 import {
@@ -25,10 +25,9 @@ import {
   MapPin,
   MessageSquare,
   Newspaper,
-  Plus,
+  Phone,
   Search,
   Tag,
-  User,
   UserCheck,
   Users,
   X,
@@ -52,18 +51,6 @@ import { useGlobalSearch, type GlobalSearchResult } from "@/hooks/use-global-sea
 interface SearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-interface RecordItemProps {
-  item: GlobalSearchResult;
-  isSelected: boolean;
-  onSelect: () => void;
-  onNavigate: () => void;
-}
-
-interface RecordPreviewProps {
-  item: GlobalSearchResult | null;
-  isLoading: boolean;
 }
 
 // ============================================================================
@@ -90,42 +77,17 @@ function getDocTypeConfig(doctype: string) {
 // Avatar Component
 // ============================================================================
 
-function Avatar({
-  src,
-  name,
-  doctype,
-  className = ""
-}: {
-  src?: string | null;
-  name: string;
-  doctype: string;
-  className?: string;
-}) {
-  const [error, setError] = useState(false);
+function RecordAvatar({ doctype, className = "" }: { doctype: string; className?: string }) {
   const config = getDocTypeConfig(doctype);
   const Icon = config.icon;
 
-  if (!src || error) {
-    return (
-      <div className={cn(
-        "flex items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-slate-200",
-        className
-      )}>
-        <Icon className="w-4 h-4 text-slate-400" />
-      </div>
-    );
-  }
-
   return (
-    <img
-      src={src}
-      alt={name}
-      onError={() => setError(true)}
-      className={cn(
-        "rounded-lg object-contain bg-white border border-slate-100",
-        className
-      )}
-    />
+    <div className={cn(
+      "flex items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-slate-200",
+      className
+    )}>
+      <Icon className="w-4 h-4 text-slate-500" />
+    </div>
   );
 }
 
@@ -139,7 +101,7 @@ function TypeBadge({ doctype }: { doctype: string }) {
 
   return (
     <span className={cn(
-      "inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border",
+      "inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-md border",
       config.bgColor,
       config.color
     )}>
@@ -153,9 +115,17 @@ function TypeBadge({ doctype }: { doctype: string }) {
 // Record Item Component
 // ============================================================================
 
-function RecordItem({ item, isSelected, onSelect, onNavigate }: RecordItemProps) {
-  const config = getDocTypeConfig(item.doctype);
-
+function RecordItem({
+  item,
+  isSelected,
+  onSelect,
+  onNavigate,
+}: {
+  item: GlobalSearchResult;
+  isSelected: boolean;
+  onSelect: () => void;
+  onNavigate: () => void;
+}) {
   return (
     <div
       onClick={onSelect}
@@ -167,21 +137,12 @@ function RecordItem({ item, isSelected, onSelect, onNavigate }: RecordItemProps)
           : "hover:bg-slate-50 border border-transparent"
       )}
     >
-      <Avatar
-        name={item.name}
-        doctype={item.doctype}
-        className="w-9 h-9"
-      />
+      <RecordAvatar doctype={item.doctype} className="w-9 h-9 flex-shrink-0" />
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-slate-900 text-sm">{item.name}</span>
-          {item.description ? (
-            <span className="text-slate-400 text-sm truncate">{item.description}</span>
-          ) : item.content ? (
-            <span className="text-slate-400 text-sm truncate">{item.content}</span>
-          ) : null}
-        </div>
+        <span className="font-medium text-slate-900 text-sm block truncate">
+          {item.name}
+        </span>
       </div>
 
       <TypeBadge doctype={item.doctype} />
@@ -195,19 +156,35 @@ function RecordItem({ item, isSelected, onSelect, onNavigate }: RecordItemProps)
 
 function DetailRow({
   icon: Icon,
-  children,
-  className = ""
+  label,
+  value,
+  isLink = false,
 }: {
   icon: LucideIcon;
-  children: React.ReactNode;
-  className?: string;
+  label: string;
+  value: string;
+  isLink?: boolean;
 }) {
   return (
-    <div className={cn("flex items-start gap-3", className)}>
-      <div className="w-5 h-5 flex items-center justify-center mt-0.5">
+    <div className="flex items-start gap-3 py-2">
+      <div className="w-5 h-5 flex items-center justify-center mt-0.5 flex-shrink-0">
         <Icon className="w-4 h-4 text-slate-400" />
       </div>
-      <div className="flex-1 min-w-0">{children}</div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-slate-400 mb-0.5">{label}</p>
+        {isLink ? (
+          <a
+            href={value.startsWith("http") ? value : `https://${value}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            {value.replace(/^https?:\/\//, "")}
+          </a>
+        ) : (
+          <p className="text-sm text-slate-700">{value}</p>
+        )}
+      </div>
     </div>
   );
 }
@@ -216,8 +193,13 @@ function DetailRow({
 // Record Preview Component
 // ============================================================================
 
-function RecordPreview({ item, isLoading: searchLoading }: RecordPreviewProps) {
-  // Fetch actual document data when item is selected
+function RecordPreview({
+  item,
+  isSearchLoading,
+}: {
+  item: GlobalSearchResult | null;
+  isSearchLoading: boolean;
+}) {
   const { data: docData, isLoading: docLoading } = useFrappeGetDoc(
     item?.doctype || "",
     item?.name || "",
@@ -233,141 +215,85 @@ function RecordPreview({ item, isLoading: searchLoading }: RecordPreviewProps) {
     );
   }
 
-  const isLoading = searchLoading || docLoading;
+  const isLoading = isSearchLoading || docLoading;
   const doc = docData as Record<string, unknown> | undefined;
-  const config = getDocTypeConfig(item.doctype);
-  const Icon = config.icon;
 
-  // Extract common fields
+  // Extract fields
   const description = doc?.description as string | undefined;
   const email = doc?.email as string | undefined;
-  const phone = doc?.phone as string | undefined;
-  const mobile = doc?.mobile_no as string | undefined;
+  const phone = (doc?.phone || doc?.mobile_no) as string | undefined;
   const website = doc?.website as string | undefined;
   const city = doc?.city as string | undefined;
   const state = doc?.state as string | undefined;
   const country = doc?.country as string | undefined;
   const status = doc?.status as string | undefined;
-  const tags = doc?.tags as string[] | undefined;
+  const fullName = (doc?.full_name || doc?.student_name || doc?.guardian_name) as string | undefined;
 
-  // No communication indicator
-  const hasCommunication = email || phone || mobile;
+  // Build location string
+  const locationParts = [city, state, country].filter(Boolean);
+  const location = locationParts.join(", ");
 
   return (
     <div className="flex flex-col h-full">
-      {/* Detail Header */}
-      <div className="px-6 py-3 border-b border-slate-100 flex items-center gap-3 flex-shrink-0">
-        <Avatar
-          name={item.name}
-          doctype={item.doctype}
-          className="w-7 h-7"
-        />
-        <h2 className="text-base font-semibold text-slate-900">{item.name}</h2>
-        {status ? (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border bg-slate-100 text-slate-500 border-slate-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3 flex-shrink-0">
+        <RecordAvatar doctype={item.doctype} className="w-10 h-10" />
+        <div className="flex-1 min-w-0">
+          <h2 className="text-base font-semibold text-slate-900 truncate">
+            {fullName || item.name}
+          </h2>
+          {fullName && fullName !== item.name && (
+            <p className="text-xs text-slate-400">{item.name}</p>
+          )}
+        </div>
+        {status && (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600">
             {status}
           </span>
-        ) : !hasCommunication && !isLoading ? (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border bg-slate-100 text-slate-500 border-slate-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-            No communication found
-          </span>
-        ) : null}
+        )}
       </div>
 
-      {/* Detail Content */}
+      {/* Content */}
       <ScrollArea className="flex-1">
         <div className="p-6">
-          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
             Details
           </h3>
 
           {isLoading ? (
-            <div className="space-y-4">
+            <div className="space-y-4 mt-4">
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
             </div>
           ) : (
-            <div className="space-y-4">
-              {/* Description */}
+            <div className="divide-y divide-slate-100">
               {description && (
-                <DetailRow icon={Building2}>
+                <div className="py-3">
                   <p className="text-sm text-slate-600 leading-relaxed">{description}</p>
-                </DetailRow>
+                </div>
               )}
 
-              {/* Website */}
-              {website && (
-                <DetailRow icon={Globe}>
-                  <a
-                    href={website.startsWith("http") ? website : `https://${website}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-                  >
-                    {website.replace(/^https?:\/\//, "")}
-                  </a>
-                </DetailRow>
-              )}
-
-              {/* Email */}
               {email && (
-                <DetailRow icon={Mail}>
-                  <a
-                    href={`mailto:${email}`}
-                    className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
-                  >
-                    {email}
-                  </a>
-                </DetailRow>
+                <DetailRow icon={Mail} label="Email" value={email} />
               )}
 
-              {/* Phone */}
-              {(phone || mobile) && (
-                <DetailRow icon={Globe}>
-                  <span className="text-sm text-slate-700">{phone || mobile}</span>
-                </DetailRow>
+              {phone && (
+                <DetailRow icon={Phone} label="Phone" value={phone} />
               )}
 
-              {/* Tags */}
-              {tags && tags.length > 0 && (
-                <DetailRow icon={Tag}>
-                  <div className="flex flex-wrap gap-2">
-                    {tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-md border bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 transition-colors"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </DetailRow>
+              {website && (
+                <DetailRow icon={Globe} label="Website" value={website} isLink />
               )}
 
-              {/* Location */}
-              {city && (
-                <DetailRow icon={MapPin}>
-                  <span className="text-sm text-slate-700">{city}</span>
-                </DetailRow>
-              )}
-              {state && (
-                <DetailRow icon={MapPin}>
-                  <span className="text-sm text-slate-700">{state}</span>
-                </DetailRow>
-              )}
-              {country && (
-                <DetailRow icon={MapPin}>
-                  <span className="text-sm text-slate-700">{country}</span>
-                </DetailRow>
+              {location && (
+                <DetailRow icon={MapPin} label="Location" value={location} />
               )}
 
-              {/* DocType */}
-              <DetailRow icon={Tag}>
+              <div className="py-3">
+                <p className="text-xs text-slate-400 mb-1">Type</p>
                 <TypeBadge doctype={item.doctype} />
-              </DetailRow>
+              </div>
             </div>
           )}
         </div>
@@ -385,46 +311,40 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const {
     query,
     setQuery,
-    flatResults,
+    results,
     isLoading,
     error,
-    recentItems,
     addRecentItem,
-    quickActions,
     clear,
+    loadInitialRecords,
   } = useGlobalSearch();
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedItem, setSelectedItem] = useState<GlobalSearchResult | null>(null);
 
-  // All items to display (results or recent)
-  const displayItems = useMemo(() => {
-    if (flatResults.length > 0) {
-      return flatResults;
-    }
-    if (!query && recentItems.length > 0) {
-      return recentItems.map((item): GlobalSearchResult => ({
-        doctype: item.doctype,
-        name: item.name,
-        content: item.label,
-      }));
-    }
-    return [];
-  }, [flatResults, query, recentItems]);
-
-  // Update selected item when index or items change
+  // Load initial records when dialog opens
   useEffect(() => {
-    if (displayItems.length > 0 && selectedIndex < displayItems.length) {
-      setSelectedItem(displayItems[selectedIndex]);
+    if (open) {
+      loadInitialRecords();
+    }
+  }, [open, loadInitialRecords]);
+
+  // Update selected item when index or results change
+  useEffect(() => {
+    if (results.length > 0 && selectedIndex < results.length) {
+      setSelectedItem(results[selectedIndex]);
+    } else if (results.length > 0) {
+      setSelectedIndex(0);
+      setSelectedItem(results[0]);
     } else {
       setSelectedItem(null);
     }
-  }, [displayItems, selectedIndex]);
+  }, [results, selectedIndex]);
 
-  // Reset selection when results change
+  // Reset selection when results change significantly
   useEffect(() => {
     setSelectedIndex(0);
-  }, [flatResults]);
+  }, [query]);
 
   // Navigate to record
   const navigateToRecord = useCallback(
@@ -438,10 +358,15 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
       const slug = doctypeToSlug(item.doctype);
       const url = `/${slug}/${encodeURIComponent(item.name)}`;
 
-      handleClose();
+      onOpenChange(false);
+      setTimeout(() => {
+        clear();
+        setSelectedIndex(0);
+        setSelectedItem(null);
+      }, 150);
       router.push(url);
     },
-    [router, addRecentItem]
+    [router, addRecentItem, onOpenChange, clear]
   );
 
   // Handle close
@@ -460,12 +385,10 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   }, []);
 
   const navigateDown = useCallback(() => {
-    setSelectedIndex((prev) =>
-      prev < displayItems.length - 1 ? prev + 1 : prev
-    );
-  }, [displayItems.length]);
+    setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : prev));
+  }, [results.length]);
 
-  // Handle keyboard navigation
+  // Keyboard navigation
   useEffect(() => {
     if (!open) return;
 
@@ -496,7 +419,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [open, selectedItem, navigateUp, navigateDown, navigateToRecord, handleClose]);
 
-  // Keyboard shortcut to open
+  // Global keyboard shortcut to open
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -516,16 +439,13 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [open, onOpenChange]);
 
-  const hasResults = displayItems.length > 0;
-  const showQuickActions = !query && !hasResults;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[700px] p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-5xl h-[600px] p-0 gap-0 overflow-hidden">
         <DialogTitle className="sr-only">Search records</DialogTitle>
 
         <div className="flex flex-col h-full">
-          {/* 1. Search Header - Full width */}
+          {/* Search Header */}
           <div className="p-4 border-b border-slate-100 flex-shrink-0">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -551,28 +471,27 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
             </div>
           </div>
 
-          {/* 2. Content Area - Two columns */}
+          {/* Content Area */}
           <div className="flex flex-1 min-h-0">
             {/* Left Panel - Records List */}
             <div className="w-[400px] border-r border-slate-100 flex flex-col min-h-0">
-              <div className="px-4 py-3 border-b border-slate-50 flex-shrink-0">
+              <div className="px-4 py-2 border-b border-slate-50 flex-shrink-0">
                 <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  {query ? "Records" : hasResults ? "Recent" : "Quick Actions"}
+                  Records
                 </span>
               </div>
 
-              {/* Scrollable Records List */}
               <ScrollArea className="flex-1">
                 <div className="p-2 space-y-0.5">
-                  {isLoading && (
+                  {isLoading && results.length === 0 && (
                     <div className="space-y-2 p-2">
-                      {[1, 2, 3].map((i) => (
+                      {[1, 2, 3, 4, 5].map((i) => (
                         <div key={i} className="flex items-center gap-3">
                           <Skeleton className="h-9 w-9 rounded-lg" />
                           <div className="flex-1">
-                            <Skeleton className="h-4 w-32 mb-1" />
-                            <Skeleton className="h-3 w-24" />
+                            <Skeleton className="h-4 w-32" />
                           </div>
+                          <Skeleton className="h-5 w-16 rounded-md" />
                         </div>
                       ))}
                     </div>
@@ -584,7 +503,13 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                     </div>
                   )}
 
-                  {!isLoading && hasResults && displayItems.map((item, index) => (
+                  {!isLoading && results.length === 0 && query && (
+                    <div className="p-4 text-center text-sm text-slate-400">
+                      No results found for "{query}"
+                    </div>
+                  )}
+
+                  {results.map((item, index) => (
                     <RecordItem
                       key={`${item.doctype}-${item.name}`}
                       item={item}
@@ -596,74 +521,46 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                       onNavigate={() => navigateToRecord(item)}
                     />
                   ))}
-
-                  {!isLoading && !hasResults && query && query.length >= 2 && (
-                    <div className="p-4 text-center text-sm text-slate-400">
-                      No results found for "{query}"
-                    </div>
-                  )}
-
-                  {showQuickActions && quickActions.map((action) => {
-                    const config = getDocTypeConfig(action.doctype);
-                    return (
-                      <div
-                        key={action.doctype}
-                        onClick={() => {
-                          const slug = doctypeToSlug(action.doctype);
-                          handleClose();
-                          router.push(`/${slug}/new`);
-                        }}
-                        className="flex items-center gap-3 px-3 py-2.5 cursor-pointer rounded-lg hover:bg-slate-50 transition-colors"
-                      >
-                        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-blue-50">
-                          <Plus className="w-4 h-4 text-blue-600" />
-                        </div>
-                        <span className="text-sm font-medium text-slate-700">{action.label}</span>
-                      </div>
-                    );
-                  })}
                 </div>
               </ScrollArea>
             </div>
 
             {/* Right Panel - Details */}
-            <div className="flex-1 flex flex-col min-h-0 bg-slate-50/50">
-              <RecordPreview item={selectedItem} isLoading={isLoading} />
+            <div className="flex-1 flex flex-col min-h-0 bg-slate-50/30">
+              <RecordPreview item={selectedItem} isSearchLoading={isLoading} />
             </div>
           </div>
 
-          {/* 3. Actions Footer - Full width */}
+          {/* Footer */}
           <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-between flex-shrink-0 bg-white">
-            {/* Left - Navigation */}
+            {/* Navigation */}
             <div className="flex items-center gap-2">
               <button
                 onClick={navigateUp}
-                className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors"
+                disabled={selectedIndex === 0}
+                className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors disabled:opacity-50"
               >
                 <ChevronUp className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={navigateDown}
-                className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors"
+                disabled={selectedIndex >= results.length - 1}
+                className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-colors disabled:opacity-50"
               >
                 <ChevronDown className="w-3.5 h-3.5" />
               </button>
               <span className="text-xs text-slate-400 ml-1">Navigate</span>
             </div>
 
-            {/* Right - Action Buttons */}
+            {/* Actions */}
             <div className="flex items-center gap-2">
-              <button className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all duration-200 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300">
-                Actions
-                <kbd className="px-1 py-0.5 text-[10px] font-mono bg-slate-100 rounded border border-slate-200">⌘K</kbd>
-              </button>
               <button
                 onClick={() => selectedItem && navigateToRecord(selectedItem)}
                 disabled={!selectedItem}
-                className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all duration-200 bg-blue-500 text-white border border-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-all duration-200 bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Open record
-                <kbd className="px-1 py-0.5 text-[10px] font-mono bg-blue-400/30 rounded border border-blue-400/50">↵</kbd>
+                <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-blue-400/30 rounded">↵</kbd>
               </button>
             </div>
           </div>

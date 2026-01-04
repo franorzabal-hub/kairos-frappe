@@ -6,10 +6,8 @@
 
 export { Awesomebar, AwesomebarTrigger } from "./awesomebar";
 export {
-  SearchResults,
+  SearchResultsList,
   RecentItems,
-  QuickActions,
   useSearchNavigation,
   getDocTypeIcon,
-  getDocTypeLabel,
 } from "./search-results";

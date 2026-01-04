@@ -3,7 +3,6 @@
  *
  * Global search command palette for Kairos Desk.
  * Opens with Cmd+K (Mac) or Ctrl+K (Windows/Linux).
- * Provides search across DocTypes, recent items, and quick actions.
  */
 
 "use client";
@@ -26,9 +25,8 @@ import {
 } from "@/components/ui/command";
 import { useGlobalSearch } from "@/hooks/use-global-search";
 import {
-  SearchResults,
+  SearchResultsList,
   RecentItems,
-  QuickActions,
   useSearchNavigation,
 } from "./search-results";
 
@@ -37,9 +35,7 @@ import {
 // ============================================================================
 
 interface AwesomebarProps {
-  /** Additional className for the trigger button */
   className?: string;
-  /** Placeholder text for the search input */
   placeholder?: string;
 }
 
@@ -47,32 +43,12 @@ interface AwesomebarProps {
 // Awesomebar Component
 // ============================================================================
 
-/**
- * Global search command palette component.
- *
- * Features:
- * - Opens with Cmd+K (Mac) or Ctrl+K (Windows/Linux)
- * - Searches across all DocTypes (Students, Guardians, Messages, etc.)
- * - Shows recent items for quick access
- * - Provides quick actions to create new documents
- * - Debounced search with loading states
- *
- * @example
- * ```tsx
- * // In your header/navbar component
- * <Awesomebar />
- *
- * // With custom placeholder
- * <Awesomebar placeholder="Search Kairos..." />
- * ```
- */
 export function Awesomebar({
   className,
   placeholder = "Search or type a command...",
 }: AwesomebarProps) {
   const [open, setOpen] = useState(false);
 
-  // Global search hook
   const {
     query,
     setQuery,
@@ -82,12 +58,11 @@ export function Awesomebar({
     recentItems,
     addRecentItem,
     clearRecentItems,
-    quickActions,
     clear,
+    loadInitialRecords,
   } = useGlobalSearch();
 
-  // Navigation helpers
-  const { navigateToDocument, navigateToNew } = useSearchNavigation(
+  const { navigateToDocument } = useSearchNavigation(
     () => {
       setOpen(false);
       clear();
@@ -95,13 +70,16 @@ export function Awesomebar({
     addRecentItem
   );
 
-  // ============================================================================
-  // Keyboard Shortcut
-  // ============================================================================
+  // Load records when dialog opens
+  useEffect(() => {
+    if (open) {
+      loadInitialRecords();
+    }
+  }, [open, loadInitialRecords]);
 
+  // Keyboard shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd+K (Mac) or Ctrl+K (Windows/Linux)
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setOpen((prev) => !prev);
@@ -112,12 +90,10 @@ export function Awesomebar({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Clear search when dialog closes
   const handleOpenChange = useCallback(
     (isOpen: boolean) => {
       setOpen(isOpen);
       if (!isOpen) {
-        // Delay clearing to avoid flash during close animation
         setTimeout(() => {
           clear();
         }, 150);
@@ -126,23 +102,13 @@ export function Awesomebar({
     [clear]
   );
 
-  // ============================================================================
-  // Computed Values
-  // ============================================================================
-
-  const hasResults = Object.keys(results).length > 0;
+  const hasResults = results.length > 0;
   const hasRecentItems = recentItems.length > 0;
   const showEmptyState = query.length >= 2 && !isLoading && !hasResults;
-  const showQuickActions = !query || query.toLowerCase().startsWith("new");
   const showRecentItems = !query && hasRecentItems;
-
-  // ============================================================================
-  // Render
-  // ============================================================================
 
   return (
     <>
-      {/* Trigger Button */}
       <Button
         variant="outline"
         className={cn(
@@ -165,7 +131,6 @@ export function Awesomebar({
         </kbd>
       </Button>
 
-      {/* Command Dialog */}
       <CommandDialog open={open} onOpenChange={handleOpenChange}>
         <CommandInput
           placeholder={placeholder}
@@ -173,27 +138,23 @@ export function Awesomebar({
           onValueChange={setQuery}
         />
         <CommandList>
-          {/* Loading State */}
           {isLoading && <CommandLoading />}
 
-          {/* Empty State */}
           {showEmptyState && (
             <CommandEmpty>
               No results found for &ldquo;{query}&rdquo;
             </CommandEmpty>
           )}
 
-          {/* Error State */}
           {error && (
             <div className="py-6 text-center text-sm text-destructive">
               {error}
             </div>
           )}
 
-          {/* Search Results */}
           {hasResults && (
             <>
-              <SearchResults
+              <SearchResultsList
                 results={results}
                 onSelect={navigateToDocument}
               />
@@ -201,7 +162,6 @@ export function Awesomebar({
             </>
           )}
 
-          {/* Recent Items (when no query) */}
           {showRecentItems && (
             <>
               <RecentItems
@@ -213,33 +173,17 @@ export function Awesomebar({
             </>
           )}
 
-          {/* Quick Actions */}
-          {showQuickActions && (
-            <QuickActions
-              actions={quickActions}
-              onSelect={navigateToNew}
-              query={query}
-            />
-          )}
-
-          {/* Navigation Hints */}
-          {!query && !hasRecentItems && (
+          {!query && !hasRecentItems && !hasResults && (
             <CommandGroup heading="Tips">
               <CommandItem disabled value="tip-search">
                 <span className="text-muted-foreground">
                   Type to search students, guardians, messages...
                 </span>
               </CommandItem>
-              <CommandItem disabled value="tip-new">
-                <span className="text-muted-foreground">
-                  Type &ldquo;new&rdquo; to create a new document
-                </span>
-              </CommandItem>
             </CommandGroup>
           )}
         </CommandList>
 
-        {/* Footer */}
         <div className="flex items-center justify-between border-t px-3 py-2 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
             <kbd className="rounded border bg-muted px-1.5 py-0.5">
@@ -264,28 +208,15 @@ export function Awesomebar({
   );
 }
 
-// ============================================================================
-// AwesomebarTrigger Component
-// ============================================================================
-
-/**
- * Standalone trigger for the Awesomebar.
- * Use this when you want to customize the trigger appearance.
- */
-interface AwesomebarTriggerProps {
-  /** Children to render inside the trigger */
-  children?: React.ReactNode;
-  /** Additional className */
-  className?: string;
-  /** Callback when clicked */
-  onClick?: () => void;
-}
-
 export function AwesomebarTrigger({
   children,
   className,
   onClick,
-}: AwesomebarTriggerProps) {
+}: {
+  children?: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}) {
   return (
     <Button
       variant="ghost"
@@ -297,9 +228,5 @@ export function AwesomebarTrigger({
     </Button>
   );
 }
-
-// ============================================================================
-// Default Export
-// ============================================================================
 
 export default Awesomebar;
