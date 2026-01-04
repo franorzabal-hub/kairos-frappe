@@ -141,29 +141,13 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
     return Array.from(fields);
   }, [listViewFields, titleField]);
 
-  // Build filters for search
+  // Build filters for search - use title field for simple search
   const filters = useMemo(() => {
     if (!debouncedSearch || !meta) return undefined;
 
-    // Search in title field and name
-    const searchFields = [titleField, "name"].filter(Boolean);
-    const orFilters: Array<[string, string, string]> = searchFields.map(
-      (field) => [field!, "like", `%${debouncedSearch}%`]
-    );
-
-    // If we have search fields defined in meta, add them too
-    if (meta.search_fields) {
-      const additionalFields = meta.search_fields
-        .split(",")
-        .map((f) => f.trim());
-      additionalFields.forEach((field) => {
-        if (!searchFields.includes(field)) {
-          orFilters.push([field, "like", `%${debouncedSearch}%`]);
-        }
-      });
-    }
-
-    return orFilters;
+    // Search by title field (frappe-react-sdk doesn't support OR filters well)
+    const searchField = titleField || "name";
+    return [[searchField, "like", `%${debouncedSearch}%`]] as [string, string, string][];
   }, [debouncedSearch, meta, titleField]);
 
   // Determine sort field and order
