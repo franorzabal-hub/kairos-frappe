@@ -22,6 +22,7 @@ import { useNotification } from "@/hooks/use-notification";
 import { useFrappeDocMeta } from "@/hooks/use-frappe-meta";
 import { DynamicForm } from "@/components/forms/dynamic-form";
 import { Timeline } from "@/components/timeline";
+import { AttachmentsList } from "@/components/attachments";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -215,9 +216,20 @@ export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
           )}
         </div>
 
-        {/* Timeline Sidebar - only shown for existing documents */}
+        {/* Sidebar - only shown for existing documents */}
         {!isNew && (
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
+            {/* Attachments */}
+            <Card>
+              <CardContent className="pt-6">
+                <AttachmentsList
+                  doctype={doctype}
+                  docname={id}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Timeline */}
             <Card className="sticky top-6">
               <CardContent className="pt-6">
                 <Timeline
