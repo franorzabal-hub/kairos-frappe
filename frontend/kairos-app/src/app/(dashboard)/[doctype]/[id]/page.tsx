@@ -58,18 +58,18 @@ export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
   const doctype = slugToDoctype(doctypeSlug);
   const isNew = id === "new";
 
-  // Fetch DocType metadata using frappe.client.get_meta
+  // Fetch DocType metadata using frappe.desk.form.load.getdoctype
   const {
     data: metaResponse,
     isLoading: metaLoading,
     error: metaError,
-  } = useFrappeGetCall<{ message: DocTypeMeta }>(
-    "frappe.client.get_meta",
-    { doctype },
+  } = useFrappeGetCall<{ docs: DocTypeMeta[] }>(
+    "frappe.desk.form.load.getdoctype",
+    { doctype, with_parent: 0 },
     `doctype_meta_${doctype}`
   );
 
-  const docMeta = metaResponse?.message;
+  const docMeta = metaResponse?.docs?.[0];
 
   // Fetch existing document (only if not creating new)
   const {
