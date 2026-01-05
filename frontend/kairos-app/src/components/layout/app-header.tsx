@@ -204,8 +204,13 @@ export function AppHeader({ className }: AppHeaderProps) {
   const hasNext = currentIndex >= 0 && currentIndex < totalCount - 1;
 
   const handleClose = () => {
-    // Use browser back to return to previous page (could be parent record or list)
-    router.back();
+    // Use browser history to return to previous page
+    // This goes back through history: C → B → A → list
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      window.history.back();
+    } else if (pageContext.doctypeSlug) {
+      router.push(`/${pageContext.doctypeSlug}`);
+    }
   };
 
   const handlePrev = () => {
@@ -294,7 +299,7 @@ export function AppHeader({ className }: AppHeaderProps) {
                     <X className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Back to list</TooltipContent>
+                <TooltipContent>Go back</TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
