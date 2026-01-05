@@ -319,13 +319,14 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
                 onSelectionChange={(id, event) => handleRangeSelection(id, currentPageIds, event)}
                 disabled={listLoading}
               />
-              <span className="font-medium text-primary">
+              <span className="font-medium text-primary truncate">
                 {value ? String(value) : "-"}
               </span>
             </div>
           );
         },
         enableSorting: true,
+        minSize: 150,
       },
     ];
 
@@ -346,7 +347,7 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
           if (field.fieldtype === "Check") {
             return (
               <span
-                className={value ? "text-green-600" : "text-muted-foreground"}
+                className={`truncate ${value ? "text-green-600" : "text-muted-foreground"}`}
               >
                 {formattedValue}
               </span>
@@ -355,15 +356,16 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
 
           if (field.fieldtype === "Link") {
             return (
-              <span className="text-blue-600 hover:underline">
+              <span className="truncate text-blue-600 hover:underline">
                 {formattedValue || "-"}
               </span>
             );
           }
 
-          return formattedValue || "-";
+          return <span className="truncate">{formattedValue || "-"}</span>;
         },
         enableSorting: true,
+        minSize: 100,
       });
     });
 
@@ -376,12 +378,13 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
           const value = getValue();
           if (!value) return "-";
           try {
-            return new Date(String(value)).toLocaleDateString();
+            return <span className="truncate">{new Date(String(value)).toLocaleDateString()}</span>;
           } catch {
-            return String(value);
+            return <span className="truncate">{String(value)}</span>;
           }
         },
         enableSorting: true,
+        minSize: 100,
       });
     }
 
