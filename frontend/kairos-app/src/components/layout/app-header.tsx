@@ -237,12 +237,24 @@ export function AppHeader({ className }: AppHeaderProps) {
   };
 
   const handleClose = () => {
-    // Pop from our navigation stack
+    // Priority 1: If we came from a parent record (related tab), go back to parent
+    if (hasParentContext && parentDoctype && parentDocname) {
+      const parentSlug = parentDoctype.toLowerCase().replace(/ /g, "-");
+      // Include tab parameter to return to the related tab
+      const tabParam = `?tab=related_${pageContext.doctype}`;
+      router.push(`/${parentSlug}/${encodeURIComponent(parentDocname)}${tabParam}`);
+      return;
+    }
+
+    // Priority 2: Pop from our navigation stack (for arrow navigation)
     const prevUrl = popFromNavStack();
     if (prevUrl) {
       router.push(prevUrl);
-    } else if (pageContext.doctypeSlug) {
-      // Fallback to list view
+      return;
+    }
+
+    // Priority 3: Fallback to list view
+    if (pageContext.doctypeSlug) {
       router.push(`/${pageContext.doctypeSlug}`);
     }
   };
