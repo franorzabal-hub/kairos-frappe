@@ -787,11 +787,11 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
 
       {/* Secondary toolbar: Sort indicator + Filter (Attio style) */}
       <div className="flex items-center gap-2 px-6 py-2 border-b bg-background">
-        <div className="flex items-center rounded-md border border-border/50 bg-muted/50">
-          {/* Sort indicator with dropdown */}
+        {/* Sort indicator with dropdown */}
+        <div className="rounded-md border border-border/50 bg-muted/50">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground rounded-r-none">
+              <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
               {currentSortField?.desc ? (
                 <ArrowDown className="h-4 w-4" />
               ) : (
@@ -865,14 +865,16 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
             </div>
           </PopoverContent>
           </Popover>
+        </div>
 
-          {/* Divider */}
-          <div className="w-px h-5 bg-border/50" />
+        {/* Divider */}
+        <div className="w-px h-4 bg-border/30" />
 
-          {/* Filter button with attribute search */}
+        {/* Filter button with attribute search */}
+        <div className="rounded-md border border-border/50 bg-muted/50">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground rounded-l-none">
+              <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
                 <SlidersHorizontal className="h-4 w-4" />
                 Filter
                 {getValidFilters(filterConditions).length > 0 && (
