@@ -289,48 +289,40 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
   type DocRecord = Record<string, unknown>;
 
   const columns = useMemo<ColumnDef<DocRecord, unknown>[]>(() => {
-    // Start with checkbox column for selection
+    // Name/title column with integrated checkbox
+    const headerLabel = titleField
+      ? listViewFields.find((f) => f.fieldname === titleField)?.label || "Name"
+      : "Name";
+
     const cols: ColumnDef<DocRecord, unknown>[] = [
       {
-        id: "select",
-        header: () => (
-          <HeaderCheckbox
-            isAllSelected={isAllPageSelected}
-            isPartiallySelected={isPartiallySelected}
-            onToggleSelectAll={() => toggleSelectAll(currentPageIds)}
-            disabled={listLoading || currentPageIds.length === 0}
-          />
-        ),
-        cell: ({ row }) => {
-          const rowId = row.original.name as string;
-          return (
-            <RowCheckbox
-              rowId={rowId}
-              isSelected={isSelected(rowId)}
-              onSelectionChange={(id, event) => handleRangeSelection(id, currentPageIds, event)}
-              disabled={listLoading}
-            />
-          );
-        },
-        enableSorting: false,
-        enableResizing: false,
-        size: 40,
-        minSize: 40,
-        maxSize: 40,
-      },
-      // Name/title column
-      {
         accessorKey: titleField || "name",
-        header: titleField
-          ? listViewFields.find((f) => f.fieldname === titleField)?.label ||
-            "Name"
-          : "Name",
-        cell: ({ getValue }) => {
+        header: () => (
+          <div className="flex items-center gap-3">
+            <HeaderCheckbox
+              isAllSelected={isAllPageSelected}
+              isPartiallySelected={isPartiallySelected}
+              onToggleSelectAll={() => toggleSelectAll(currentPageIds)}
+              disabled={listLoading || currentPageIds.length === 0}
+            />
+            <span>{headerLabel}</span>
+          </div>
+        ),
+        cell: ({ row, getValue }) => {
+          const rowId = row.original.name as string;
           const value = getValue();
           return (
-            <span className="font-medium text-primary">
-              {value ? String(value) : "-"}
-            </span>
+            <div className="flex items-center gap-3">
+              <RowCheckbox
+                rowId={rowId}
+                isSelected={isSelected(rowId)}
+                onSelectionChange={(id, event) => handleRangeSelection(id, currentPageIds, event)}
+                disabled={listLoading}
+              />
+              <span className="font-medium text-primary">
+                {value ? String(value) : "-"}
+              </span>
+            </div>
           );
         },
         enableSorting: true,
