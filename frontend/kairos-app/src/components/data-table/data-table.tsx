@@ -237,15 +237,6 @@ export function DataTable<TData, TValue>({
                                 header.column.columnDef.header,
                                 header.getContext()
                               )}
-                              {canSort && sortDirection && (
-                                <span className="ml-auto">
-                                  {sortDirection === "asc" ? (
-                                    <ArrowUp className="h-4 w-4" />
-                                  ) : (
-                                    <ArrowDown className="h-4 w-4" />
-                                  )}
-                                </span>
-                              )}
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="start" className="w-48">

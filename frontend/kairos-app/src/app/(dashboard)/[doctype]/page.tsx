@@ -29,6 +29,8 @@ import {
   Download,
   Upload,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   SlidersHorizontal,
   GripVertical,
   Check,
@@ -672,7 +674,11 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
   const currentSortField = sorting.length > 0 ? sorting[0] : null;
   const currentSortFieldLabel = currentSortField
     ? (listViewFields.find((f) => f.fieldname === currentSortField.id)?.label ||
-       (currentSortField.id === "modified" ? "Modified" : currentSortField.id))
+       (currentSortField.id === "modified" ? "Modified" :
+        currentSortField.id === "creation" ? "Created" :
+        currentSortField.id === "name" ? "Name" :
+        currentSortField.id === titleField ? (listViewFields.find((f) => f.fieldname === titleField)?.label || "Name") :
+        currentSortField.id))
     : null;
 
   return (
@@ -785,7 +791,11 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
-              <ArrowUpDown className="h-4 w-4" />
+              {currentSortField?.desc ? (
+                <ArrowDown className="h-4 w-4" />
+              ) : (
+                <ArrowUp className="h-4 w-4" />
+              )}
               Sorted by {currentSortFieldLabel || "Modified"}
             </Button>
           </PopoverTrigger>
