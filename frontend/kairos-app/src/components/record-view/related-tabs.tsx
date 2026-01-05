@@ -53,7 +53,6 @@ import {
   Reply,
   CalendarCheck,
   ClipboardList,
-  ExternalLink,
   Mail,
   Trash2,
   X,
@@ -751,7 +750,6 @@ function RelatedContent({ config, docname, parentDoctype, isNew }: RelatedConten
               {displayFields.map((field) => (
                 <TableHead key={field.fieldname}>{field.label}</TableHead>
               ))}
-              <TableHead className="w-10"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -801,13 +799,6 @@ function RelatedContent({ config, docname, parentDoctype, isNew }: RelatedConten
                       )}
                     </TableCell>
                   ))}
-                  <TableCell>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                      <Link href={`/${slug}/${encodeURIComponent(rowId)}?parentDoctype=${encodeURIComponent(parentDoctype)}&parent=${encodeURIComponent(docname)}&linkField=${encodeURIComponent(config.linkField)}`}>
-                        <ExternalLink className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </TableCell>
                 </TableRow>
               );
             })}
