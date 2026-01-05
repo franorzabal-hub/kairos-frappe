@@ -323,7 +323,7 @@ function EditableField({
             <CommandList>
               <CommandEmpty>No results found</CommandEmpty>
               <CommandGroup>
-                {value && (
+                {value != null && value !== "" && (
                   <CommandItem
                     value=""
                     onSelect={() => {
@@ -344,7 +344,7 @@ function EditableField({
                     }}
                   >
                     {opt.name}
-                    {opt.name === value && (
+                    {opt.name === String(value) && (
                       <Check className="ml-auto h-4 w-4" />
                     )}
                   </CommandItem>

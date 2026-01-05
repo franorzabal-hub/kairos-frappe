@@ -43,6 +43,7 @@ import { useFrappeGetDocList, useFrappeGetDoc } from "frappe-react-sdk";
 import { cn, slugToDoctype } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useSidebar } from "./sidebar-context";
 import {
   Tooltip,
   TooltipContent,
@@ -151,6 +152,7 @@ export function AppHeader({ className }: AppHeaderProps) {
   const { user, isLoading, logout } = useCurrentUser();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pageContext = usePageContext();
+  const { width: sidebarWidth, isCollapsed: sidebarCollapsed } = useSidebar();
 
   // Check if we came from a parent record (related tab navigation)
   const parentDoctype = searchParams.get("parentDoctype");
@@ -298,7 +300,13 @@ export function AppHeader({ className }: AppHeaderProps) {
       )}
     >
       {/* Left: Logo + Workspace Selector (same width as sidebar) */}
-      <div className="hidden md:flex items-center gap-1 w-64 flex-shrink-0 border-r bg-muted/50 px-3">
+      <div
+        className={cn(
+          "hidden md:flex items-center gap-1 flex-shrink-0 border-r bg-muted/50 px-3 transition-[width] duration-200 overflow-hidden",
+          sidebarCollapsed && "w-0 px-0 border-r-0"
+        )}
+        style={{ width: sidebarCollapsed ? 0 : sidebarWidth }}
+      >
         {/* Logo */}
         <Link
           href="/"
