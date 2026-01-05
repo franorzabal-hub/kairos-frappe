@@ -24,9 +24,13 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  MoveRight,
+  MoveLeft,
+  Pencil,
+  EyeOff,
+  Check,
 } from "lucide-react";
 
 import {
@@ -46,6 +50,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 export interface DataTableProps<TData, TValue> {
@@ -73,6 +84,12 @@ export interface DataTableProps<TData, TValue> {
   showPageSizeSelector?: boolean;
   /** Available page sizes */
   pageSizeOptions?: number[];
+  /** Callback when column visibility changes */
+  onColumnVisibilityChange?: (columnId: string, visible: boolean) => void;
+  /** Callback when column order changes */
+  onColumnOrderChange?: (columnId: string, direction: "left" | "right") => void;
+  /** Callback when column label is edited */
+  onColumnLabelEdit?: (columnId: string) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -88,6 +105,9 @@ export function DataTable<TData, TValue>({
   emptyMessage = "No results found.",
   showPageSizeSelector = true,
   pageSizeOptions = [10, 20, 30, 50, 100],
+  onColumnVisibilityChange,
+  onColumnOrderChange,
+  onColumnLabelEdit,
 }: DataTableProps<TData, TValue>) {
   // Internal sorting state (when uncontrolled)
   const [internalSorting, setInternalSorting] = React.useState<SortingState>([]);
@@ -173,46 +193,117 @@ export function DataTable<TData, TValue>({
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
+                {headerGroup.headers.map((header, headerIndex) => {
                   const canSort = header.column.getCanSort();
                   const sortDirection = header.column.getIsSorted();
-
                   const canResize = header.column.getCanResize();
+                  const isFirstColumn = header.index === 0;
+                  const isLastColumn = header.index === headerGroup.headers.length - 1;
+                  const columnId = header.column.id;
 
                   return (
                     <TableHead
                       key={header.id}
                       style={{
                         width: header.getSize(),
-                        position: header.index === 0 ? "sticky" : "relative",
-                        left: header.index === 0 ? 0 : undefined,
-                        zIndex: header.index === 0 ? 10 : undefined,
+                        position: isFirstColumn ? "sticky" : "relative",
+                        left: isFirstColumn ? 0 : undefined,
+                        zIndex: isFirstColumn ? 10 : undefined,
                       }}
                       className={cn(
-                        canSort && "cursor-pointer select-none hover:bg-muted/50",
-                        header.index === 0 && "bg-background",
-                        header.index === headerGroup.headers.length - 1 && "pr-4"
+                        isFirstColumn && "bg-background",
+                        isLastColumn && "pr-4"
                       )}
-                      onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
                     >
                       {header.isPlaceholder ? null : (
-                        <div className="flex items-center gap-2">
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                          {canSort && (
-                            <span className="ml-auto">
-                              {sortDirection === "asc" ? (
-                                <ArrowUp className="h-4 w-4" />
-                              ) : sortDirection === "desc" ? (
-                                <ArrowDown className="h-4 w-4" />
-                              ) : (
-                                <ArrowUpDown className="h-4 w-4 text-muted-foreground/50" />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className={cn(
+                                "flex items-center gap-2 w-full text-left hover:bg-muted/50 -mx-2 px-2 py-1 rounded-sm",
+                                canSort && "cursor-pointer"
                               )}
-                            </span>
-                          )}
-                        </div>
+                            >
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                              {canSort && sortDirection && (
+                                <span className="ml-auto">
+                                  {sortDirection === "asc" ? (
+                                    <ArrowUp className="h-4 w-4" />
+                                  ) : (
+                                    <ArrowDown className="h-4 w-4" />
+                                  )}
+                                </span>
+                              )}
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" className="w-48">
+                            {canSort && (
+                              <>
+                                <DropdownMenuItem
+                                  onClick={() => header.column.toggleSorting(false)}
+                                  className="flex items-center justify-between"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <ArrowUp className="h-4 w-4" />
+                                    <span>Sort ascending</span>
+                                  </div>
+                                  {sortDirection === "asc" && (
+                                    <Check className="h-4 w-4 text-primary" />
+                                  )}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => header.column.toggleSorting(true)}
+                                  className="flex items-center justify-between"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <ArrowDown className="h-4 w-4" />
+                                    <span>Sort descending</span>
+                                  </div>
+                                  {sortDirection === "desc" && (
+                                    <Check className="h-4 w-4 text-primary" />
+                                  )}
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            {!isFirstColumn && (
+                              <DropdownMenuItem
+                                onClick={() => onColumnOrderChange?.(columnId, "left")}
+                                disabled={headerIndex === 1}
+                              >
+                                <MoveLeft className="h-4 w-4 mr-2" />
+                                <span>Move left</span>
+                              </DropdownMenuItem>
+                            )}
+                            {!isLastColumn && !isFirstColumn && (
+                              <DropdownMenuItem
+                                onClick={() => onColumnOrderChange?.(columnId, "right")}
+                              >
+                                <MoveRight className="h-4 w-4 mr-2" />
+                                <span>Move right</span>
+                              </DropdownMenuItem>
+                            )}
+                            {(canSort || !isFirstColumn) && <DropdownMenuSeparator />}
+                            {onColumnLabelEdit && !isFirstColumn && (
+                              <DropdownMenuItem
+                                onClick={() => onColumnLabelEdit?.(columnId)}
+                              >
+                                <Pencil className="h-4 w-4 mr-2" />
+                                <span>Edit column label</span>
+                              </DropdownMenuItem>
+                            )}
+                            {onColumnVisibilityChange && !isFirstColumn && (
+                              <DropdownMenuItem
+                                onClick={() => onColumnVisibilityChange?.(columnId, false)}
+                              >
+                                <EyeOff className="h-4 w-4 mr-2" />
+                                <span>Hide from view</span>
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       )}
                       {/* Resize handle */}
                       {canResize && (
