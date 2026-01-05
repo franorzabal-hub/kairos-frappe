@@ -217,7 +217,7 @@ export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
                   doctype={doctype}
                   docname={id}
                   isNew={isNew}
-                  className="border-b"
+                  className="flex-1"
                 />
               )}
 

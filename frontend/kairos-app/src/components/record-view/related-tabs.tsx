@@ -284,7 +284,7 @@ export function RelatedTabs({
       </div>
 
       {/* Tab content */}
-      <div className="flex-1 overflow-auto max-h-[400px]">
+      <div className="flex-1 overflow-auto">
         {activeTab === "overview" && (
           <OverviewContent
             meta={meta}
