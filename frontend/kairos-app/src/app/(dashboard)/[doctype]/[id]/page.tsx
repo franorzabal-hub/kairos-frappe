@@ -246,6 +246,7 @@ export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
             docname={id}
             isNew={isNew}
             className="w-[400px] hidden lg:flex"
+            onUpdate={() => mutateDoc()}
           />
         )}
       </div>

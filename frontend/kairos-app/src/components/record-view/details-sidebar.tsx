@@ -2,27 +2,51 @@
  * DetailsSidebar Component
  *
  * Right sidebar showing:
- * - Details tab: Field values in a read-only format
+ * - Details tab: Field values with inline editing (auto-save on blur)
  * - Comments tab: Comment thread
  */
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useFrappeUpdateDoc, useFrappeGetDocList } from "frappe-react-sdk";
 import { DocTypeField, DocTypeMeta } from "@/types/frappe";
 import { Timeline } from "@/components/timeline";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-import { getFieldDisplayValue } from "@/hooks/use-frappe-meta";
+import { useNotification } from "@/hooks/use-notification";
 import {
   Grid3X3,
   MessageSquare,
   ChevronDown,
   ChevronRight,
+  Loader2,
+  Check,
 } from "lucide-react";
 
 // ============================================================================
@@ -42,6 +66,8 @@ interface DetailsSidebarProps {
   isNew?: boolean;
   /** Custom className */
   className?: string;
+  /** Callback when document is updated */
+  onUpdate?: () => void;
 }
 
 type TabType = "details" | "comments";
@@ -71,58 +97,372 @@ const LAYOUT_FIELD_TYPES = [
   "HTML",
 ];
 
+const READ_ONLY_FIELD_TYPES = [
+  "Read Only",
+  "HTML",
+  "Image",
+  "Attach",
+  "Attach Image",
+];
+
 // ============================================================================
 // Helper Functions
 // ============================================================================
 
-function formatValue(
-  value: unknown,
-  field: DocTypeField
-): { display: string; isLink?: boolean; href?: string } {
+function formatDisplayValue(value: unknown, field: DocTypeField): string {
   if (value === null || value === undefined || value === "") {
-    return { display: "—" };
+    return "—";
   }
 
-  // Handle Link fields
-  if (field.fieldtype === "Link" && field.options && value) {
-    const doctype = field.options;
-    const slug = doctype.toLowerCase().replace(/ /g, "-");
-    return {
-      display: String(value),
-      isLink: true,
-      href: `/${slug}/${encodeURIComponent(String(value))}`,
-    };
-  }
-
-  // Handle Check fields
   if (field.fieldtype === "Check") {
-    return { display: value ? "Yes" : "No" };
+    return value ? "Yes" : "No";
   }
 
-  // Handle Date fields
   if (field.fieldtype === "Date" && typeof value === "string") {
     try {
-      return { display: new Date(value).toLocaleDateString() };
+      return new Date(value).toLocaleDateString();
     } catch {
-      return { display: String(value) };
+      return String(value);
     }
   }
 
-  // Handle Datetime fields
   if (field.fieldtype === "Datetime" && typeof value === "string") {
     try {
-      return { display: new Date(value).toLocaleString() };
+      return new Date(value).toLocaleString();
     } catch {
-      return { display: String(value) };
+      return String(value);
     }
   }
 
-  // Handle Select fields (could show badges)
-  if (field.fieldtype === "Select") {
-    return { display: String(value) };
+  return String(value);
+}
+
+function getSelectOptions(field: DocTypeField): string[] {
+  if (!field.options) return [];
+  return field.options.split("\n").filter(Boolean);
+}
+
+// ============================================================================
+// Editable Field Component
+// ============================================================================
+
+interface EditableFieldProps {
+  field: DocTypeField;
+  value: unknown;
+  doctype: string;
+  docname: string;
+  onUpdate?: () => void;
+  isNew?: boolean;
+}
+
+function EditableField({
+  field,
+  value,
+  doctype,
+  docname,
+  onUpdate,
+  isNew,
+}: EditableFieldProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState<string>(value != null ? String(value) : "");
+  const [isSaving, setIsSaving] = useState(false);
+  const [linkSearchOpen, setLinkSearchOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { showError } = useNotification();
+  const { updateDoc } = useFrappeUpdateDoc();
+
+  // For Link fields, search linked records
+  const [linkSearch, setLinkSearch] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: linkOptions } = useFrappeGetDocList<any>(
+    field.options || "",
+    {
+      fields: ["name"],
+      filters: linkSearch ? [["name", "like", `%${linkSearch}%`]] : [],
+      limit: 10,
+    },
+    field.fieldtype === "Link" && linkSearchOpen ? `link_${field.options}_${linkSearch}` : null
+  );
+
+  // Focus input when editing starts
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  // Reset edit value when external value changes
+  useEffect(() => {
+    setEditValue(value != null ? String(value) : "");
+  }, [value]);
+
+  const isReadOnly =
+    isNew ||
+    field.read_only === 1 ||
+    READ_ONLY_FIELD_TYPES.includes(field.fieldtype);
+
+  const handleSave = async (newValue: unknown) => {
+    if (isNew || isReadOnly) return;
+
+    // Skip if value hasn't changed
+    const currentValue = value ?? "";
+    const compareNewValue = newValue ?? "";
+    if (String(currentValue) === String(compareNewValue)) {
+      setIsEditing(false);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await updateDoc(doctype, docname, {
+        [field.fieldname]: newValue,
+      });
+      onUpdate?.();
+    } catch (error) {
+      showError(error instanceof Error ? error.message : "Failed to save");
+      // Reset to original value on error
+      setEditValue(value != null ? String(value) : "");
+    } finally {
+      setIsSaving(false);
+      setIsEditing(false);
+    }
+  };
+
+  const handleBlur = () => {
+    if (field.fieldtype === "Check") return; // Checkbox handles its own save
+    handleSave(editValue);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSave(editValue);
+    } else if (e.key === "Escape") {
+      setEditValue(value != null ? String(value) : "");
+      setIsEditing(false);
+    }
+  };
+
+  // Render based on field type
+  const displayValue = formatDisplayValue(value, field);
+
+  // Check field - inline toggle
+  if (field.fieldtype === "Check") {
+    return (
+      <div className="flex items-center">
+        {isSaving ? (
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        ) : (
+          <Checkbox
+            checked={!!value}
+            disabled={isReadOnly}
+            onCheckedChange={async (checked) => {
+              if (isReadOnly) return;
+              setIsSaving(true);
+              try {
+                await updateDoc(doctype, docname, {
+                  [field.fieldname]: checked ? 1 : 0,
+                });
+                onUpdate?.();
+              } catch (error) {
+                showError(error instanceof Error ? error.message : "Failed to save");
+              } finally {
+                setIsSaving(false);
+              }
+            }}
+          />
+        )}
+      </div>
+    );
   }
 
-  return { display: String(value) };
+  // Link field - with autocomplete
+  if (field.fieldtype === "Link" && field.options) {
+    const slug = field.options.toLowerCase().replace(/ /g, "-");
+
+    if (isReadOnly) {
+      return value ? (
+        <Link
+          href={`/${slug}/${encodeURIComponent(String(value))}`}
+          className="text-primary hover:underline truncate block"
+        >
+          {displayValue}
+        </Link>
+      ) : (
+        <span className="text-muted-foreground">—</span>
+      );
+    }
+
+    return (
+      <Popover open={linkSearchOpen} onOpenChange={setLinkSearchOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className={cn(
+              "w-full text-left text-sm truncate px-2 py-1 -mx-2 rounded hover:bg-accent transition-colors",
+              isSaving && "opacity-50"
+            )}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : value ? (
+              <span className="text-primary">{displayValue}</span>
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            )}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[200px] p-0" align="start">
+          <Command>
+            <CommandInput
+              placeholder={`Search ${field.options}...`}
+              value={linkSearch}
+              onValueChange={setLinkSearch}
+            />
+            <CommandList>
+              <CommandEmpty>No results found</CommandEmpty>
+              <CommandGroup>
+                {value && (
+                  <CommandItem
+                    value=""
+                    onSelect={() => {
+                      handleSave("");
+                      setLinkSearchOpen(false);
+                    }}
+                  >
+                    <span className="text-muted-foreground">Clear</span>
+                  </CommandItem>
+                )}
+                {linkOptions?.map((opt: { name: string }) => (
+                  <CommandItem
+                    key={opt.name}
+                    value={opt.name}
+                    onSelect={() => {
+                      handleSave(opt.name);
+                      setLinkSearchOpen(false);
+                    }}
+                  >
+                    {opt.name}
+                    {opt.name === value && (
+                      <Check className="ml-auto h-4 w-4" />
+                    )}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
+  // Select field
+  if (field.fieldtype === "Select") {
+    const options = getSelectOptions(field);
+
+    if (isReadOnly) {
+      return displayValue !== "—" ? (
+        <Badge variant="secondary">{displayValue}</Badge>
+      ) : (
+        <span className="text-muted-foreground">—</span>
+      );
+    }
+
+    return (
+      <Select
+        value={editValue}
+        onValueChange={(newValue) => {
+          setEditValue(newValue);
+          handleSave(newValue);
+        }}
+        disabled={isSaving}
+      >
+        <SelectTrigger className="h-7 text-sm border-0 shadow-none px-2 -mx-2 hover:bg-accent">
+          {isSaving ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <SelectValue placeholder="—" />
+          )}
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((opt) => (
+            <SelectItem key={opt} value={opt}>
+              {opt}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  }
+
+  // Date field
+  if (field.fieldtype === "Date") {
+    if (isReadOnly) {
+      return (
+        <span className={displayValue === "—" ? "text-muted-foreground" : ""}>
+          {displayValue}
+        </span>
+      );
+    }
+
+    return isEditing ? (
+      <Input
+        ref={inputRef}
+        type="date"
+        value={editValue}
+        onChange={(e) => setEditValue(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        disabled={isSaving}
+        className="h-7 text-sm"
+      />
+    ) : (
+      <button
+        type="button"
+        onClick={() => setIsEditing(true)}
+        className={cn(
+          "w-full text-left text-sm truncate px-2 py-1 -mx-2 rounded hover:bg-accent transition-colors",
+          displayValue === "—" && "text-muted-foreground"
+        )}
+      >
+        {displayValue}
+      </button>
+    );
+  }
+
+  // Default: Text input
+  if (isReadOnly) {
+    return (
+      <span className={displayValue === "—" ? "text-muted-foreground" : "truncate block"}>
+        {displayValue}
+      </span>
+    );
+  }
+
+  return isEditing ? (
+    <Input
+      ref={inputRef}
+      type={field.fieldtype === "Int" || field.fieldtype === "Float" || field.fieldtype === "Currency" ? "number" : "text"}
+      value={editValue}
+      onChange={(e) => setEditValue(e.target.value)}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      disabled={isSaving}
+      className="h-7 text-sm"
+    />
+  ) : (
+    <button
+      type="button"
+      onClick={() => setIsEditing(true)}
+      className={cn(
+        "w-full text-left text-sm truncate px-2 py-1 -mx-2 rounded hover:bg-accent transition-colors",
+        displayValue === "—" && "text-muted-foreground"
+      )}
+    >
+      {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : displayValue}
+    </button>
+  );
 }
 
 // ============================================================================
@@ -136,6 +476,7 @@ export function DetailsSidebar({
   docname,
   isNew = false,
   className,
+  onUpdate,
 }: DetailsSidebarProps) {
   const [activeTab, setActiveTab] = useState<TabType>("details");
 
@@ -151,17 +492,6 @@ export function DetailsSidebar({
   }, [meta.fields]);
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(allSectionNames);
-
-  // Get displayable fields
-  const displayFields = useMemo(() => {
-    return meta.fields.filter(
-      (field) =>
-        !EXCLUDED_FIELDS.includes(field.fieldname) &&
-        !LAYOUT_FIELD_TYPES.includes(field.fieldtype) &&
-        field.hidden !== 1 &&
-        field.fieldtype !== "Table" // Tables shown in tabs
-    );
-  }, [meta.fields]);
 
   // Group fields by section
   const fieldSections = useMemo(() => {
@@ -231,7 +561,7 @@ export function DetailsSidebar({
       </div>
 
       {/* Tab content */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 h-0">
         {activeTab === "details" ? (
           <div className="p-4 space-y-4">
             {fieldSections.map((section) => (
@@ -240,7 +570,7 @@ export function DetailsSidebar({
                 <button
                   type="button"
                   onClick={() => toggleSection(section.name)}
-                  className="flex items-center gap-2 w-full text-left py-2 hover:bg-accent/50 rounded -mx-2 px-2"
+                  className="flex items-center gap-2 w-full text-left py-2 hover:bg-accent/50 rounded -mx-2 px-2 cursor-pointer"
                 >
                   {expandedSections.has(section.name) ? (
                     <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -252,41 +582,24 @@ export function DetailsSidebar({
 
                 {/* Section fields */}
                 {expandedSections.has(section.name) && (
-                  <div className="space-y-2 mt-2 ml-6">
-                    {section.fields.map((field) => {
-                      const value = doc[field.fieldname];
-                      const formatted = formatValue(value, field);
-
-                      return (
-                        <div key={field.fieldname} className="flex items-center gap-2 py-1">
-                          <div className="text-sm text-muted-foreground flex-shrink-0 w-[140px]">
-                            {field.label}
-                          </div>
-                          <div className="text-sm flex-1 min-w-0">
-                            {formatted.isLink && formatted.href ? (
-                              <Link
-                                href={formatted.href}
-                                className="text-primary hover:underline truncate block"
-                              >
-                                {formatted.display}
-                              </Link>
-                            ) : formatted.display === "—" ? (
-                              <span className="text-muted-foreground">
-                                {formatted.display}
-                              </span>
-                            ) : field.fieldtype === "Select" ? (
-                              <Badge variant="secondary">
-                                {formatted.display}
-                              </Badge>
-                            ) : (
-                              <span className="truncate block">
-                                {formatted.display}
-                              </span>
-                            )}
-                          </div>
+                  <div className="space-y-1 mt-2 ml-6">
+                    {section.fields.map((field) => (
+                      <div key={field.fieldname} className="flex items-center gap-2 py-1">
+                        <div className="text-sm text-muted-foreground flex-shrink-0 w-[140px]">
+                          {field.label}
                         </div>
-                      );
-                    })}
+                        <div className="text-sm flex-1 min-w-0">
+                          <EditableField
+                            field={field}
+                            value={doc[field.fieldname]}
+                            doctype={doctype}
+                            docname={docname}
+                            onUpdate={onUpdate}
+                            isNew={isNew}
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -298,7 +611,7 @@ export function DetailsSidebar({
               <button
                 type="button"
                 onClick={() => toggleSection("System Info")}
-                className="flex items-center gap-2 w-full text-left py-2 hover:bg-accent/50 rounded -mx-2 px-2"
+                className="flex items-center gap-2 w-full text-left py-2 hover:bg-accent/50 rounded -mx-2 px-2 cursor-pointer"
               >
                 {expandedSections.has("System Info") ? (
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -309,7 +622,7 @@ export function DetailsSidebar({
               </button>
 
               {expandedSections.has("System Info") && (
-                <div className="space-y-2 mt-2 ml-6 text-sm">
+                <div className="space-y-1 mt-2 ml-6 text-sm">
                   <div className="flex items-center gap-2 py-1">
                     <div className="text-sm text-muted-foreground flex-shrink-0 w-[140px]">ID</div>
                     <div className="font-mono text-xs truncate">{doc.name as string}</div>
@@ -346,6 +659,9 @@ export function DetailsSidebar({
                 docname={docname}
                 maxItems={20}
                 showInput={true}
+                defaultFilter="comments"
+                hideFilters={true}
+                hideHeader={true}
               />
             ) : (
               <div className="text-sm text-muted-foreground text-center py-8">
@@ -377,7 +693,7 @@ function TabButton({ active, onClick, children, icon, count }: TabButtonProps) {
       type="button"
       onClick={onClick}
       className={cn(
-        "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors",
+        "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer",
         active
           ? "border-primary text-primary"
           : "border-transparent text-muted-foreground hover:text-foreground"

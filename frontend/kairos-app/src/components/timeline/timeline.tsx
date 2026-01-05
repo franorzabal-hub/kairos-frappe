@@ -27,15 +27,21 @@ import {
 // Types
 // ============================================================================
 
+type FilterType = "all" | "comments" | "changes";
+
 interface TimelineProps {
   doctype: string;
   docname: string;
   className?: string;
   maxItems?: number;
   showInput?: boolean;
+  /** Default filter to apply */
+  defaultFilter?: FilterType;
+  /** Hide the filter tabs */
+  hideFilters?: boolean;
+  /** Hide the header */
+  hideHeader?: boolean;
 }
-
-type FilterType = "all" | "comments" | "changes";
 
 // ============================================================================
 // Component
@@ -47,8 +53,11 @@ export function Timeline({
   className,
   maxItems = 10,
   showInput = true,
+  defaultFilter = "all",
+  hideFilters = false,
+  hideHeader = false,
 }: TimelineProps) {
-  const [filter, setFilter] = useState<FilterType>("all");
+  const [filter, setFilter] = useState<FilterType>(defaultFilter);
   const [isExpanded, setIsExpanded] = useState(false);
   const { showSuccess, showError } = useNotification();
 
@@ -104,7 +113,7 @@ export function Timeline({
   if (isLoading) {
     return (
       <div className={cn("space-y-4", className)}>
-        <TimelineHeader onRefresh={handleRefresh} isRefreshing={false} />
+        {!hideHeader && <TimelineHeader onRefresh={handleRefresh} isRefreshing={false} />}
         <TimelineSkeleton />
       </div>
     );
@@ -114,7 +123,7 @@ export function Timeline({
   if (error) {
     return (
       <div className={cn("space-y-4", className)}>
-        <TimelineHeader onRefresh={handleRefresh} isRefreshing={false} />
+        {!hideHeader && <TimelineHeader onRefresh={handleRefresh} isRefreshing={false} />}
         <div className="text-sm text-muted-foreground text-center py-6">
           Failed to load timeline
           <Button
@@ -133,7 +142,7 @@ export function Timeline({
   return (
     <div className={cn("space-y-4", className)}>
       {/* Header */}
-      <TimelineHeader onRefresh={handleRefresh} isRefreshing={isLoading} />
+      {!hideHeader && <TimelineHeader onRefresh={handleRefresh} isRefreshing={isLoading} />}
 
       {/* Comment Input */}
       {showInput && (
@@ -144,31 +153,33 @@ export function Timeline({
       )}
 
       {/* Filter tabs */}
-      <div className="flex gap-1 border-b">
-        <FilterButton
-          active={filter === "all"}
-          onClick={() => setFilter("all")}
-          count={items.length}
-        >
-          All
-        </FilterButton>
-        <FilterButton
-          active={filter === "comments"}
-          onClick={() => setFilter("comments")}
-          icon={<MessageSquare className="h-3.5 w-3.5" />}
-          count={items.filter((i) => i.type === "Comment").length}
-        >
-          Comments
-        </FilterButton>
-        <FilterButton
-          active={filter === "changes"}
-          onClick={() => setFilter("changes")}
-          icon={<History className="h-3.5 w-3.5" />}
-          count={items.filter((i) => i.type === "Edit").length}
-        >
-          Changes
-        </FilterButton>
-      </div>
+      {!hideFilters && (
+        <div className="flex gap-1 border-b">
+          <FilterButton
+            active={filter === "all"}
+            onClick={() => setFilter("all")}
+            count={items.length}
+          >
+            All
+          </FilterButton>
+          <FilterButton
+            active={filter === "comments"}
+            onClick={() => setFilter("comments")}
+            icon={<MessageSquare className="h-3.5 w-3.5" />}
+            count={items.filter((i) => i.type === "Comment").length}
+          >
+            Comments
+          </FilterButton>
+          <FilterButton
+            active={filter === "changes"}
+            onClick={() => setFilter("changes")}
+            icon={<History className="h-3.5 w-3.5" />}
+            count={items.filter((i) => i.type === "Edit").length}
+          >
+            Changes
+          </FilterButton>
+        </div>
+      )}
 
       {/* Timeline items */}
       {displayItems.length === 0 ? (

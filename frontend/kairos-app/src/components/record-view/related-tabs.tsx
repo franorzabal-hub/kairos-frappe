@@ -34,6 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { Timeline } from "@/components/timeline";
 import {
   LayoutGrid,
   Activity,
@@ -290,6 +291,7 @@ export function RelatedTabs({
             meta={meta}
             doc={doc}
             doctype={doctype}
+            docname={docname}
             isNew={isNew}
           />
         )}
@@ -369,7 +371,7 @@ function RelatedTabButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
+        "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer",
         active
           ? "border-primary text-primary"
           : "border-transparent text-muted-foreground hover:text-foreground"
@@ -401,10 +403,11 @@ interface OverviewContentProps {
   meta: DocTypeMeta;
   doc: Record<string, unknown>;
   doctype: string;
+  docname: string;
   isNew: boolean;
 }
 
-function OverviewContent({ meta, doc }: OverviewContentProps) {
+function OverviewContent({ meta, doc, doctype, docname, isNew }: OverviewContentProps) {
   // Get "highlight" fields - fields marked as in_list_view or first few visible fields
   const highlightFields = useMemo(() => {
     const fields = meta.fields.filter(
@@ -418,7 +421,7 @@ function OverviewContent({ meta, doc }: OverviewContentProps) {
   }, [meta.fields]);
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-8">
       {/* Highlights section */}
       {highlightFields.length > 0 ? (
         <section>
@@ -441,6 +444,23 @@ function OverviewContent({ meta, doc }: OverviewContentProps) {
         <div className="text-sm text-muted-foreground text-center py-8">
           No highlights available
         </div>
+      )}
+
+      {/* Recent Activity section */}
+      {!isNew && (
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <Activity className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold">Recent Activity</h3>
+          </div>
+          <Timeline
+            doctype={doctype}
+            docname={docname}
+            maxItems={5}
+            showInput={false}
+            hideHeader={true}
+          />
+        </section>
       )}
     </div>
   );
@@ -505,13 +525,12 @@ function ActivityContent({ doctype, docname, isNew }: ActivityContentProps) {
 
   return (
     <div className="p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <Activity className="h-4 w-4 text-muted-foreground" />
-        <h3 className="text-sm font-semibold">Recent Activity</h3>
-      </div>
-      <div className="text-sm text-muted-foreground">
-        Activity timeline coming soon...
-      </div>
+      <Timeline
+        doctype={doctype}
+        docname={docname}
+        maxItems={20}
+        showInput={false}
+      />
     </div>
   );
 }
@@ -721,8 +740,8 @@ function RelatedContent({ config, docname, parentDoctype, isNew }: RelatedConten
   }
 
   return (
-    <div className="p-4 relative">
-      <div className="flex items-center justify-between mb-4">
+    <div className="relative">
+      <div className="flex items-center justify-between px-4 py-3 border-b">
         <div className="flex items-center gap-2">
           <Icon className="h-4 w-4 text-muted-foreground" />
           <h3 className="text-sm font-semibold">{config.label}</h3>
@@ -736,17 +755,11 @@ function RelatedContent({ config, docname, parentDoctype, isNew }: RelatedConten
         />
       </div>
 
-      <div className="rounded-md border">
+      <div>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-10">
-                <Checkbox
-                  checked={isAllSelected}
-                  onCheckedChange={toggleSelectAll}
-                  aria-label="Select all"
-                />
-              </TableHead>
+              <TableHead className="w-10"></TableHead>
               {displayFields.map((field) => (
                 <TableHead key={field.fieldname}>{field.label}</TableHead>
               ))}
@@ -775,7 +788,7 @@ function RelatedContent({ config, docname, parentDoctype, isNew }: RelatedConten
                         // Pass parent context for navigation
                         <Link
                           href={`/${slug}/${encodeURIComponent(rowId)}?parentDoctype=${encodeURIComponent(parentDoctype)}&parent=${encodeURIComponent(docname)}&linkField=${encodeURIComponent(config.linkField)}`}
-                          className="flex items-center gap-3 hover:underline"
+                          className="flex items-center gap-3"
                         >
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={row.image as string || row.user_image as string} />
