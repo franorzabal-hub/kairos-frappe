@@ -203,20 +203,56 @@ export function AppHeader({ className }: AppHeaderProps) {
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex >= 0 && currentIndex < totalCount - 1;
 
+  // Navigation history stack key
+  const NAV_STACK_KEY = "record_nav_stack";
+
+  const getNavStack = (): string[] => {
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = sessionStorage.getItem(NAV_STACK_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const pushToNavStack = (url: string) => {
+    if (typeof window === "undefined") return;
+    const stack = getNavStack();
+    // Don't push duplicates
+    if (stack[stack.length - 1] !== url) {
+      stack.push(url);
+      sessionStorage.setItem(NAV_STACK_KEY, JSON.stringify(stack));
+    }
+  };
+
+  const popFromNavStack = (): string | null => {
+    if (typeof window === "undefined") return null;
+    const stack = getNavStack();
+    if (stack.length === 0) return null;
+    stack.pop(); // Remove current
+    const prev = stack.pop(); // Get previous
+    sessionStorage.setItem(NAV_STACK_KEY, JSON.stringify(stack));
+    return prev || null;
+  };
+
   const handleClose = () => {
-    // Use browser history to return to previous page
-    // This goes back through history: C → B → A → list
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      window.history.back();
+    // Pop from our navigation stack
+    const prevUrl = popFromNavStack();
+    if (prevUrl) {
+      router.push(prevUrl);
     } else if (pageContext.doctypeSlug) {
+      // Fallback to list view
       router.push(`/${pageContext.doctypeSlug}`);
     }
   };
 
   const handlePrev = () => {
     if (hasPrev && pageContext.doctypeSlug) {
+      // Push current URL to stack before navigating
+      pushToNavStack(window.location.pathname + window.location.search);
+
       const prevName = docNames[currentIndex - 1];
-      // Preserve parent context so router.back() returns to previous
       const contextParams = hasParentContext
         ? `?parentDoctype=${encodeURIComponent(parentDoctype!)}&parent=${encodeURIComponent(parentDocname!)}&linkField=${encodeURIComponent(linkField!)}`
         : "";
@@ -226,8 +262,10 @@ export function AppHeader({ className }: AppHeaderProps) {
 
   const handleNext = () => {
     if (hasNext && pageContext.doctypeSlug) {
+      // Push current URL to stack before navigating
+      pushToNavStack(window.location.pathname + window.location.search);
+
       const nextName = docNames[currentIndex + 1];
-      // Preserve parent context so router.back() returns to previous
       const contextParams = hasParentContext
         ? `?parentDoctype=${encodeURIComponent(parentDoctype!)}&parent=${encodeURIComponent(parentDocname!)}&linkField=${encodeURIComponent(linkField!)}`
         : "";
