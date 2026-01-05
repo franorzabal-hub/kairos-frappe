@@ -298,8 +298,8 @@ export function AppHeader({ className }: AppHeaderProps) {
               </Tooltip>
             </TooltipProvider>
 
-            {/* Navigation arrows (up/down) in mini button group */}
-            <div className="flex flex-col border rounded-md overflow-hidden">
+            {/* Navigation arrows (up/down) */}
+            <div className="flex items-center gap-1">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -308,17 +308,16 @@ export function AppHeader({ className }: AppHeaderProps) {
                       onClick={handlePrev}
                       disabled={!hasPrev}
                       className={cn(
-                        "flex items-center justify-center h-4 w-6 hover:bg-accent transition-colors",
+                        "flex items-center justify-center h-6 w-6 rounded border hover:bg-accent transition-colors",
                         !hasPrev && "opacity-40 cursor-not-allowed"
                       )}
                     >
-                      <ChevronUp className="h-3 w-3" />
+                      <ChevronUp className="h-3.5 w-3.5" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>Previous</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <div className="border-t" />
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -327,11 +326,11 @@ export function AppHeader({ className }: AppHeaderProps) {
                       onClick={handleNext}
                       disabled={!hasNext}
                       className={cn(
-                        "flex items-center justify-center h-4 w-6 hover:bg-accent transition-colors",
+                        "flex items-center justify-center h-6 w-6 rounded border hover:bg-accent transition-colors",
                         !hasNext && "opacity-40 cursor-not-allowed"
                       )}
                     >
-                      <ChevronDown className="h-3 w-3" />
+                      <ChevronDown className="h-3.5 w-3.5" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>Next</TooltipContent>
