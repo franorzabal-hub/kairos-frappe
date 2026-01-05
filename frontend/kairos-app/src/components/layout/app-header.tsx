@@ -211,16 +211,22 @@ export function AppHeader({ className }: AppHeaderProps) {
   const handlePrev = () => {
     if (hasPrev && pageContext.doctypeSlug) {
       const prevName = docNames[currentIndex - 1];
-      // Navigate without parent context - closing will go to list view
-      router.push(`/${pageContext.doctypeSlug}/${encodeURIComponent(prevName)}`);
+      // Preserve parent context so router.back() returns to previous
+      const contextParams = hasParentContext
+        ? `?parentDoctype=${encodeURIComponent(parentDoctype!)}&parent=${encodeURIComponent(parentDocname!)}&linkField=${encodeURIComponent(linkField!)}`
+        : "";
+      router.push(`/${pageContext.doctypeSlug}/${encodeURIComponent(prevName)}${contextParams}`);
     }
   };
 
   const handleNext = () => {
     if (hasNext && pageContext.doctypeSlug) {
       const nextName = docNames[currentIndex + 1];
-      // Navigate without parent context - closing will go to list view
-      router.push(`/${pageContext.doctypeSlug}/${encodeURIComponent(nextName)}`);
+      // Preserve parent context so router.back() returns to previous
+      const contextParams = hasParentContext
+        ? `?parentDoctype=${encodeURIComponent(parentDoctype!)}&parent=${encodeURIComponent(parentDocname!)}&linkField=${encodeURIComponent(linkField!)}`
+        : "";
+      router.push(`/${pageContext.doctypeSlug}/${encodeURIComponent(nextName)}${contextParams}`);
     }
   };
 
@@ -292,40 +298,46 @@ export function AppHeader({ className }: AppHeaderProps) {
               </Tooltip>
             </TooltipProvider>
 
-            {/* Navigation arrows (up/down) */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handlePrev}
-                    disabled={!hasPrev}
-                    className="h-7 w-7"
-                  >
-                    <ChevronUp className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Previous</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleNext}
-                    disabled={!hasNext}
-                    className="h-7 w-7"
-                  >
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Next</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {/* Navigation arrows (up/down) in mini button group */}
+            <div className="flex flex-col border rounded-md overflow-hidden">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={handlePrev}
+                      disabled={!hasPrev}
+                      className={cn(
+                        "flex items-center justify-center h-4 w-6 hover:bg-accent transition-colors",
+                        !hasPrev && "opacity-40 cursor-not-allowed"
+                      )}
+                    >
+                      <ChevronUp className="h-3 w-3" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Previous</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <div className="border-t" />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      disabled={!hasNext}
+                      className={cn(
+                        "flex items-center justify-center h-4 w-6 hover:bg-accent transition-colors",
+                        !hasNext && "opacity-40 cursor-not-allowed"
+                      )}
+                    >
+                      <ChevronDown className="h-3 w-3" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Next</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
 
             {/* Position indicator */}
             {currentIndex >= 0 && totalCount > 0 && (
