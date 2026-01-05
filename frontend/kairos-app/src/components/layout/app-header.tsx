@@ -18,8 +18,7 @@ import {
   Building2,
   Calendar,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
+  ChevronUp,
   FileText,
   GraduationCap,
   HelpCircle,
@@ -212,22 +211,16 @@ export function AppHeader({ className }: AppHeaderProps) {
   const handlePrev = () => {
     if (hasPrev && pageContext.doctypeSlug) {
       const prevName = docNames[currentIndex - 1];
-      // Preserve parent context when navigating
-      const contextParams = hasParentContext
-        ? `?parentDoctype=${encodeURIComponent(parentDoctype!)}&parent=${encodeURIComponent(parentDocname!)}&linkField=${encodeURIComponent(linkField!)}`
-        : "";
-      router.push(`/${pageContext.doctypeSlug}/${encodeURIComponent(prevName)}${contextParams}`);
+      // Navigate without parent context - closing will go to list view
+      router.push(`/${pageContext.doctypeSlug}/${encodeURIComponent(prevName)}`);
     }
   };
 
   const handleNext = () => {
     if (hasNext && pageContext.doctypeSlug) {
       const nextName = docNames[currentIndex + 1];
-      // Preserve parent context when navigating
-      const contextParams = hasParentContext
-        ? `?parentDoctype=${encodeURIComponent(parentDoctype!)}&parent=${encodeURIComponent(parentDocname!)}&linkField=${encodeURIComponent(linkField!)}`
-        : "";
-      router.push(`/${pageContext.doctypeSlug}/${encodeURIComponent(nextName)}${contextParams}`);
+      // Navigate without parent context - closing will go to list view
+      router.push(`/${pageContext.doctypeSlug}/${encodeURIComponent(nextName)}`);
     }
   };
 
@@ -299,7 +292,7 @@ export function AppHeader({ className }: AppHeaderProps) {
               </Tooltip>
             </TooltipProvider>
 
-            {/* Navigation arrows */}
+            {/* Navigation arrows (up/down) */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -310,7 +303,7 @@ export function AppHeader({ className }: AppHeaderProps) {
                     disabled={!hasPrev}
                     className="h-7 w-7"
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronUp className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Previous</TooltipContent>
@@ -327,7 +320,7 @@ export function AppHeader({ className }: AppHeaderProps) {
                     disabled={!hasNext}
                     className="h-7 w-7"
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronDown className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Next</TooltipContent>
