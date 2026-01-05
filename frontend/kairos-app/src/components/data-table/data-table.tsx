@@ -215,7 +215,16 @@ export function DataTable<TData, TValue>({
                         isLastColumn && "pr-4"
                       )}
                     >
-                      {header.isPlaceholder ? null : (
+                      {header.isPlaceholder ? null : isFirstColumn ? (
+                        // First column (with checkbox) - no dropdown, just render content
+                        <div className="flex items-center gap-2">
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                        </div>
+                      ) : (
+                        // Other columns - show dropdown menu
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button
@@ -268,16 +277,14 @@ export function DataTable<TData, TValue>({
                                 </DropdownMenuItem>
                               </>
                             )}
-                            {!isFirstColumn && (
-                              <DropdownMenuItem
-                                onClick={() => onColumnOrderChange?.(columnId, "left")}
-                                disabled={headerIndex === 1}
-                              >
-                                <MoveLeft className="h-4 w-4 mr-2" />
-                                <span>Move left</span>
-                              </DropdownMenuItem>
-                            )}
-                            {!isLastColumn && !isFirstColumn && (
+                            <DropdownMenuItem
+                              onClick={() => onColumnOrderChange?.(columnId, "left")}
+                              disabled={headerIndex === 1}
+                            >
+                              <MoveLeft className="h-4 w-4 mr-2" />
+                              <span>Move left</span>
+                            </DropdownMenuItem>
+                            {!isLastColumn && (
                               <DropdownMenuItem
                                 onClick={() => onColumnOrderChange?.(columnId, "right")}
                               >
@@ -285,8 +292,8 @@ export function DataTable<TData, TValue>({
                                 <span>Move right</span>
                               </DropdownMenuItem>
                             )}
-                            {(canSort || !isFirstColumn) && <DropdownMenuSeparator />}
-                            {onColumnLabelEdit && !isFirstColumn && (
+                            {(canSort || onColumnLabelEdit || onColumnVisibilityChange) && <DropdownMenuSeparator />}
+                            {onColumnLabelEdit && (
                               <DropdownMenuItem
                                 onClick={() => onColumnLabelEdit?.(columnId)}
                               >
@@ -294,7 +301,7 @@ export function DataTable<TData, TValue>({
                                 <span>Edit column label</span>
                               </DropdownMenuItem>
                             )}
-                            {onColumnVisibilityChange && !isFirstColumn && (
+                            {onColumnVisibilityChange && (
                               <DropdownMenuItem
                                 onClick={() => onColumnVisibilityChange?.(columnId, false)}
                               >
