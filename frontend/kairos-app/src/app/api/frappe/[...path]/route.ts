@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-const FRAPPE_URL = process.env.NEXT_PUBLIC_FRAPPE_URL || "http://kairos.localhost:8000";
+// Use the actual site hostname - Node.js fetch doesn't allow Host header override
+const FRAPPE_URL = process.env.FRAPPE_URL || "http://kairos.localhost";
 
 export async function GET(
   request: NextRequest,
@@ -14,8 +15,8 @@ export async function GET(
 
   const cookieStore = await cookies();
   const sid = cookieStore.get("sid")?.value;
-  
-  console.log("[Frappe Proxy] GET", url, "sid:", sid ? "present" : "missing");
+
+  console.log("[Frappe Proxy] GET", url, "sid:", sid ? sid.substring(0, 10) + "..." : "missing");
 
   try {
     const response = await fetch(url, {
@@ -50,7 +51,7 @@ export async function POST(
   const cookieStore = await cookies();
   const sid = cookieStore.get("sid")?.value;
 
-  console.log("[Frappe Proxy] POST", url, "sid:", sid ? "present" : "missing");
+  console.log("[Frappe Proxy] POST", url, "sid:", sid ? sid.substring(0, 10) + "..." : "missing");
 
   try {
     const body = await request.json();

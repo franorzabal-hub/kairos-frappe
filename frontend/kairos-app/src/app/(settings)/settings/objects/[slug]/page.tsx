@@ -35,6 +35,8 @@ import {
   CalendarDays,
   FileCode,
   Percent,
+  Trash2,
+  Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -63,6 +65,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // ============================================================================
 // Types
@@ -228,6 +241,8 @@ export default function ObjectDetailPage({ params }: ObjectDetailPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [recordCount, setRecordCount] = useState(0);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Fetch DocType metadata
   useEffect(() => {
@@ -253,7 +268,8 @@ export default function ObjectDetailPage({ params }: ObjectDetailPageProps) {
         }
 
         const metaData = await metaResponse.json();
-        const rawMeta = metaData.message?.docs?.[0];
+        // Response structure is { docs: [...] } - no message wrapper
+        const rawMeta = metaData.docs?.[0];
 
         if (!rawMeta) {
           throw new Error("DocType not found");
@@ -342,6 +358,38 @@ export default function ObjectDetailPage({ params }: ObjectDetailPageProps) {
 
     fetchMeta();
   }, [doctypeName]);
+
+  // Delete object handler
+  const handleDeleteObject = async () => {
+    if (!meta?.isCustom) return;
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const response = await fetch(
+        `/api/frappe/api/resource/DocType/${encodeURIComponent(meta.name)}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || errorData.exc || "Failed to delete object");
+      }
+
+      // Success - redirect to objects list
+      router.push("/settings/objects");
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Failed to delete object");
+      setIsDeleting(false);
+    }
+  };
 
   const iconInfo = getObjectIcon(slug);
   const Icon = iconInfo.icon;
@@ -506,6 +554,62 @@ export default function ObjectDetailPage({ params }: ObjectDetailPageProps) {
               </div>
             </CardContent>
           </Card>
+
+          {/* Danger Zone - Only for Custom Objects */}
+          {meta.isCustom && (
+            <Card className="border-destructive/50">
+              <CardHeader>
+                <CardTitle className="text-destructive">Danger zone</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Delete object</p>
+                    <p className="text-sm text-muted-foreground">
+                      Once deleted, your object cannot be recovered.
+                    </p>
+                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" disabled={isDeleting}>
+                        {isDeleting ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="mr-2 h-4 w-4" />
+                        )}
+                        Delete object
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete &quot;{meta.name}&quot;?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete the
+                          object and all its records ({recordCount} records).
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      {deleteError && (
+                        <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                          {deleteError}
+                        </div>
+                      )}
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDeleteObject}
+                          disabled={isDeleting}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Appearance Tab */}

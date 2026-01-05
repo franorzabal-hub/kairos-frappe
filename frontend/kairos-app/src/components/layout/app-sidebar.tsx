@@ -18,7 +18,6 @@ import {
   ChevronDown,
   ChevronRight,
   Command,
-  FileText,
   LayoutGrid,
   Search,
   Users,
@@ -28,7 +27,8 @@ import {
   Calendar,
   GraduationCap,
   UserCheck,
-  Mail,
+  MapPin,
+  Layers,
   type LucideIcon,
 } from "lucide-react";
 
@@ -77,63 +77,68 @@ const navigationItems: NavItem[] = [
 ];
 
 /**
- * DocTypes to show in Records section
- * Maps to Frappe DocTypes with their display names and icons
+ * Comunicación - DocTypes relacionados a comunicación con padres/tutores
  */
-const recordTypes: DocTypeItem[] = [
-  {
-    name: "Student",
-    label: "Students",
-    icon: Users,
-    href: "/Student",
-  },
-  {
-    name: "Guardian",
-    label: "Guardians",
-    icon: UserCheck,
-    href: "/Guardian",
-  },
-  {
-    name: "Institution",
-    label: "Institutions",
-    icon: Building2,
-    href: "/Institution",
-  },
+const comunicacionItems: DocTypeItem[] = [
   {
     name: "Message",
-    label: "Messages",
+    label: "Mensajes",
     icon: MessageSquare,
     href: "/Message",
   },
   {
     name: "News",
-    label: "News",
+    label: "Noticias",
     icon: Newspaper,
     href: "/News",
   },
   {
     name: "School Event",
-    label: "Events",
+    label: "Eventos",
     icon: Calendar,
     href: "/School-Event",
   },
+];
+
+/**
+ * Estructura - DocTypes relacionados a la estructura de la institución
+ */
+const estructuraItems: DocTypeItem[] = [
+  {
+    name: "Institution",
+    label: "Institución",
+    icon: Building2,
+    href: "/Institution",
+  },
+  {
+    name: "Campus",
+    label: "Sedes",
+    icon: MapPin,
+    href: "/Campus",
+  },
   {
     name: "Grade",
-    label: "Grades",
+    label: "Grados",
     icon: GraduationCap,
     href: "/Grade",
   },
   {
-    name: "Enrollment",
-    label: "Enrollments",
-    icon: FileText,
-    href: "/Enrollment",
+    name: "Section",
+    label: "Secciones",
+    icon: Layers,
+    href: "/Section",
   },
   {
-    name: "Guardian Invite",
-    label: "Guardian Invites",
-    icon: Mail,
-    href: "/Guardian-Invite",
+    name: "Student",
+    label: "Alumnos",
+    icon: Users,
+    href: "/Student",
+  },
+  {
+    name: "Guardian",
+    label: "Tutores",
+    icon: UserCheck,
+    href: "/Guardian",
   },
 ];
 
@@ -314,10 +319,23 @@ export function AppSidebar({ className }: AppSidebarProps) {
             ))}
           </nav>
 
-          {/* Records Section */}
-          <SidebarSection title="Records" defaultOpen>
+          {/* Comunicación Section */}
+          <SidebarSection title="Comunicación" defaultOpen>
             <nav className="space-y-1">
-              {recordTypes.map((item) => (
+              {comunicacionItems.map((item) => (
+                <RecordItemLink
+                  key={item.name}
+                  item={item}
+                  isActive={isRecordActive(item.href)}
+                />
+              ))}
+            </nav>
+          </SidebarSection>
+
+          {/* Estructura Section */}
+          <SidebarSection title="Estructura" defaultOpen>
+            <nav className="space-y-1">
+              {estructuraItems.map((item) => (
                 <RecordItemLink
                   key={item.name}
                   item={item}

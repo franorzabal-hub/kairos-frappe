@@ -4,6 +4,7 @@
  * Minimal header with:
  * - Logo + Workspace selector (left)
  * - Current context/page indicator (center-left)
+ * - Record navigation when viewing a record
  * - Actions: notifications, help, user avatar (right)
  */
 
@@ -11,12 +12,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Bell,
   Building2,
   Calendar,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   FileText,
   GraduationCap,
   HelpCircle,
@@ -25,18 +28,28 @@ import {
   Loader2,
   LogOut,
   Mail,
+  MapPin,
   MessageSquare,
   Newspaper,
   Settings,
   User,
   UserCheck,
   Users,
+  Layers,
+  X,
   type LucideIcon,
 } from "lucide-react";
 
+import { useFrappeGetDocList, useFrappeGetDoc } from "frappe-react-sdk";
 import { cn, slugToDoctype } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,6 +77,8 @@ const contextIcons: Record<string, LucideIcon> = {
   student: Users,
   guardian: UserCheck,
   institution: Building2,
+  campus: MapPin,
+  section: Layers,
   message: MessageSquare,
   news: Newspaper,
   "school-event": Calendar,
@@ -74,13 +89,35 @@ const contextIcons: Record<string, LucideIcon> = {
 };
 
 /**
+ * Pluralize a DocType name correctly
+ */
+function pluralize(word: string): string {
+  if (word.endsWith("s") || word.endsWith("x") || word.endsWith("ch") || word.endsWith("sh")) {
+    return word + "es";
+  }
+  if (word.endsWith("y") && !["a", "e", "i", "o", "u"].includes(word.charAt(word.length - 2))) {
+    return word.slice(0, -1) + "ies";
+  }
+  return word + "s";
+}
+
+interface PageContext {
+  title: string;
+  icon: LucideIcon;
+  isRecordView: boolean;
+  doctypeSlug?: string;
+  doctype?: string;
+  recordId?: string;
+}
+
+/**
  * Get the current page context from pathname
  */
-function usePageContext(): { title: string; icon: LucideIcon } {
+function usePageContext(): PageContext {
   const pathname = usePathname();
 
   if (pathname === "/" || pathname === "/dashboard") {
-    return { title: "Home", icon: Home };
+    return { title: "Home", icon: Home, isRecordView: false };
   }
 
   // Match /[doctype] or /[doctype]/[id]
@@ -90,16 +127,109 @@ function usePageContext(): { title: string; icon: LucideIcon } {
     const slug = segments[0].toLowerCase();
     const doctype = slugToDoctype(segments[0]);
     const icon = contextIcons[slug] || FileText;
-    return { title: doctype, icon };
+
+    // Check if this is a record view (has an ID that's not "new")
+    if (segments.length >= 2 && segments[1] !== "new") {
+      return {
+        title: doctype,
+        icon,
+        isRecordView: true,
+        doctypeSlug: segments[0],
+        doctype,
+        recordId: decodeURIComponent(segments[1]),
+      };
+    }
+
+    return { title: doctype, icon, isRecordView: false };
   }
 
-  return { title: "Kairos", icon: Home };
+  return { title: "Kairos", icon: Home, isRecordView: false };
 }
 
 export function AppHeader({ className }: AppHeaderProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, isLoading, logout } = useCurrentUser();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pageContext = usePageContext();
+
+  // Check if we came from a parent record (related tab navigation)
+  const parentDoctype = searchParams.get("parentDoctype");
+  const parentDocname = searchParams.get("parent");
+  const linkField = searchParams.get("linkField");
+  const hasParentContext = !!(parentDoctype && parentDocname && linkField);
+
+  // Fetch parent document to get its display name
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: parentDoc } = useFrappeGetDoc<any>(
+    parentDoctype || "",
+    parentDocname || "",
+    hasParentContext ? `parent_doc_${parentDoctype}_${parentDocname}` : null
+  );
+
+  // Get parent display name (try common title fields)
+  const parentDisplayName = parentDoc
+    ? (parentDoc.full_name as string) ||
+      (parentDoc.title as string) ||
+      (parentDoc.name1 as string) ||
+      (parentDoc.institution_name as string) ||
+      (parentDoc.campus_name as string) ||
+      (parentDoc.company_name as string) ||
+      (parentDoc.subject as string) ||
+      (parentDoc.name as string)
+    : parentDocname;
+
+  // Fetch document list for navigation (only when viewing a record)
+  // If we have parent context, filter by the parent
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: docList } = useFrappeGetDocList<any>(
+    pageContext.doctype || "",
+    {
+      fields: ["name"],
+      filters: hasParentContext ? [[linkField!, "=", parentDocname]] : [],
+      orderBy: { field: "modified", order: "desc" },
+      limit: 1000,
+    },
+    pageContext.isRecordView
+      ? hasParentContext
+        ? `doclist_nav_header_${pageContext.doctype}_${parentDocname}`
+        : `doclist_nav_header_${pageContext.doctype}`
+      : null
+  );
+
+  // Calculate navigation position
+  const docNames = docList?.map((d: { name: string }) => d.name) ?? [];
+  const currentIndex = pageContext.recordId ? docNames.indexOf(pageContext.recordId) : -1;
+  const totalCount = docNames.length;
+  const hasPrev = currentIndex > 0;
+  const hasNext = currentIndex >= 0 && currentIndex < totalCount - 1;
+
+  const handleClose = () => {
+    // Use browser back to return to previous page (could be parent record or list)
+    router.back();
+  };
+
+  const handlePrev = () => {
+    if (hasPrev && pageContext.doctypeSlug) {
+      const prevName = docNames[currentIndex - 1];
+      // Preserve parent context when navigating
+      const contextParams = hasParentContext
+        ? `?parentDoctype=${encodeURIComponent(parentDoctype!)}&parent=${encodeURIComponent(parentDocname!)}&linkField=${encodeURIComponent(linkField!)}`
+        : "";
+      router.push(`/${pageContext.doctypeSlug}/${encodeURIComponent(prevName)}${contextParams}`);
+    }
+  };
+
+  const handleNext = () => {
+    if (hasNext && pageContext.doctypeSlug) {
+      const nextName = docNames[currentIndex + 1];
+      // Preserve parent context when navigating
+      const contextParams = hasParentContext
+        ? `?parentDoctype=${encodeURIComponent(parentDoctype!)}&parent=${encodeURIComponent(parentDocname!)}&linkField=${encodeURIComponent(linkField!)}`
+        : "";
+      router.push(`/${pageContext.doctypeSlug}/${encodeURIComponent(nextName)}${contextParams}`);
+    }
+  };
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -148,12 +278,77 @@ export function AppHeader({ className }: AppHeaderProps) {
         </DropdownMenu>
       </div>
 
-      {/* Current Page Context */}
-      <div className="flex items-center gap-2 px-4">
-        <pageContext.icon className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium text-foreground">
-          {pageContext.title}
-        </span>
+      {/* Current Page Context / Record Navigation */}
+      <div className="flex items-center gap-1 px-2">
+        {pageContext.isRecordView ? (
+          <>
+            {/* Close button */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleClose}
+                    className="h-7 w-7"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Back to list</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {/* Navigation arrows */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handlePrev}
+                    disabled={!hasPrev}
+                    className="h-7 w-7"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Previous</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleNext}
+                    disabled={!hasNext}
+                    className="h-7 w-7"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Next</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {/* Position indicator */}
+            {currentIndex >= 0 && totalCount > 0 && (
+              <span className="text-sm text-muted-foreground ml-1">
+                {currentIndex + 1} of {totalCount} in {hasParentContext ? parentDisplayName : `All ${pluralize(pageContext.doctype || "")}`}
+              </span>
+            )}
+          </>
+        ) : (
+          <>
+            <pageContext.icon className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">
+              {pageContext.title}
+            </span>
+          </>
+        )}
       </div>
 
       {/* Spacer */}

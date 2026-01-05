@@ -2,16 +2,16 @@
  * DocType Detail View Page
  *
  * Dynamic page that displays a single document for any DocType
- * Handles both creation (id === "new") and editing modes
- * Uses dynamic form rendering based on DocType metadata
- * Includes activity timeline sidebar for existing documents
+ * Uses an Attio-style layout with:
+ * - Header with navigation
+ * - Main content area with tabs (Overview, Activity, Related objects)
+ * - Right sidebar with Details and Comments
  */
 
 "use client";
 
-import { useCallback, use } from "react";
+import { useCallback, use, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   useFrappeGetDoc,
   useFrappeCreateDoc,
@@ -21,28 +21,20 @@ import {
 import { useNotification } from "@/hooks/use-notification";
 import { useFrappeDocMeta } from "@/hooks/use-frappe-meta";
 import { DynamicForm } from "@/components/forms/dynamic-form";
-import { Timeline } from "@/components/timeline";
-import { AttachmentsList } from "@/components/attachments";
-import { Button } from "@/components/ui/button";
+import { RecordHeader, DetailsSidebar, RelatedTabs } from "@/components/record-view";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
   CardContent,
   CardHeader,
 } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { slugToDoctype } from "@/lib/utils";
-import { ChevronRight, ArrowLeft, Save, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+
+// ============================================================================
+// Types
+// ============================================================================
 
 interface DocTypeDetailPageProps {
   params: Promise<{
@@ -50,6 +42,10 @@ interface DocTypeDetailPageProps {
     id: string;
   }>;
 }
+
+// ============================================================================
+// Component
+// ============================================================================
 
 export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
   const { doctype: doctypeSlug, id } = use(params);
@@ -60,12 +56,15 @@ export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
   const doctype = slugToDoctype(doctypeSlug);
   const isNew = id === "new";
 
+  // State for sidebar visibility (mobile)
+  const [showSidebar, setShowSidebar] = useState(true);
+
   // Fetch DocType metadata with permissions applied
   const {
     meta: docMeta,
     isLoading: metaLoading,
     error: metaError,
-    permissions,
+    titleField,
   } = useFrappeDocMeta({
     doctype,
     isNewDoc: isNew,
@@ -88,28 +87,28 @@ export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
   const isSaving = createLoading || updateLoading;
   const isDeleting = deleteLoading;
 
+  // Get document title
+  const docTitle = doc
+    ? (doc[titleField] as string) || (doc.name as string)
+    : id;
+
   // Handle form submission
   const handleSubmit = useCallback(
     async (data: Record<string, unknown>) => {
       try {
         if (isNew) {
-          // Create new document
           const result = await createDoc(doctype, data);
           showSuccess(`${doctype} created successfully`);
-          // Navigate to the created document
           router.push(`/${doctypeSlug}/${result.name}`);
         } else {
-          // Update existing document
           await updateDoc(doctype, id, data);
           showSuccess(`${doctype} updated successfully`);
-          // Refresh the document data
           mutateDoc();
         }
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "An error occurred";
         showError(`Failed to save: ${message}`);
-        console.error("Save error:", error);
       }
     },
     [isNew, createDoc, updateDoc, doctype, id, router, doctypeSlug, mutateDoc, showSuccess, showError]
@@ -120,17 +119,15 @@ export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
     try {
       await deleteDoc(doctype, id);
       showSuccess(`${doctype} deleted successfully`);
-      // Navigate back to list view
       router.push(`/${doctypeSlug}`);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "An error occurred";
       showError(`Failed to delete: ${message}`);
-      console.error("Delete error:", error);
     }
   }, [deleteDoc, doctype, id, router, doctypeSlug, showSuccess, showError]);
 
-  // Handle cancel/back
+  // Handle back
   const handleBack = useCallback(() => {
     router.push(`/${doctypeSlug}`);
   }, [router, doctypeSlug]);
@@ -139,17 +136,16 @@ export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
   if (metaError || docError) {
     const error = metaError || docError;
     return (
-      <div className="space-y-6">
-        <Breadcrumb doctype={doctype} doctypeSlug={doctypeSlug} id={id} isNew={isNew} />
-        <Card className="border-destructive">
+      <div className="h-full flex items-center justify-center p-6">
+        <Card className="border-destructive max-w-md w-full">
           <CardHeader>
             <h2 className="text-lg font-semibold text-destructive">Error</h2>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mb-4">
               {error instanceof Error ? error.message : "Failed to load data"}
             </p>
-            <Button variant="outline" className="mt-4" onClick={handleBack}>
+            <Button variant="outline" onClick={handleBack}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to list
             </Button>
@@ -162,25 +158,36 @@ export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
   // Loading state
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Breadcrumb doctype={doctype} doctypeSlug={doctypeSlug} id={id} isNew={isNew} />
-        <Header
-          doctype={doctype}
-          isNew={isNew}
-          docName={id}
-          isSaving={false}
-          isDeleting={false}
-          onBack={handleBack}
-        />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <LoadingSkeleton />
+      <div className="h-full flex flex-col -m-6">
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-8" />
+            <Skeleton className="h-8 w-8" />
+            <Skeleton className="h-8 w-8" />
+            <Skeleton className="h-4 w-48" />
           </div>
-          {!isNew && (
-            <div className="lg:col-span-1">
-              <TimelineSkeleton />
+          <Skeleton className="h-8 w-24" />
+        </div>
+
+        {/* Content skeleton */}
+        <div className="flex-1 flex">
+          <div className="flex-1 p-6">
+            <Skeleton className="h-10 w-full mb-4" />
+            <div className="space-y-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-20 w-full" />
+              ))}
             </div>
-          )}
+          </div>
+          <div className="w-80 border-l p-4">
+            <Skeleton className="h-8 w-full mb-4" />
+            <div className="space-y-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -188,252 +195,60 @@ export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
 
   // Main render
   return (
-    <div className="space-y-6">
-      <Breadcrumb doctype={doctype} doctypeSlug={doctypeSlug} id={id} isNew={isNew} />
-
-      <Header
+    <div className="h-full flex flex-col -m-6">
+      {/* Header */}
+      <RecordHeader
+        title={docTitle}
         doctype={doctype}
         isNew={isNew}
-        docName={doc?.name || id}
-        isSaving={isSaving}
-        isDeleting={isDeleting}
-        onBack={handleBack}
-        onDelete={handleDelete}
       />
 
-      {/* Main content with sidebar layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Form - takes 2/3 on large screens */}
-        <div className="lg:col-span-2">
+      {/* Main content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left side: Tabs and content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
           {docMeta && (
-            <DynamicForm
-              docMeta={docMeta}
-              initialData={isNew ? undefined : doc}
-              onSubmit={handleSubmit}
-              isLoading={isSaving}
-              formId="doctype-form"
-            />
+            <>
+              {/* Related tabs (Overview, Activity, Child tables) */}
+              {!isNew && doc && (
+                <RelatedTabs
+                  meta={docMeta}
+                  doc={doc}
+                  doctype={doctype}
+                  docname={id}
+                  isNew={isNew}
+                  className="border-b"
+                />
+              )}
+
+              {/* Form (only for new records - existing records show details in sidebar) */}
+              {isNew && (
+                <div className="flex-1 overflow-auto p-6">
+                  <DynamicForm
+                    docMeta={docMeta}
+                    initialData={undefined}
+                    onSubmit={handleSubmit}
+                    isLoading={isSaving}
+                    formId="record-form"
+                  />
+                </div>
+              )}
+            </>
           )}
         </div>
 
-        {/* Sidebar - only shown for existing documents */}
-        {!isNew && (
-          <div className="lg:col-span-1 space-y-6">
-            {/* Attachments */}
-            <Card>
-              <CardContent className="pt-6">
-                <AttachmentsList
-                  doctype={doctype}
-                  docname={id}
-                />
-              </CardContent>
-            </Card>
-
-            {/* Timeline */}
-            <Card className="sticky top-6">
-              <CardContent className="pt-6">
-                <Timeline
-                  doctype={doctype}
-                  docname={id}
-                  maxItems={10}
-                  showInput={true}
-                />
-              </CardContent>
-            </Card>
-          </div>
+        {/* Right sidebar: Details and Comments */}
+        {docMeta && (showSidebar || !isNew) && (
+          <DetailsSidebar
+            meta={docMeta}
+            doc={doc || {}}
+            doctype={doctype}
+            docname={id}
+            isNew={isNew}
+            className="w-[400px] hidden lg:flex"
+          />
         )}
       </div>
     </div>
-  );
-}
-
-/**
- * Breadcrumb Component
- */
-function Breadcrumb({
-  doctype,
-  doctypeSlug,
-  id,
-  isNew,
-}: {
-  doctype: string;
-  doctypeSlug: string;
-  id: string;
-  isNew: boolean;
-}) {
-  return (
-    <nav className="flex items-center space-x-1 text-sm text-muted-foreground">
-      <Link
-        href={`/${doctypeSlug}`}
-        className="hover:text-foreground transition-colors"
-      >
-        {doctype}
-      </Link>
-      <ChevronRight className="h-4 w-4" />
-      <span className="text-foreground font-medium">
-        {isNew ? "New" : id}
-      </span>
-    </nav>
-  );
-}
-
-/**
- * Header Component with actions
- */
-function Header({
-  doctype,
-  isNew,
-  docName,
-  isSaving,
-  isDeleting,
-  onBack,
-  onDelete,
-}: {
-  doctype: string;
-  isNew: boolean;
-  docName: string;
-  isSaving: boolean;
-  isDeleting: boolean;
-  onBack: () => void;
-  onDelete?: () => void;
-}) {
-  return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          {isNew ? `New ${doctype}` : docName}
-        </h1>
-        <p className="text-muted-foreground">
-          {isNew ? `Create a new ${doctype}` : `Edit ${doctype}`}
-        </p>
-      </div>
-
-      <div className="flex items-center gap-2">
-        {/* Back/Cancel Button */}
-        <Button variant="outline" onClick={onBack} disabled={isSaving}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Cancel
-        </Button>
-
-        {/* Delete Button (only in edit mode) */}
-        {!isNew && onDelete && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" disabled={isSaving || isDeleting}>
-                {isDeleting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Trash2 className="mr-2 h-4 w-4" />
-                )}
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the
-                  {` ${doctype} "${docName}"`} and all associated data.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={onDelete}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
-
-        {/* Save Button */}
-        <Button
-          type="submit"
-          form="doctype-form"
-          disabled={isSaving || isDeleting}
-        >
-          {isSaving ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="mr-2 h-4 w-4" />
-          )}
-          {isNew ? "Create" : "Save"}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Loading Skeleton for Form
- */
-function LoadingSkeleton() {
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardContent className="pt-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-32" />
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-/**
- * Loading Skeleton for Timeline
- */
-function TimelineSkeleton() {
-  return (
-    <Card className="sticky top-6">
-      <CardContent className="pt-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-5 w-20" />
-          <Skeleton className="h-8 w-8 rounded" />
-        </div>
-        <Skeleton className="h-20 w-full" />
-        <div className="flex gap-2 border-b pb-2">
-          <Skeleton className="h-8 w-12" />
-          <Skeleton className="h-8 w-20" />
-          <Skeleton className="h-8 w-18" />
-        </div>
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="flex gap-3">
-            <Skeleton className="h-8 w-8 rounded-full flex-shrink-0" />
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-16" />
-              </div>
-              <Skeleton className="h-12 w-full rounded-lg" />
-            </div>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
   );
 }

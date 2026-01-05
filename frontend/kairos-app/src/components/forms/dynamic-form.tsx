@@ -76,9 +76,13 @@ function groupFieldsBySections(fields: DocTypeField[]): Section[] {
   };
   let currentColumnIndex = 0;
 
+  // Fields to always exclude from the form
+  const excludedFields = ["naming_series"];
+
   for (const field of fields) {
-    // Skip hidden fields
+    // Skip hidden fields and excluded fields
     if (field.hidden === 1) continue;
+    if (excludedFields.includes(field.fieldname)) continue;
 
     if (field.fieldtype === "Section Break") {
       // Save current section if it has fields

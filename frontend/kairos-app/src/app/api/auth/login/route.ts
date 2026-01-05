@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const FRAPPE_URL = process.env.NEXT_PUBLIC_FRAPPE_URL || "http://kairos.localhost:8000";
+// Use nginx on port 80 (kairos.localhost resolves to 127.0.0.1)
+const FRAPPE_URL = process.env.FRAPPE_URL || "http://kairos.localhost";
 
 // Cookie durations
 const SESSION_DURATION = undefined; // Session cookie - expires when browser closes
