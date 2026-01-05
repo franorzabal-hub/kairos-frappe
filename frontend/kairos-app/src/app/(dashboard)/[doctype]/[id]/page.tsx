@@ -195,7 +195,7 @@ export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
 
   // Main render
   return (
-    <div className="h-full flex flex-col -m-6">
+    <div className="flex flex-col -m-6" style={{ height: 'calc(100vh - 48px)' }}>
       {/* Header */}
       <RecordHeader
         title={docTitle}
@@ -204,9 +204,9 @@ export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
       />
 
       {/* Main content */}
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Left side: Tabs and content */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0">
           {docMeta && (
             <>
               {/* Related tabs (Overview, Activity, Child tables) */}
