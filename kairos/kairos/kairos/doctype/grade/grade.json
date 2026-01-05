@@ -12,7 +12,9 @@
   "grade_name",
   "grade_code",
   "column_break_basic",
+  "school_unit",
   "campus",
+  "level",
   "sequence",
   "is_active",
   "details_section",
@@ -43,7 +45,8 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Grade Name",
-   "reqd": 1
+   "reqd": 1,
+   "description": "e.g., '1° Grado', 'Sala de 3'"
   },
   {
    "fieldname": "grade_code",
@@ -51,27 +54,49 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Grade Code",
-   "reqd": 1
+   "reqd": 1,
+   "description": "Short code, e.g., '1G', 'S3'"
   },
   {
    "fieldname": "column_break_basic",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "campus",
+   "fieldname": "school_unit",
    "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
+   "label": "School Unit",
+   "options": "School Unit",
+   "reqd": 1,
+   "description": "The School Unit this grade belongs to (e.g., Primaria Martínez)"
+  },
+  {
+   "fetch_from": "school_unit.campus",
+   "fieldname": "campus",
+   "fieldtype": "Link",
    "label": "Campus",
    "options": "Campus",
-   "reqd": 1
+   "read_only": 1,
+   "description": "Inherited from School Unit"
+  },
+  {
+   "fetch_from": "school_unit.level",
+   "fieldname": "level",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Level",
+   "read_only": 1,
+   "description": "Inherited from School Unit"
   },
   {
    "default": "0",
    "fieldname": "sequence",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Sequence"
+   "label": "Sequence",
+   "description": "Order within the School Unit (1, 2, 3...)"
   },
   {
    "default": "1",
@@ -83,7 +108,8 @@
   {
    "fieldname": "details_section",
    "fieldtype": "Section Break",
-   "label": "Details"
+   "label": "Details",
+   "collapsible": 1
   },
   {
    "fieldname": "description",
@@ -107,18 +133,20 @@
   {
    "fieldname": "associations_section",
    "fieldtype": "Section Break",
-   "label": "Associations"
+   "label": "Associations",
+   "collapsible": 1
   },
   {
    "fieldname": "coordinator",
    "fieldtype": "Link",
    "label": "Coordinator",
-   "options": "User"
+   "options": "Staff",
+   "description": "Grade coordinator (optional)"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-01-01 00:00:00.000000",
+ "modified": "2025-01-05 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Kairos",
  "name": "Grade",
@@ -135,6 +163,18 @@
    "report": 1,
    "role": "System Manager",
    "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "School Admin",
+   "share": 0,
    "write": 1
   }
  ],

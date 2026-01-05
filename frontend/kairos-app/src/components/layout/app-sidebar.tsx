@@ -35,6 +35,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SearchDialog } from "@/components/search/search-dialog";
+import { useFrappeGetDocList } from "frappe-react-sdk";
 
 // ============================================================================
 // Types
@@ -102,14 +103,9 @@ const comunicacionItems: DocTypeItem[] = [
 
 /**
  * Estructura - DocTypes relacionados a la estructura de la institución
+ * Note: Institution is handled separately as it's a singleton per tenant
  */
 const estructuraItems: DocTypeItem[] = [
-  {
-    name: "Institution",
-    label: "Institución",
-    icon: Building2,
-    href: "/Institution",
-  },
   {
     name: "Campus",
     label: "Sedes",
@@ -127,6 +123,12 @@ const estructuraItems: DocTypeItem[] = [
     label: "Secciones",
     icon: Layers,
     href: "/Section",
+  },
+  {
+    name: "Staff",
+    label: "Personal",
+    icon: UserCheck,
+    href: "/Staff",
   },
   {
     name: "Student",
@@ -238,6 +240,39 @@ function RecordItemLink({
 }
 
 /**
+ * Special component for Institution link - fetches single institution dynamically
+ * Each tenant has exactly one institution, so we link directly to its record view
+ */
+function InstitutionLink({ isActive }: { isActive: boolean }) {
+  const { data: institutions } = useFrappeGetDocList<{ name: string }>(
+    "Institution",
+    {
+      fields: ["name"],
+      limit: 1,
+    }
+  );
+
+  const institutionId = institutions?.[0]?.name;
+  const href = institutionId ? `/Institution/${institutionId}` : "/Institution";
+
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+        "hover:bg-accent hover:text-accent-foreground",
+        isActive
+          ? "bg-accent text-accent-foreground"
+          : "text-muted-foreground"
+      )}
+    >
+      <Building2 className="h-4 w-4" />
+      <span className="flex-1">Institución</span>
+    </Link>
+  );
+}
+
+/**
  * Sidebar header with search
  */
 function SidebarHeader() {
@@ -336,6 +371,8 @@ export function AppSidebar({ className }: AppSidebarProps) {
           {/* Estructura Section */}
           <SidebarSection title="Estructura" defaultOpen>
             <nav className="space-y-1">
+              {/* Institution is a singleton - link directly to record */}
+              <InstitutionLink isActive={pathname.startsWith("/Institution")} />
               {estructuraItems.map((item) => (
                 <RecordItemLink
                   key={item.name}

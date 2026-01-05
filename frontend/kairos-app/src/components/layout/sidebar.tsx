@@ -29,6 +29,13 @@ import {
   Mail,
   Star,
   Package,
+  Layers,
+  MapPin,
+  BookOpen,
+  Clock,
+  UserPlus,
+  CalendarClock,
+  CalendarRange,
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
@@ -68,6 +75,56 @@ const fallbackNavigationItems: NavItem[] = [
     icon: Building2,
   },
   {
+    label: "Campus",
+    href: "/Campus",
+    icon: MapPin,
+  },
+  {
+    label: "School Units",
+    href: "/School Unit",
+    icon: Layers,
+  },
+  {
+    label: "Grades",
+    href: "/Grade",
+    icon: GraduationCap,
+  },
+  {
+    label: "Sections",
+    href: "/Section",
+    icon: Folder,
+  },
+  {
+    label: "Academic Years",
+    href: "/Academic Year",
+    icon: CalendarRange,
+  },
+  {
+    label: "Subjects",
+    href: "/Subject",
+    icon: BookOpen,
+  },
+  {
+    label: "Time Slots",
+    href: "/Schedule Time Slot",
+    icon: Clock,
+  },
+  {
+    label: "Student Enrollments",
+    href: "/Student Enrollment",
+    icon: UserPlus,
+  },
+  {
+    label: "Staff Assignments",
+    href: "/Staff Section Assignment",
+    icon: UserCheck,
+  },
+  {
+    label: "Schedules",
+    href: "/Section Schedule Entry",
+    icon: CalendarClock,
+  },
+  {
     label: "Messages",
     href: "/Message",
     icon: MessageSquare,
@@ -81,11 +138,6 @@ const fallbackNavigationItems: NavItem[] = [
     label: "Events",
     href: "/School-Event",
     icon: Calendar,
-  },
-  {
-    label: "Grades",
-    href: "/Grade",
-    icon: GraduationCap,
   },
 ];
 
@@ -109,6 +161,13 @@ const iconComponents: Record<string, LucideIcon> = {
   Mail,
   Star,
   Package,
+  Layers,
+  MapPin,
+  BookOpen,
+  Clock,
+  UserPlus,
+  CalendarClock,
+  CalendarRange,
 };
 
 function getIconComponent(iconName?: string): LucideIcon {

@@ -1,0 +1,42 @@
+{
+ "actions": [],
+ "creation": "2025-01-05 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section",
+  "expected_students"
+ ],
+ "fields": [
+  {
+   "fieldname": "section",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Section",
+   "options": "Section",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "expected_students",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Expected Students",
+   "description": "Expected number of participants from this section"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-01-05 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Kairos",
+ "name": "Field Trip Section",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

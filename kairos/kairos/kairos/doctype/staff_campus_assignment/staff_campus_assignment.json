@@ -9,8 +9,8 @@
  "field_order": [
   "assignment_details_section",
   "naming_series",
-  "user",
-  "instructor",
+  "staff",
+  "staff_name",
   "column_break_assignment",
   "campus",
   "role_at_campus",
@@ -19,7 +19,9 @@
   "start_date",
   "end_date",
   "column_break_dates",
-  "is_active"
+  "is_active",
+  "deprecated_section",
+  "user"
  ],
  "fields": [
   {
@@ -36,21 +38,20 @@
    "reqd": 1
   },
   {
-   "fieldname": "user",
+   "fieldname": "staff",
    "fieldtype": "Link",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Staff User",
-   "options": "User",
-   "reqd": 1
+   "label": "Staff",
+   "options": "Staff"
   },
   {
-   "description": "Link to Instructor record if this staff member is a teacher (from Frappe Education)",
-   "fieldname": "instructor",
-   "fieldtype": "Link",
-   "in_standard_filter": 1,
-   "label": "Instructor",
-   "options": "Instructor"
+   "fetch_from": "staff.full_name",
+   "fieldname": "staff_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Staff Name",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_assignment",
@@ -109,11 +110,27 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Is Active"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "deprecated_section",
+   "fieldtype": "Section Break",
+   "hidden": 1,
+   "label": "Deprecated Fields"
+  },
+  {
+   "description": "DEPRECATED: Use 'Staff' field instead. Kept for migration purposes.",
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Staff User (Deprecated)",
+   "options": "User",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-01-01 00:00:00.000000",
+ "modified": "2025-01-05 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Kairos",
  "name": "Staff Campus Assignment",
@@ -130,6 +147,18 @@
    "report": 1,
    "role": "System Manager",
    "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "School Admin",
+   "share": 0,
    "write": 1
   }
  ],

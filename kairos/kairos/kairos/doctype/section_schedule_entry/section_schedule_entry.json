@@ -1,0 +1,163 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-01-05 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "schedule_section",
+  "naming_series",
+  "section",
+  "academic_year",
+  "column_break_schedule",
+  "day_of_week",
+  "time_slot",
+  "class_section",
+  "subject",
+  "staff",
+  "staff_name",
+  "column_break_class",
+  "room",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "schedule_section",
+   "fieldtype": "Section Break",
+   "label": "Schedule"
+  },
+  {
+   "default": "SCH-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "SCH-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Section",
+   "options": "Section",
+   "reqd": 1
+  },
+  {
+   "fieldname": "academic_year",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Academic Year",
+   "options": "Academic Year",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_schedule",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "day_of_week",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Day of Week",
+   "options": "Monday\nTuesday\nWednesday\nThursday\nFriday",
+   "reqd": 1
+  },
+  {
+   "fieldname": "time_slot",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Time Slot",
+   "options": "Schedule Time Slot",
+   "reqd": 1
+  },
+  {
+   "fieldname": "class_section",
+   "fieldtype": "Section Break",
+   "label": "Class Details"
+  },
+  {
+   "fieldname": "subject",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Subject",
+   "options": "Subject",
+   "description": "Leave empty for breaks/lunch"
+  },
+  {
+   "fieldname": "staff",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Staff",
+   "options": "Staff",
+   "description": "Teacher for this class"
+  },
+  {
+   "fetch_from": "staff.full_name",
+   "fieldname": "staff_name",
+   "fieldtype": "Data",
+   "label": "Staff Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_class",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "room",
+   "fieldtype": "Data",
+   "label": "Room",
+   "description": "Classroom or location"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-01-05 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Kairos",
+ "name": "Section Schedule Entry",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "School Admin",
+   "share": 0,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

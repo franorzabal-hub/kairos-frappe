@@ -1,0 +1,276 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "hash",
+ "creation": "2025-01-05 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "reference_section",
+  "field_trip",
+  "trip_name",
+  "column_break_ref",
+  "student",
+  "student_name",
+  "section",
+  "authorization_section",
+  "authorization_status",
+  "authorized_by",
+  "authorization_date",
+  "column_break_auth",
+  "authorization_method",
+  "authorization_document",
+  "authorization_notes",
+  "emergency_section",
+  "emergency_contact_name",
+  "emergency_contact_phone",
+  "emergency_contact_relation",
+  "column_break_emergency",
+  "medical_notes",
+  "medications",
+  "dietary_restrictions",
+  "payment_section",
+  "payment_status",
+  "payment_date",
+  "column_break_payment",
+  "payment_reference",
+  "attendance_section",
+  "attended",
+  "attendance_notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "reference_section",
+   "fieldtype": "Section Break",
+   "label": "Reference"
+  },
+  {
+   "fieldname": "field_trip",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Field Trip",
+   "options": "Field Trip",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "field_trip.trip_name",
+   "fieldname": "trip_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Trip Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ref",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "student",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Student",
+   "options": "Student",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "student.student_name",
+   "fieldname": "student_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Student Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Section",
+   "options": "Section",
+   "description": "Student's section at time of trip"
+  },
+  {
+   "fieldname": "authorization_section",
+   "fieldtype": "Section Break",
+   "label": "Authorization"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "authorization_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Authorization Status",
+   "options": "Pending\nAuthorized\nNot Authorized",
+   "reqd": 1
+  },
+  {
+   "fieldname": "authorized_by",
+   "fieldtype": "Data",
+   "label": "Authorized By",
+   "description": "Parent/guardian name who authorized"
+  },
+  {
+   "fieldname": "authorization_date",
+   "fieldtype": "Datetime",
+   "label": "Authorization Date"
+  },
+  {
+   "fieldname": "column_break_auth",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "App",
+   "fieldname": "authorization_method",
+   "fieldtype": "Select",
+   "label": "Authorization Method",
+   "options": "App\nPaper\nEmail"
+  },
+  {
+   "fieldname": "authorization_document",
+   "fieldtype": "Attach",
+   "label": "Authorization Document",
+   "description": "Signed form (if paper)"
+  },
+  {
+   "fieldname": "authorization_notes",
+   "fieldtype": "Small Text",
+   "label": "Authorization Notes",
+   "description": "Parent comments"
+  },
+  {
+   "fieldname": "emergency_section",
+   "fieldtype": "Section Break",
+   "label": "Emergency Information",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "emergency_contact_name",
+   "fieldtype": "Data",
+   "label": "Emergency Contact Name",
+   "description": "Contact for this specific trip"
+  },
+  {
+   "fieldname": "emergency_contact_phone",
+   "fieldtype": "Data",
+   "label": "Emergency Contact Phone",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "emergency_contact_relation",
+   "fieldtype": "Data",
+   "label": "Relationship",
+   "description": "e.g., Mother, Father, Aunt"
+  },
+  {
+   "fieldname": "column_break_emergency",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "medical_notes",
+   "fieldtype": "Small Text",
+   "label": "Medical Notes",
+   "description": "Allergies, conditions, etc."
+  },
+  {
+   "fieldname": "medications",
+   "fieldtype": "Small Text",
+   "label": "Medications",
+   "description": "Required medications during trip"
+  },
+  {
+   "fieldname": "dietary_restrictions",
+   "fieldtype": "Small Text",
+   "label": "Dietary Restrictions",
+   "description": "Food restrictions or allergies"
+  },
+  {
+   "fieldname": "payment_section",
+   "fieldtype": "Section Break",
+   "label": "Payment",
+   "collapsible": 1
+  },
+  {
+   "default": "Not Required",
+   "fieldname": "payment_status",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Payment Status",
+   "options": "Not Required\nPending\nPaid\nRefunded"
+  },
+  {
+   "fieldname": "payment_date",
+   "fieldtype": "Date",
+   "label": "Payment Date"
+  },
+  {
+   "fieldname": "column_break_payment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "payment_reference",
+   "fieldtype": "Data",
+   "label": "Payment Reference",
+   "description": "Receipt number"
+  },
+  {
+   "fieldname": "attendance_section",
+   "fieldtype": "Section Break",
+   "label": "Attendance",
+   "collapsible": 1,
+   "description": "To be filled after the trip"
+  },
+  {
+   "default": "0",
+   "fieldname": "attended",
+   "fieldtype": "Check",
+   "label": "Attended",
+   "description": "Did they attend? (fill after trip)"
+  },
+  {
+   "fieldname": "attendance_notes",
+   "fieldtype": "Small Text",
+   "label": "Attendance Notes",
+   "description": "If absent, why"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-01-05 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Kairos",
+ "name": "Field Trip Student",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "School Admin",
+   "share": 0,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

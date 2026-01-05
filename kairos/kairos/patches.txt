@@ -1,0 +1,5 @@
+[pre_model_sync]
+
+[post_model_sync]
+kairos.patches.v1_1.create_staff_records
+kairos.patches.v1_1.create_academic_structure

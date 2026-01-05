@@ -13,17 +13,12 @@
   "section_code",
   "column_break_basic",
   "grade",
-  "academic_year",
   "is_active",
-  "assignment_section",
-  "homeroom_teacher",
-  "assistant_teacher",
-  "column_break_assignment",
+  "capacity_section",
   "classroom",
   "max_students",
-  "schedule_type",
-  "links_section",
-  "student_group"
+  "column_break_capacity",
+  "schedule_type"
  ],
  "fields": [
   {
@@ -67,13 +62,6 @@
    "reqd": 1
   },
   {
-   "fieldname": "academic_year",
-   "fieldtype": "Link",
-   "in_standard_filter": 1,
-   "label": "Academic Year",
-   "options": "Academic Year"
-  },
-  {
    "default": "1",
    "fieldname": "is_active",
    "fieldtype": "Check",
@@ -81,25 +69,9 @@
    "label": "Is Active"
   },
   {
-   "fieldname": "assignment_section",
+   "fieldname": "capacity_section",
    "fieldtype": "Section Break",
-   "label": "Assignment"
-  },
-  {
-   "fieldname": "homeroom_teacher",
-   "fieldtype": "Link",
-   "label": "Homeroom Teacher",
-   "options": "Instructor"
-  },
-  {
-   "fieldname": "assistant_teacher",
-   "fieldtype": "Link",
-   "label": "Assistant Teacher",
-   "options": "Instructor"
-  },
-  {
-   "fieldname": "column_break_assignment",
-   "fieldtype": "Column Break"
+   "label": "Capacity & Location"
   },
   {
    "fieldname": "classroom",
@@ -112,22 +84,15 @@
    "label": "Max Students"
   },
   {
+   "fieldname": "column_break_capacity",
+   "fieldtype": "Column Break"
+  },
+  {
    "fieldname": "schedule_type",
    "fieldtype": "Select",
    "in_standard_filter": 1,
    "label": "Schedule Type",
    "options": "\nMorning\nAfternoon\nFull Day"
-  },
-  {
-   "fieldname": "links_section",
-   "fieldtype": "Section Break",
-   "label": "Links"
-  },
-  {
-   "fieldname": "student_group",
-   "fieldtype": "Link",
-   "label": "Student Group",
-   "options": "Student Group"
   }
  ],
  "index_web_pages_for_search": 1,

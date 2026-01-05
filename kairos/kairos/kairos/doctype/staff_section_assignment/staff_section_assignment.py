@@ -1,4 +1,4 @@
-# Copyright (c) 2024, Kairos and contributors
+# Copyright (c) 2025, Kairos and contributors
 # For license information, please see license.txt
 
 import frappe
@@ -7,48 +7,31 @@ from frappe.model.document import Document
 
 
 class StaffSectionAssignment(Document):
-	# begin: auto-generated types
-	# This code is auto-generated. Do not modify anything in this block.
+    def validate(self):
+        """Validate the Staff Section Assignment document before saving."""
+        self.validate_subject_for_type()
+        self.validate_duplicate_assignment()
 
-	from typing import TYPE_CHECKING
+    def validate_subject_for_type(self):
+        """Ensure subject is provided when assignment_type is 'Subject Teacher'."""
+        if self.assignment_type == "Subject Teacher" and not self.subject:
+            frappe.throw(_("Subject is required when Assignment Type is 'Subject Teacher'"))
 
-	if TYPE_CHECKING:
-		from frappe.types import DF
+    def validate_duplicate_assignment(self):
+        """Check for duplicate assignments of the same staff to the same section."""
+        if self.is_new():
+            filters = {
+                "staff": self.staff,
+                "section": self.section,
+                "academic_year": self.academic_year,
+                "assignment_type": self.assignment_type,
+                "is_active": 1
+            }
+            if self.assignment_type == "Subject Teacher":
+                filters["subject"] = self.subject
 
-		academic_year: DF.Link
-		instructor: DF.Link
-		is_active: DF.Check
-		naming_series: DF.Literal["SSA-.#####"]
-		role: DF.Literal["", "Homeroom", "Subject", "Assistant"]
-		section: DF.Link
-		subject: DF.Link | None
-	# end: auto-generated types
-
-	def validate(self):
-		"""Validate the Staff Section Assignment document before saving."""
-		self.validate_subject_for_role()
-		self.validate_duplicate_assignment()
-
-	def validate_subject_for_role(self):
-		"""Ensure subject is provided when role is 'Subject'."""
-		if self.role == "Subject" and not self.subject:
-			frappe.throw(_("Subject is required when Role is 'Subject'"))
-
-	def validate_duplicate_assignment(self):
-		"""Check for duplicate assignments of the same instructor to the same section."""
-		if self.is_new():
-			filters = {
-				"instructor": self.instructor,
-				"section": self.section,
-				"academic_year": self.academic_year,
-				"role": self.role,
-				"is_active": 1
-			}
-			if self.role == "Subject":
-				filters["subject"] = self.subject
-
-			existing = frappe.db.exists("Staff Section Assignment", filters)
-			if existing:
-				frappe.throw(
-					_("An active assignment already exists for this instructor, section, academic year, and role combination.")
-				)
+            existing = frappe.db.exists("Staff Section Assignment", filters)
+            if existing:
+                frappe.throw(
+                    _("An active assignment already exists for this staff, section, academic year, and assignment type combination.")
+                )

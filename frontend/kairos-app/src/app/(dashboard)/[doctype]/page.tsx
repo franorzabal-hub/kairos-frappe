@@ -23,17 +23,13 @@ import { useFrappeGetDocList, useFrappeDeleteDoc, useFrappeUpdateDoc } from "fra
 import {
   Plus,
   AlertCircle,
-  Settings,
-  LayoutGrid,
   ChevronDown,
   Download,
   Upload,
-  ArrowUpDown,
   ArrowUp,
   ArrowDown,
   SlidersHorizontal,
   GripVertical,
-  Check,
   X,
 } from "lucide-react";
 import {
@@ -64,6 +60,12 @@ import {
 } from "@/components/ui/select";
 
 import { useFrappeDocMeta, getFieldDisplayValue } from "@/hooks/use-frappe-meta";
+import { useSavedViews, SavedView, SavedViewFilter } from "@/hooks/use-saved-views";
+import { useFavoriteFolders } from "@/hooks/use-favorite-folders";
+import { ViewsDropdown, ViewSettingsPanel } from "@/components/views";
+import { CreateViewDialog } from "@/components/dialogs/create-view-dialog";
+import { ViewType, VisibleColumn } from "@/hooks/use-saved-views";
+import { RenameViewDialog } from "@/components/dialogs/rename-view-dialog";
 import { ActiveFilters } from "@/components/filters/filter-builder";
 import {
   FilterCondition,
@@ -72,6 +74,7 @@ import {
   createEmptyFilter,
 } from "@/lib/filters";
 import { useBulkSelection, usePageSelectionState } from "@/hooks/use-bulk-selection";
+import { useLinkedFieldResolver } from "@/hooks/use-linked-field-resolver";
 import { useNotification } from "@/hooks/use-notification";
 import {
   DataTable,
@@ -175,6 +178,15 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
   // Column order state (stores column IDs in display order)
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
 
+  // Visible columns state (for ViewSettingsPanel)
+  const [visibleColumnsConfig, setVisibleColumnsConfig] = useState<VisibleColumn[]>([]);
+
+  // Views state
+  const [currentViewId, setCurrentViewId] = useState<string | null>(null);
+  const [createViewDialogOpen, setCreateViewDialogOpen] = useState(false);
+  const [renameViewDialogOpen, setRenameViewDialogOpen] = useState(false);
+  const [viewToRename, setViewToRename] = useState<SavedView | null>(null);
+
   // ============================================================================
   // Data Fetching
   // ============================================================================
@@ -189,7 +201,23 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
     titleField,
   } = useFrappeDocMeta({ doctype: doctypeName });
 
-  // Determine fields to fetch - always include name and title_field
+  // Fetch saved views for this doctype
+  const {
+    views: savedViews,
+    isLoading: viewsLoading,
+    createView,
+    updateView,
+    deleteView,
+    duplicateView,
+    addToFavorites,
+    removeFromFavorites,
+    refresh: refreshViews,
+  } = useSavedViews({ doctype: doctypeName, enabled: !!meta });
+
+  // Fetch favorite folders
+  const { folders: favoriteFolders } = useFavoriteFolders();
+
+  // Determine fields to fetch - include visible columns from config
   const fieldsToFetch = useMemo(() => {
     const fields = new Set<string>(["name", "modified", "creation"]);
 
@@ -198,13 +226,27 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
       fields.add(titleField);
     }
 
-    // Add list view fields
+    // Add list view fields (for default view)
     listViewFields.forEach((field) => {
       fields.add(field.fieldname);
     });
 
-    return Array.from(fields);
-  }, [listViewFields, titleField]);
+    // Add fields from visible columns config (when user adds columns via View Settings)
+    visibleColumnsConfig.forEach((col) => {
+      // For nested fields like "director.full_name", add the base link field "director"
+      if (col.fieldname.includes(".")) {
+        const baseLinkField = col.fieldname.split(".")[0];
+        console.log(`[fieldsToFetch] Adding base link field "${baseLinkField}" for nested field "${col.fieldname}"`);
+        fields.add(baseLinkField);
+      } else {
+        fields.add(col.fieldname);
+      }
+    });
+
+    const result = Array.from(fields);
+    console.log("[fieldsToFetch] Final fields:", result);
+    return result;
+  }, [listViewFields, titleField, visibleColumnsConfig]);
 
   // Build filters for API
   const apiFilters = useMemo(() => {
@@ -245,7 +287,8 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
       limit_start: pagination.pageIndex * pagination.pageSize,
       limit: pagination.pageSize,
     },
-    meta ? "doclist_" + doctypeName + "_" + pagination.pageIndex + "_" + pagination.pageSize + "_" + orderBy.field + "_" + orderBy.order + "_" + JSON.stringify(getValidFilters(filterConditions)) : null
+    // Include fieldsToFetch in cache key so query re-runs when columns change
+    meta ? "doclist_" + doctypeName + "_" + pagination.pageIndex + "_" + pagination.pageSize + "_" + orderBy.field + "_" + orderBy.order + "_" + JSON.stringify(getValidFilters(filterConditions)) + "_" + JSON.stringify(fieldsToFetch) : null
   );
 
   // Fetch total count for pagination
@@ -286,119 +329,203 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
   const { deleteDoc } = useFrappeDeleteDoc();
   const { updateDoc } = useFrappeUpdateDoc();
 
+  // Build a map of link field names to their target DocTypes
+  const linkFieldMap = useMemo(() => {
+    const map = new Map<string, string>();
+    visibleFields.forEach((field) => {
+      if (field.fieldtype === "Link" && field.options) {
+        map.set(field.fieldname, field.options);
+      }
+    });
+    // Add standard link fields
+    map.set("owner", "User");
+    map.set("modified_by", "User");
+    console.log("[linkFieldMap] Built map:", Object.fromEntries(map));
+    console.log("[linkFieldMap] visibleFields Link fields:", visibleFields.filter(f => f.fieldtype === "Link").map(f => ({ fieldname: f.fieldname, options: f.options })));
+    return map;
+  }, [visibleFields]);
+
+  // Resolve linked field values
+  const { resolvedDocuments, isResolving } = useLinkedFieldResolver({
+    documents: documents as Record<string, unknown>[] | undefined,
+    visibleColumns: visibleColumnsConfig,
+    linkFieldMap,
+    enabled: !!documents && visibleColumnsConfig.some((col) => col.fieldname.includes(".")),
+  });
+
   // ============================================================================
   // Table Columns
   // ============================================================================
 
+  // Get fields that can be used for Kanban grouping (Select and Link fields)
+  const kanbanGroupFields = useMemo(() => {
+    return visibleFields.filter(
+      (f) => f.fieldtype === "Select" || f.fieldtype === "Link"
+    );
+  }, [visibleFields]);
+
+  // Get default visible columns (what the table shows by default)
+  const defaultVisibleColumns = useMemo<VisibleColumn[]>(() => {
+    const columns: VisibleColumn[] = [];
+
+    // Add title field first
+    if (titleField) {
+      columns.push({ fieldname: titleField });
+    } else {
+      columns.push({ fieldname: "name" });
+    }
+
+    // Add list view fields (excluding title)
+    listViewFields.forEach((field) => {
+      if (field.fieldname !== titleField && field.fieldname !== "name") {
+        columns.push({ fieldname: field.fieldname });
+      }
+    });
+
+    // Add modified if not already present
+    if (!listViewFields.some((f) => f.fieldname === "modified")) {
+      columns.push({ fieldname: "modified" });
+    }
+
+    return columns;
+  }, [listViewFields, titleField]);
+
+  // All available fields for View Settings (includes standard fields)
+  const allAvailableFields = useMemo<DocTypeField[]>(() => {
+    const standardFields: DocTypeField[] = [
+      { fieldname: "name", fieldtype: "Data", label: "ID" },
+      { fieldname: "modified", fieldtype: "Datetime", label: "Modified" },
+      { fieldname: "creation", fieldtype: "Datetime", label: "Created" },
+      { fieldname: "owner", fieldtype: "Link", label: "Created By", options: "User" },
+      { fieldname: "modified_by", fieldtype: "Link", label: "Modified By", options: "User" },
+    ];
+
+    // Combine visible fields with standard fields (avoid duplicates)
+    const fieldMap = new Map<string, DocTypeField>();
+    visibleFields.forEach((f) => fieldMap.set(f.fieldname, f));
+    standardFields.forEach((f) => {
+      if (!fieldMap.has(f.fieldname)) {
+        fieldMap.set(f.fieldname, f);
+      }
+    });
+
+    return Array.from(fieldMap.values());
+  }, [visibleFields]);
+
   // Define document type for table
   type DocRecord = Record<string, unknown>;
 
-  // Build base columns (without order applied)
+  // Get the active visible columns (from config or default)
+  const activeVisibleColumns = useMemo(() => {
+    return visibleColumnsConfig.length > 0 ? visibleColumnsConfig : defaultVisibleColumns;
+  }, [visibleColumnsConfig, defaultVisibleColumns]);
+
+  // Build a map of all available fields for quick lookup
+  const allFieldsMap = useMemo(() => {
+    const map = new Map<string, DocTypeField>();
+    allAvailableFields.forEach((f) => map.set(f.fieldname, f));
+    return map;
+  }, [allAvailableFields]);
+
+  // Build base columns based on activeVisibleColumns
   const baseColumns = useMemo<ColumnDef<DocRecord, unknown>[]>(() => {
-    // Name/title column with integrated checkbox
-    const headerLabel = titleField
-      ? listViewFields.find((f) => f.fieldname === titleField)?.label || "Name"
-      : "Name";
+    const cols: ColumnDef<DocRecord, unknown>[] = [];
 
-    const cols: ColumnDef<DocRecord, unknown>[] = [
-      {
-        id: titleField || "name",
-        accessorKey: titleField || "name",
-        header: () => (
-          <div className="flex items-center gap-3">
-            <HeaderCheckbox
-              isAllSelected={isAllPageSelected}
-              isPartiallySelected={isPartiallySelected}
-              onToggleSelectAll={() => toggleSelectAll(currentPageIds)}
-              disabled={listLoading || currentPageIds.length === 0}
-            />
-            <span>{headerLabel}</span>
-          </div>
-        ),
-        cell: ({ row, getValue }) => {
-          const rowId = row.original.name as string;
-          const value = getValue();
-          return (
+    activeVisibleColumns.forEach((visCol, index) => {
+      const field = allFieldsMap.get(visCol.fieldname);
+      const fieldname = visCol.fieldname;
+      const label = visCol.label || field?.label || fieldname;
+      const isFirstColumn = index === 0;
+
+      if (isFirstColumn) {
+        // First column has checkbox integrated
+        cols.push({
+          id: fieldname,
+          accessorKey: fieldname,
+          header: () => (
             <div className="flex items-center gap-3">
-              <RowCheckbox
-                rowId={rowId}
-                isSelected={isSelected(rowId)}
-                onSelectionChange={(id, event) => handleRangeSelection(id, currentPageIds, event)}
-                disabled={listLoading}
+              <HeaderCheckbox
+                isAllSelected={isAllPageSelected}
+                isPartiallySelected={isPartiallySelected}
+                onToggleSelectAll={() => toggleSelectAll(currentPageIds)}
+                disabled={listLoading || currentPageIds.length === 0}
               />
-              <span className="font-medium text-primary truncate">
-                {value ? String(value) : "-"}
-              </span>
+              <span>{label}</span>
             </div>
-          );
-        },
-        enableSorting: true,
-        minSize: 150,
-      },
-    ];
+          ),
+          cell: ({ row, getValue }) => {
+            const rowId = row.original.name as string;
+            const value = getValue();
+            return (
+              <div className="flex items-center gap-3">
+                <RowCheckbox
+                  rowId={rowId}
+                  isSelected={isSelected(rowId)}
+                  onSelectionChange={(id, event) => handleRangeSelection(id, currentPageIds, event)}
+                  disabled={listLoading}
+                />
+                <span className="font-medium text-primary truncate">
+                  {value ? String(value) : "-"}
+                </span>
+              </div>
+            );
+          },
+          enableSorting: true,
+          minSize: 150,
+        });
+      } else {
+        // Other columns
+        cols.push({
+          id: fieldname,
+          accessorKey: fieldname,
+          header: label,
+          cell: ({ getValue }) => {
+            const value = getValue();
 
-    // Add list view fields (excluding title field if already added)
-    listViewFields.forEach((field) => {
-      if (field.fieldname === titleField || field.fieldname === "name") {
-        return;
+            // Format based on field type
+            if (field) {
+              const formattedValue = formatCellValue(value, field);
+
+              if (field.fieldtype === "Check") {
+                return (
+                  <span className={`truncate ${value ? "text-green-600" : "text-muted-foreground"}`}>
+                    {formattedValue}
+                  </span>
+                );
+              }
+
+              if (field.fieldtype === "Link") {
+                return (
+                  <span className="truncate text-blue-600 hover:underline">
+                    {formattedValue || "-"}
+                  </span>
+                );
+              }
+
+              if (field.fieldtype === "Datetime" || field.fieldtype === "Date") {
+                if (!value) return <span className="truncate">-</span>;
+                try {
+                  return <span className="truncate">{new Date(String(value)).toLocaleDateString()}</span>;
+                } catch {
+                  return <span className="truncate">{String(value)}</span>;
+                }
+              }
+
+              return <span className="truncate">{formattedValue || "-"}</span>;
+            }
+
+            // Fallback for fields not in allFieldsMap
+            if (!value) return <span className="truncate">-</span>;
+            return <span className="truncate">{String(value)}</span>;
+          },
+          enableSorting: true,
+          minSize: 100,
+        });
       }
-
-      cols.push({
-        id: field.fieldname,
-        accessorKey: field.fieldname,
-        header: field.label,
-        cell: ({ getValue }) => {
-          const value = getValue();
-          const formattedValue = formatCellValue(value, field);
-
-          // Special rendering for certain field types
-          if (field.fieldtype === "Check") {
-            return (
-              <span
-                className={`truncate ${value ? "text-green-600" : "text-muted-foreground"}`}
-              >
-                {formattedValue}
-              </span>
-            );
-          }
-
-          if (field.fieldtype === "Link") {
-            return (
-              <span className="truncate text-blue-600 hover:underline">
-                {formattedValue || "-"}
-              </span>
-            );
-          }
-
-          return <span className="truncate">{formattedValue || "-"}</span>;
-        },
-        enableSorting: true,
-        minSize: 100,
-      });
     });
 
-    // Add modified column if not already present
-    if (!listViewFields.some((f) => f.fieldname === "modified")) {
-      cols.push({
-        id: "modified",
-        accessorKey: "modified",
-        header: "Modified",
-        cell: ({ getValue }) => {
-          const value = getValue();
-          if (!value) return "-";
-          try {
-            return <span className="truncate">{new Date(String(value)).toLocaleDateString()}</span>;
-          } catch {
-            return <span className="truncate">{String(value)}</span>;
-          }
-        },
-        enableSorting: true,
-        minSize: 100,
-      });
-    }
-
     return cols;
-  }, [listViewFields, titleField, isAllPageSelected, isPartiallySelected, toggleSelectAll, currentPageIds, isSelected, handleRangeSelection, listLoading]);
+  }, [activeVisibleColumns, allFieldsMap, isAllPageSelected, isPartiallySelected, toggleSelectAll, currentPageIds, isSelected, handleRangeSelection, listLoading]);
 
   // Apply column order to get final columns
   const columns = useMemo<ColumnDef<DocRecord, unknown>[]>(() => {
@@ -528,9 +655,9 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
 
   // Handle bulk export to CSV
   const handleBulkExport = useCallback(() => {
-    if (!documents || selectedIds.size === 0) return;
+    if (resolvedDocuments.length === 0 || selectedIds.size === 0) return;
 
-    const selectedDocs = (documents as Record<string, unknown>[]).filter((doc) =>
+    const selectedDocs = resolvedDocuments.filter((doc) =>
       selectedIds.has(doc.name as string)
     );
 
@@ -551,7 +678,7 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
     const timestamp = new Date().toISOString().split("T")[0];
     exportToCSV(selectedDocs, doctypeName.toLowerCase() + "-export-" + timestamp, exportColumns);
     showSuccess("Exported " + selectedDocs.length + " " + doctypeName.toLowerCase() + (selectedDocs.length !== 1 ? "s" : "") + " to CSV");
-  }, [documents, selectedIds, listViewFields, doctypeName, showSuccess, showInfo]);
+  }, [resolvedDocuments, selectedIds, listViewFields, doctypeName, showSuccess, showInfo]);
 
   // Handle bulk field update
   const handleBulkUpdate = useCallback(
@@ -588,6 +715,199 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
       }
     },
     [selectedIds, doctypeName, updateDoc, showSuccess, showError, clearSelection, refetchList]
+  );
+
+  // ============================================================================
+  // View Handlers
+  // ============================================================================
+
+  // Fetch fields of a related DocType (for View Settings navigation)
+  const fetchRelatedFields = useCallback(
+    async (doctype: string): Promise<DocTypeField[]> => {
+      try {
+        const params = new URLSearchParams({
+          doctype,
+          with_parent: "0",
+        });
+        const response = await fetch(
+          `/api/frappe/api/method/frappe.desk.form.load.getdoctype?${params.toString()}`,
+          { credentials: "include" }
+        );
+        if (!response.ok) throw new Error("Failed to fetch");
+        const data = await response.json();
+
+        // Try different response structures
+        const meta = data?.message?.docs?.[0] || data?.docs?.[0] || data?.message;
+        if (!meta?.fields) return [];
+
+        // Filter out layout fields
+        const layoutTypes = ["Section Break", "Column Break", "Tab Break", "HTML", "Table", "Table MultiSelect"];
+        return meta.fields.filter(
+          (f: DocTypeField) => !layoutTypes.includes(f.fieldtype) && f.hidden !== 1
+        );
+      } catch (error) {
+        console.error("Failed to fetch related fields for", doctype, error);
+        return [];
+      }
+    },
+    []
+  );
+
+  // Handle view selection
+  const handleViewSelect = useCallback(
+    (viewId: string | null) => {
+      setCurrentViewId(viewId);
+
+      if (viewId === null) {
+        // Reset to default "All" view
+        setFilterConditions([]);
+        setSorting([{ id: "modified", desc: true }]);
+        setColumnOrder([]);
+        setVisibleColumnsConfig([]);
+        setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+      } else {
+        // Find and apply the selected view
+        const view = savedViews.find((v) => v.name === viewId);
+        if (view) {
+          // Convert SavedViewFilter to FilterCondition
+          const filters = (view.filters || []).map((f: SavedViewFilter) => ({
+            id: crypto.randomUUID(),
+            fieldname: f.fieldname,
+            operator: f.operator as FilterCondition["operator"],
+            value: f.value,
+          }));
+          setFilterConditions(filters);
+          setSorting(view.sorting || [{ id: "modified", desc: true }]);
+          setColumnOrder(view.column_order || []);
+          setVisibleColumnsConfig(view.visible_columns || []);
+          setPagination((prev) => ({
+            ...prev,
+            pageIndex: 0,
+            pageSize: view.page_size || DEFAULT_PAGE_SIZE,
+          }));
+        }
+      }
+    },
+    [savedViews]
+  );
+
+  // Handle create view
+  const handleCreateView = useCallback(
+    async (title: string, viewType: ViewType, kanbanField?: string) => {
+      const validFilters = getValidFilters(filterConditions);
+      // Convert FilterCondition to SavedViewFilter (handle array values)
+      const filtersToSave: SavedViewFilter[] = validFilters.map((f) => ({
+        fieldname: f.fieldname,
+        operator: f.operator,
+        value: Array.isArray(f.value) ? f.value.join(",") : f.value,
+      }));
+
+      const newView = await createView({
+        title,
+        for_doctype: doctypeName,
+        view_type: viewType,
+        kanban_field: kanbanField,
+        filters: filtersToSave,
+        sorting,
+        column_order: columnOrder,
+        visible_columns: visibleColumnsConfig,
+        page_size: pagination.pageSize,
+        is_default: false,
+      });
+
+      setCurrentViewId(newView.name);
+      showSuccess(`View "${title}" created`);
+    },
+    [filterConditions, sorting, columnOrder, visibleColumnsConfig, pagination.pageSize, doctypeName, createView, showSuccess]
+  );
+
+  // Handle rename view
+  const handleRenameView = useCallback(
+    (viewId: string) => {
+      const view = savedViews.find((v) => v.name === viewId);
+      if (view) {
+        setViewToRename(view);
+        setRenameViewDialogOpen(true);
+      }
+    },
+    [savedViews]
+  );
+
+  // Handle rename confirm
+  const handleRenameConfirm = useCallback(
+    async (newName: string) => {
+      if (!viewToRename) return;
+      await updateView(viewToRename.name, { title: newName });
+      showSuccess(`View renamed to "${newName}"`);
+    },
+    [viewToRename, updateView, showSuccess]
+  );
+
+  // Handle duplicate view
+  const handleDuplicateView = useCallback(
+    async (view: SavedView) => {
+      const newView = await duplicateView(view, `${view.title} (copy)`);
+      setCurrentViewId(newView.name);
+      showSuccess(`View duplicated as "${newView.title}"`);
+    },
+    [duplicateView, showSuccess]
+  );
+
+  // Handle delete view
+  const handleDeleteView = useCallback(
+    async (viewId: string) => {
+      const view = savedViews.find((v) => v.name === viewId);
+      await deleteView(viewId);
+
+      // If we deleted the current view, go back to "All"
+      if (currentViewId === viewId) {
+        handleViewSelect(null);
+      }
+
+      showSuccess(`View "${view?.title}" deleted`);
+    },
+    [savedViews, deleteView, currentViewId, handleViewSelect, showSuccess]
+  );
+
+  // Handle add to favorites
+  const handleAddToFavorites = useCallback(
+    async (viewId: string, folderId?: string) => {
+      await addToFavorites(viewId, folderId);
+      showSuccess("Added to favorites");
+    },
+    [addToFavorites, showSuccess]
+  );
+
+  // Handle remove from favorites
+  const handleRemoveFromFavorites = useCallback(
+    async (viewId: string) => {
+      await removeFromFavorites(viewId);
+      showSuccess("Removed from favorites");
+    },
+    [removeFromFavorites, showSuccess]
+  );
+
+  // Handle columns change - auto-save to current view if one is selected
+  const handleColumnsChange = useCallback(
+    async (columns: VisibleColumn[]) => {
+      console.log("[handleColumnsChange] Called with columns:", columns);
+      console.log("[handleColumnsChange] currentViewId:", currentViewId);
+      setVisibleColumnsConfig(columns);
+
+      // Auto-save to current view if one is selected
+      if (currentViewId) {
+        try {
+          console.log("[handleColumnsChange] Saving to view:", currentViewId);
+          await updateView(currentViewId, { visible_columns: columns });
+          console.log("[handleColumnsChange] Save successful");
+        } catch (error) {
+          console.error("Failed to auto-save columns:", error);
+        }
+      } else {
+        console.log("[handleColumnsChange] No currentViewId, not saving");
+      }
+    },
+    [currentViewId, updateView]
   );
 
   // ============================================================================
@@ -686,73 +1006,34 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
       {/* Sub-header toolbar (Attio style) */}
       <div className="flex items-center justify-between px-6 py-3 border-b bg-background">
         <div className="flex items-center gap-2">
-          {/* Views dropdown with search */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1">
-                <LayoutGrid className="h-4 w-4" />
-                All {doctypeName}s
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-0" align="start">
-              <Command>
-                <CommandInput placeholder="Search views..." />
-                <CommandList>
-                  <CommandEmpty>No views found.</CommandEmpty>
-                  <CommandGroup>
-                    <CommandItem className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <LayoutGrid className="h-4 w-4" />
-                        All {doctypeName}s
-                      </div>
-                      <Check className="h-4 w-4 text-primary" />
-                    </CommandItem>
-                  </CommandGroup>
-                  <CommandGroup>
-                    <CommandItem className="text-muted-foreground">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Create new view
-                    </CommandItem>
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+          {/* Views dropdown */}
+          <ViewsDropdown
+            doctype={doctypeName}
+            doctypeLabel={doctypeName}
+            views={savedViews}
+            currentViewId={currentViewId}
+            onViewSelect={handleViewSelect}
+            onCreateView={() => setCreateViewDialogOpen(true)}
+            onRenameView={handleRenameView}
+            onDuplicateView={handleDuplicateView}
+            onDeleteView={handleDeleteView}
+            onAddToFavorites={handleAddToFavorites}
+            onRemoveFromFavorites={handleRemoveFromFavorites}
+            folders={favoriteFolders}
+            isLoading={viewsLoading}
+          />
 
-          {/* View settings dropdown */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1">
-                <Settings className="h-4 w-4" />
-                View settings
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-72 p-0" align="start">
-              <div className="p-3 border-b">
-                <p className="text-sm font-medium">View settings</p>
-              </div>
-              <div className="max-h-64 overflow-auto">
-                {listViewFields.map((field) => (
-                  <div
-                    key={field.fieldname}
-                    className="flex items-center gap-2 px-3 py-2 hover:bg-accent cursor-pointer"
-                  >
-                    <GripVertical className="h-4 w-4 text-muted-foreground" />
-                    <Check className="h-4 w-4 text-primary" />
-                    <span className="text-sm flex-1">{field.label}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="p-2 border-t">
-                <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add column
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
+          {/* View settings panel with drag-and-drop columns */}
+          <ViewSettingsPanel
+            fields={allAvailableFields}
+            visibleColumns={
+              visibleColumnsConfig.length > 0
+                ? visibleColumnsConfig
+                : defaultVisibleColumns
+            }
+            onColumnsChange={handleColumnsChange}
+            onFetchRelatedFields={fetchRelatedFields}
+          />
         </div>
 
         <div className="flex items-center gap-2">
@@ -957,8 +1238,8 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
           {/* Data Table */}
           <DataTable
             columns={columns}
-            data={(documents as Record<string, unknown>[]) ?? []}
-            isLoading={listLoading}
+            data={resolvedDocuments}
+            isLoading={listLoading || isResolving}
             pageCount={pageCount}
             pagination={pagination}
             onPaginationChange={handlePaginationChange}
@@ -992,6 +1273,23 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
           isLoading={isBulkOperating}
         />
       </div>
+
+      {/* View Dialogs */}
+      <CreateViewDialog
+        open={createViewDialogOpen}
+        onOpenChange={setCreateViewDialogOpen}
+        doctype={doctypeName}
+        doctypeLabel={doctypeName}
+        selectFields={kanbanGroupFields}
+        onConfirm={handleCreateView}
+      />
+
+      <RenameViewDialog
+        open={renameViewDialogOpen}
+        onOpenChange={setRenameViewDialogOpen}
+        currentName={viewToRename?.title || ""}
+        onConfirm={handleRenameConfirm}
+      />
     </div>
   );
 }

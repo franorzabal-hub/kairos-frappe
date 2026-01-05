@@ -2,7 +2,7 @@
  "actions": [],
  "allow_rename": 1,
  "autoname": "naming_series:",
- "creation": "2024-01-01 00:00:00.000000",
+ "creation": "2025-01-01 00:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -32,13 +32,15 @@
   "longitude",
   "virtual_link",
   "virtual_password",
-  "scope_section",
-  "scope_type",
-  "institution",
-  "column_break_scope",
-  "campus",
-  "grade",
-  "section",
+  "audience_section",
+  "audience_type",
+  "audience_campus",
+  "column_break_audience",
+  "audience_school_unit",
+  "audience_grade",
+  "target_section",
+  "audience_shift",
+  "resolved_recipients_count",
   "organization_section",
   "organizer",
   "organizer_name",
@@ -222,50 +224,70 @@
    "label": "Virtual Password"
   },
   {
-   "fieldname": "scope_section",
+   "fieldname": "audience_section",
    "fieldtype": "Section Break",
-   "label": "Scope"
+   "label": "Audience"
   },
   {
-   "default": "Campus",
-   "fieldname": "scope_type",
+   "default": "All School",
+   "fieldname": "audience_type",
    "fieldtype": "Select",
    "in_standard_filter": 1,
-   "label": "Scope Type",
-   "options": "Institution\nCampus\nGrade\nSection"
+   "label": "Target Audience",
+   "options": "All School\nCampus\nSchool Unit\nGrade\nSection",
+   "reqd": 1,
+   "description": "Who should see this event?"
   },
   {
-   "fieldname": "institution",
+   "depends_on": "eval:['Campus', 'School Unit', 'Grade', 'Section'].includes(doc.audience_type)",
+   "fieldname": "audience_campus",
    "fieldtype": "Link",
-   "in_standard_filter": 1,
-   "label": "Institution",
-   "options": "Institution"
+   "label": "Campus",
+   "options": "Campus",
+   "mandatory_depends_on": "eval:['Campus', 'School Unit', 'Grade', 'Section'].includes(doc.audience_type)"
   },
   {
-   "fieldname": "column_break_scope",
+   "fieldname": "column_break_audience",
    "fieldtype": "Column Break"
   },
   {
-   "depends_on": "eval:doc.scope_type=='Campus' || doc.scope_type=='Grade' || doc.scope_type=='Section'",
-   "fieldname": "campus",
+   "depends_on": "eval:['School Unit', 'Grade', 'Section'].includes(doc.audience_type)",
+   "fieldname": "audience_school_unit",
    "fieldtype": "Link",
-   "in_standard_filter": 1,
-   "label": "Campus",
-   "options": "Campus"
+   "label": "School Unit",
+   "options": "School Unit",
+   "mandatory_depends_on": "eval:['School Unit', 'Grade', 'Section'].includes(doc.audience_type)"
   },
   {
-   "depends_on": "eval:doc.scope_type=='Grade' || doc.scope_type=='Section'",
-   "fieldname": "grade",
+   "depends_on": "eval:['Grade', 'Section'].includes(doc.audience_type)",
+   "fieldname": "audience_grade",
    "fieldtype": "Link",
    "label": "Grade",
-   "options": "Grade"
+   "options": "Grade",
+   "mandatory_depends_on": "eval:['Grade', 'Section'].includes(doc.audience_type)"
   },
   {
-   "depends_on": "eval:doc.scope_type=='Section'",
-   "fieldname": "section",
+   "depends_on": "eval:doc.audience_type=='Section'",
+   "fieldname": "target_section",
    "fieldtype": "Link",
    "label": "Section",
-   "options": "Section"
+   "options": "Section",
+   "mandatory_depends_on": "eval:doc.audience_type=='Section'"
+  },
+  {
+   "depends_on": "eval:['School Unit', 'Grade', 'Section'].includes(doc.audience_type)",
+   "fieldname": "audience_shift",
+   "fieldtype": "Select",
+   "label": "Shift",
+   "options": "\nMorning\nAfternoon",
+   "description": "Leave empty for all shifts"
+  },
+  {
+   "fieldname": "resolved_recipients_count",
+   "fieldtype": "Int",
+   "label": "Estimated Recipients",
+   "read_only": 1,
+   "description": "Number of families that will see this event"
   },
   {
    "fieldname": "organization_section",
@@ -475,7 +497,7 @@
  "image_field": "featured_image",
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-01-01 00:00:00.000000",
+ "modified": "2025-01-05 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Kairos",
  "name": "School Event",

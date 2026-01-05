@@ -1,0 +1,176 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-01-05 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "enrollment_section",
+  "naming_series",
+  "student",
+  "student_name",
+  "column_break_enrollment",
+  "section",
+  "academic_year",
+  "status_section",
+  "enrollment_date",
+  "status",
+  "column_break_status",
+  "withdrawal_date",
+  "withdrawal_reason",
+  "promotion_section",
+  "promoted_to",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "enrollment_section",
+   "fieldtype": "Section Break",
+   "label": "Enrollment Details"
+  },
+  {
+   "default": "ENR-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "ENR-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "student",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Student",
+   "options": "Student",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "student.student_name",
+   "fieldname": "student_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Student Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_enrollment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Section",
+   "options": "Section",
+   "reqd": 1
+  },
+  {
+   "fieldname": "academic_year",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Academic Year",
+   "options": "Academic Year",
+   "reqd": 1
+  },
+  {
+   "fieldname": "status_section",
+   "fieldtype": "Section Break",
+   "label": "Status"
+  },
+  {
+   "default": "Today",
+   "fieldname": "enrollment_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Enrollment Date",
+   "reqd": 1
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Active\nWithdrawn\nTransferred\nGraduated\nRetained",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.status=='Withdrawn'",
+   "fieldname": "withdrawal_date",
+   "fieldtype": "Date",
+   "label": "Withdrawal Date"
+  },
+  {
+   "depends_on": "eval:doc.status=='Withdrawn'",
+   "fieldname": "withdrawal_reason",
+   "fieldtype": "Small Text",
+   "label": "Withdrawal Reason"
+  },
+  {
+   "fieldname": "promotion_section",
+   "fieldtype": "Section Break",
+   "label": "Promotion"
+  },
+  {
+   "depends_on": "eval:['Graduated', 'Retained'].indexOf(doc.status) === -1",
+   "fieldname": "promoted_to",
+   "fieldtype": "Link",
+   "label": "Promoted To",
+   "options": "Student Enrollment",
+   "description": "Link to next year's enrollment record"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-01-05 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Kairos",
+ "name": "Student Enrollment",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "School Admin",
+   "share": 0,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

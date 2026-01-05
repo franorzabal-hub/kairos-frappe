@@ -1,0 +1,522 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-01-05 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "basic_info_section",
+  "naming_series",
+  "trip_name",
+  "trip_type",
+  "status",
+  "column_break_basic",
+  "school_unit",
+  "academic_year",
+  "dates_section",
+  "start_date",
+  "end_date",
+  "column_break_dates",
+  "departure_time",
+  "return_time",
+  "location_section",
+  "destination",
+  "destination_address",
+  "column_break_location",
+  "destination_phone",
+  "meeting_point",
+  "details_section",
+  "description",
+  "objectives",
+  "itinerary",
+  "column_break_details",
+  "what_to_bring",
+  "what_not_to_bring",
+  "logistics_section",
+  "transport_type",
+  "transport_provider",
+  "transport_details",
+  "column_break_logistics",
+  "cost_per_student",
+  "payment_deadline",
+  "payment_instructions",
+  "sections_section",
+  "sections",
+  "staffing_section",
+  "organizer",
+  "organizer_name",
+  "required_ratio",
+  "column_break_staffing",
+  "emergency_contact",
+  "emergency_phone",
+  "staff_section",
+  "staff",
+  "authorization_section",
+  "authorization_deadline",
+  "default_authorization_method",
+  "column_break_auth",
+  "authorization_template",
+  "approval_section",
+  "requires_approval",
+  "approved_by",
+  "approved_by_name",
+  "column_break_approval",
+  "approval_date",
+  "approval_notes",
+  "insurance_section",
+  "insurance_required",
+  "insurance_provider",
+  "column_break_insurance",
+  "insurance_policy",
+  "notes_section",
+  "internal_notes",
+  "column_break_notes",
+  "parent_notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "basic_info_section",
+   "fieldtype": "Section Break",
+   "label": "Basic Information"
+  },
+  {
+   "default": "TRIP-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "TRIP-.YYYY.-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "trip_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Trip Name",
+   "reqd": 1,
+   "description": "e.g., 'Visita al Teatro Colon', 'Campamento en el Delta'"
+  },
+  {
+   "default": "Day Trip",
+   "fieldname": "trip_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Trip Type",
+   "options": "Short Trip\nDay Trip\nOvernight\nCamp\nStudy Trip",
+   "reqd": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nPending Approval\nApproved\nIn Progress\nCompleted\nCancelled",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_basic",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "school_unit",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "School Unit",
+   "options": "School Unit",
+   "reqd": 1,
+   "description": "Organizing School Unit"
+  },
+  {
+   "fieldname": "academic_year",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Academic Year",
+   "options": "Academic Year",
+   "reqd": 1
+  },
+  {
+   "fieldname": "dates_section",
+   "fieldtype": "Section Break",
+   "label": "Dates & Times"
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Start Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "end_date",
+   "fieldtype": "Date",
+   "label": "End Date",
+   "reqd": 1,
+   "description": "Same as start date for day trips"
+  },
+  {
+   "fieldname": "column_break_dates",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "departure_time",
+   "fieldtype": "Time",
+   "label": "Departure Time",
+   "description": "When leaving school"
+  },
+  {
+   "fieldname": "return_time",
+   "fieldtype": "Time",
+   "label": "Expected Return",
+   "description": "Expected return time"
+  },
+  {
+   "fieldname": "location_section",
+   "fieldtype": "Section Break",
+   "label": "Location"
+  },
+  {
+   "fieldname": "destination",
+   "fieldtype": "Data",
+   "label": "Destination",
+   "reqd": 1,
+   "description": "e.g., 'Teatro Colon', 'Camping Los Sauces'"
+  },
+  {
+   "fieldname": "destination_address",
+   "fieldtype": "Small Text",
+   "label": "Destination Address"
+  },
+  {
+   "fieldname": "column_break_location",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "destination_phone",
+   "fieldtype": "Data",
+   "label": "Destination Phone",
+   "options": "Phone",
+   "description": "Contact at destination"
+  },
+  {
+   "default": "School entrance",
+   "fieldname": "meeting_point",
+   "fieldtype": "Data",
+   "label": "Meeting Point",
+   "description": "Where to meet before departure"
+  },
+  {
+   "fieldname": "details_section",
+   "fieldtype": "Section Break",
+   "label": "Trip Details",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "Description",
+   "description": "Trip description for parents"
+  },
+  {
+   "fieldname": "objectives",
+   "fieldtype": "Text",
+   "label": "Educational Objectives"
+  },
+  {
+   "fieldname": "itinerary",
+   "fieldtype": "Text Editor",
+   "label": "Itinerary",
+   "description": "Detailed schedule"
+  },
+  {
+   "fieldname": "column_break_details",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "what_to_bring",
+   "fieldtype": "Text",
+   "label": "What to Bring",
+   "description": "Items students should bring"
+  },
+  {
+   "fieldname": "what_not_to_bring",
+   "fieldtype": "Text",
+   "label": "What NOT to Bring",
+   "description": "Prohibited items"
+  },
+  {
+   "fieldname": "logistics_section",
+   "fieldtype": "Section Break",
+   "label": "Logistics"
+  },
+  {
+   "default": "School Bus",
+   "fieldname": "transport_type",
+   "fieldtype": "Select",
+   "label": "Transport Type",
+   "options": "School Bus\nChartered Bus\nWalking\nPublic Transport\nPrivate"
+  },
+  {
+   "fieldname": "transport_provider",
+   "fieldtype": "Data",
+   "label": "Transport Provider",
+   "description": "Company name"
+  },
+  {
+   "fieldname": "transport_details",
+   "fieldtype": "Small Text",
+   "label": "Transport Details",
+   "description": "Vehicle info, license plates"
+  },
+  {
+   "fieldname": "column_break_logistics",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "cost_per_student",
+   "fieldtype": "Currency",
+   "label": "Cost per Student",
+   "description": "Trip cost (0 if free)"
+  },
+  {
+   "fieldname": "payment_deadline",
+   "fieldtype": "Date",
+   "label": "Payment Deadline"
+  },
+  {
+   "fieldname": "payment_instructions",
+   "fieldtype": "Small Text",
+   "label": "Payment Instructions"
+  },
+  {
+   "fieldname": "sections_section",
+   "fieldtype": "Section Break",
+   "label": "Participating Sections"
+  },
+  {
+   "fieldname": "sections",
+   "fieldtype": "Table",
+   "label": "Sections",
+   "options": "Field Trip Section",
+   "reqd": 1
+  },
+  {
+   "fieldname": "staffing_section",
+   "fieldtype": "Section Break",
+   "label": "Staffing"
+  },
+  {
+   "fieldname": "organizer",
+   "fieldtype": "Link",
+   "label": "Organizer",
+   "options": "Staff",
+   "reqd": 1,
+   "description": "Primary organizer"
+  },
+  {
+   "fetch_from": "organizer.full_name",
+   "fieldname": "organizer_name",
+   "fieldtype": "Data",
+   "label": "Organizer Name",
+   "read_only": 1
+  },
+  {
+   "default": "1:10",
+   "fieldname": "required_ratio",
+   "fieldtype": "Data",
+   "label": "Required Staff Ratio",
+   "description": "e.g., '1:10' (1 adult per 10 students)"
+  },
+  {
+   "fieldname": "column_break_staffing",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "emergency_contact",
+   "fieldtype": "Data",
+   "label": "Emergency Contact",
+   "description": "Main contact name during trip"
+  },
+  {
+   "fieldname": "emergency_phone",
+   "fieldtype": "Data",
+   "label": "Emergency Phone",
+   "options": "Phone",
+   "description": "Emergency contact number"
+  },
+  {
+   "fieldname": "staff_section",
+   "fieldtype": "Section Break",
+   "label": "Assigned Staff"
+  },
+  {
+   "fieldname": "staff",
+   "fieldtype": "Table",
+   "label": "Staff",
+   "options": "Field Trip Staff"
+  },
+  {
+   "fieldname": "authorization_section",
+   "fieldtype": "Section Break",
+   "label": "Authorization"
+  },
+  {
+   "fieldname": "authorization_deadline",
+   "fieldtype": "Date",
+   "label": "Authorization Deadline",
+   "description": "Deadline for parent response"
+  },
+  {
+   "default": "App",
+   "fieldname": "default_authorization_method",
+   "fieldtype": "Select",
+   "label": "Authorization Method",
+   "options": "App\nPaper\nBoth"
+  },
+  {
+   "fieldname": "column_break_auth",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "authorization_template",
+   "fieldtype": "Link",
+   "label": "Authorization Template",
+   "options": "Print Format",
+   "description": "Custom authorization form (optional)"
+  },
+  {
+   "fieldname": "approval_section",
+   "fieldtype": "Section Break",
+   "label": "Approval",
+   "collapsible": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "requires_approval",
+   "fieldtype": "Check",
+   "label": "Requires Approval"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "Staff",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "approved_by.full_name",
+   "fieldname": "approved_by_name",
+   "fieldtype": "Data",
+   "label": "Approved By Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_approval",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "approval_date",
+   "fieldtype": "Datetime",
+   "label": "Approval Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approval_notes",
+   "fieldtype": "Small Text",
+   "label": "Approval Notes"
+  },
+  {
+   "fieldname": "insurance_section",
+   "fieldtype": "Section Break",
+   "label": "Insurance",
+   "collapsible": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "insurance_required",
+   "fieldtype": "Check",
+   "label": "Special Insurance Required"
+  },
+  {
+   "fieldname": "insurance_provider",
+   "fieldtype": "Data",
+   "label": "Insurance Provider"
+  },
+  {
+   "fieldname": "column_break_insurance",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "insurance_policy",
+   "fieldtype": "Data",
+   "label": "Policy Number"
+  },
+  {
+   "fieldname": "notes_section",
+   "fieldtype": "Section Break",
+   "label": "Notes",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "internal_notes",
+   "fieldtype": "Text",
+   "label": "Internal Notes",
+   "description": "Staff-only notes"
+  },
+  {
+   "fieldname": "column_break_notes",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "parent_notes",
+   "fieldtype": "Text",
+   "label": "Notes for Parents",
+   "description": "Visible to parents"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-01-05 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Kairos",
+ "name": "Field Trip",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "School Admin",
+   "share": 0,
+   "write": 1
+  }
+ ],
+ "sort_field": "start_date",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "trip_name",
+ "track_changes": 1
+}

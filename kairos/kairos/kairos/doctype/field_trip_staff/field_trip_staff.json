@@ -1,0 +1,68 @@
+{
+ "actions": [],
+ "creation": "2025-01-05 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "staff",
+  "staff_name",
+  "role",
+  "phone",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "staff",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Staff Member",
+   "options": "Staff",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "staff.full_name",
+   "fieldname": "staff_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Name",
+   "read_only": 1
+  },
+  {
+   "default": "Chaperone",
+   "fieldname": "role",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Role",
+   "options": "Organizer\nLead Chaperone\nChaperone\nMedical\nDriver",
+   "reqd": 1
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Phone",
+   "options": "Phone",
+   "description": "Contact number during trip"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes",
+   "description": "Special responsibilities"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-01-05 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Kairos",
+ "name": "Field Trip Staff",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

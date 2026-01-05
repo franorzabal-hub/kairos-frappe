@@ -85,7 +85,7 @@
    "fieldname": "director",
    "fieldtype": "Link",
    "label": "Director",
-   "options": "User"
+   "options": "Staff"
   },
   {
    "default": "1",

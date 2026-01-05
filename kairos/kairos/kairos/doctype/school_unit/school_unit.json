@@ -1,0 +1,204 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:unit_name",
+ "creation": "2025-01-05 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "basic_info_section",
+  "unit_name",
+  "campus",
+  "level",
+  "column_break_basic",
+  "is_active",
+  "shift_support",
+  "administration_section",
+  "director",
+  "director_name",
+  "column_break_admin",
+  "vice_director",
+  "vice_director_name",
+  "coordinator",
+  "coordinator_name",
+  "contact_section",
+  "phone",
+  "email",
+  "column_break_contact",
+  "address"
+ ],
+ "fields": [
+  {
+   "fieldname": "basic_info_section",
+   "fieldtype": "Section Break",
+   "label": "Basic Information"
+  },
+  {
+   "fieldname": "unit_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Unit Name",
+   "reqd": 1,
+   "unique": 1,
+   "description": "e.g., 'Jardín Martínez', 'Primaria Pilar'"
+  },
+  {
+   "fieldname": "campus",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Campus",
+   "options": "Campus",
+   "reqd": 1
+  },
+  {
+   "fieldname": "level",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Level",
+   "options": "Kindergarten\nPrimary\nSecondary",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_basic",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Active"
+  },
+  {
+   "default": "Both Shifts",
+   "fieldname": "shift_support",
+   "fieldtype": "Select",
+   "label": "Shift Support",
+   "options": "Morning Only\nAfternoon Only\nBoth Shifts",
+   "description": "Which shifts does this unit support?"
+  },
+  {
+   "fieldname": "administration_section",
+   "fieldtype": "Section Break",
+   "label": "Administration"
+  },
+  {
+   "fieldname": "director",
+   "fieldtype": "Link",
+   "label": "Director",
+   "options": "Staff",
+   "description": "Unit director"
+  },
+  {
+   "fetch_from": "director.full_name",
+   "fieldname": "director_name",
+   "fieldtype": "Data",
+   "label": "Director Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_admin",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "vice_director",
+   "fieldtype": "Link",
+   "label": "Vice Director",
+   "options": "Staff",
+   "description": "Vice director (optional)"
+  },
+  {
+   "fetch_from": "vice_director.full_name",
+   "fieldname": "vice_director_name",
+   "fieldtype": "Data",
+   "label": "Vice Director Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "coordinator",
+   "fieldtype": "Link",
+   "label": "Coordinator",
+   "options": "Staff",
+   "description": "Academic coordinator (optional)"
+  },
+  {
+   "fetch_from": "coordinator.full_name",
+   "fieldname": "coordinator_name",
+   "fieldtype": "Data",
+   "label": "Coordinator Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "contact_section",
+   "fieldtype": "Section Break",
+   "label": "Contact Information",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone",
+   "options": "Phone",
+   "description": "Direct phone for this unit"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email",
+   "description": "Unit email address"
+  },
+  {
+   "fieldname": "column_break_contact",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Small Text",
+   "label": "Address",
+   "description": "If different from main campus address"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-01-05 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Kairos",
+ "name": "School Unit",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "School Admin",
+   "share": 0,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -1,0 +1,150 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "hash",
+ "creation": "2025-01-05 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "for_doctype",
+  "view_type",
+  "kanban_field",
+  "section_break_view_config",
+  "filters",
+  "sorting",
+  "column_break_config",
+  "column_order",
+  "visible_columns",
+  "page_size",
+  "section_break_settings",
+  "is_default",
+  "is_favorite",
+  "favorite_folder"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "for_doctype",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "For DocType",
+   "options": "DocType",
+   "reqd": 1
+  },
+  {
+   "fieldname": "view_type",
+   "fieldtype": "Select",
+   "label": "View Type",
+   "options": "Table\nKanban",
+   "default": "Table",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "kanban_field",
+   "fieldtype": "Data",
+   "label": "Kanban Field",
+   "depends_on": "eval:doc.view_type=='Kanban'"
+  },
+  {
+   "fieldname": "section_break_view_config",
+   "fieldtype": "Section Break",
+   "label": "View Configuration"
+  },
+  {
+   "fieldname": "filters",
+   "fieldtype": "JSON",
+   "label": "Filters"
+  },
+  {
+   "fieldname": "sorting",
+   "fieldtype": "JSON",
+   "label": "Sorting"
+  },
+  {
+   "fieldname": "column_break_config",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_order",
+   "fieldtype": "JSON",
+   "label": "Column Order"
+  },
+  {
+   "fieldname": "visible_columns",
+   "fieldtype": "JSON",
+   "label": "Visible Columns"
+  },
+  {
+   "fieldname": "page_size",
+   "fieldtype": "Int",
+   "default": "20",
+   "label": "Page Size"
+  },
+  {
+   "fieldname": "section_break_settings",
+   "fieldtype": "Section Break",
+   "label": "Settings"
+  },
+  {
+   "fieldname": "is_default",
+   "fieldtype": "Check",
+   "default": "0",
+   "label": "Is Default"
+  },
+  {
+   "fieldname": "is_favorite",
+   "fieldtype": "Check",
+   "default": "0",
+   "label": "Is Favorite"
+  },
+  {
+   "fieldname": "favorite_folder",
+   "fieldtype": "Link",
+   "label": "Favorite Folder",
+   "options": "Favorite Folder",
+   "depends_on": "is_favorite"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2025-01-05 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Kairos",
+ "name": "Saved View",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "All",
+   "write": 1,
+   "if_owner": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
