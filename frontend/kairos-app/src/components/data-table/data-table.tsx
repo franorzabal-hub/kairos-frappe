@@ -17,6 +17,7 @@ import {
   useReactTable,
   SortingState,
   PaginationState,
+  ColumnResizeMode,
 } from "@tanstack/react-table";
 import {
   ChevronLeft,
@@ -136,6 +137,8 @@ export function DataTable<TData, TValue>({
   // Determine if pagination is server-side
   const isServerSide = pageCount !== undefined && onPaginationChange !== undefined;
 
+  const [columnResizeMode] = React.useState<ColumnResizeMode>("onChange");
+
   const table = useReactTable({
     data,
     columns,
@@ -145,6 +148,8 @@ export function DataTable<TData, TValue>({
     manualPagination: isServerSide,
     manualSorting: !!onSortingChange,
     pageCount: pageCount ?? -1,
+    columnResizeMode,
+    enableColumnResizing: true,
     state: {
       sorting,
       pagination: currentPagination,
@@ -163,8 +168,8 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
-        <Table>
+      <div className="border-b overflow-x-auto">
+        <Table style={{ minWidth: "100%", width: Math.max(table.getCenterTotalSize(), 0) || "100%" }} className="table-fixed">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -172,11 +177,22 @@ export function DataTable<TData, TValue>({
                   const canSort = header.column.getCanSort();
                   const sortDirection = header.column.getIsSorted();
 
+                  const canResize = header.column.getCanResize();
+
                   return (
                     <TableHead
                       key={header.id}
+                      style={{
+                        width: header.getSize(),
+                        position: header.index === 0 ? "sticky" : "relative",
+                        left: header.index === 0 ? 0 : undefined,
+                        zIndex: header.index === 0 ? 10 : undefined,
+                      }}
                       className={cn(
-                        canSort && "cursor-pointer select-none hover:bg-muted/50"
+                        canSort && "cursor-pointer select-none hover:bg-muted/50",
+                        header.index === 0 && "border-r-0 bg-background",
+                        header.index === 1 && "pl-4",
+                        header.index === headerGroup.headers.length - 1 && "pr-4"
                       )}
                       onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
                     >
@@ -199,6 +215,18 @@ export function DataTable<TData, TValue>({
                           )}
                         </div>
                       )}
+                      {/* Resize handle */}
+                      {canResize && (
+                        <div
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                          onClick={(e) => e.stopPropagation()}
+                          className={cn(
+                            "absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none hover:bg-primary/50",
+                            header.column.getIsResizing() && "bg-primary"
+                          )}
+                        />
+                      )}
                     </TableHead>
                   );
                 })}
@@ -211,7 +239,19 @@ export function DataTable<TData, TValue>({
               Array.from({ length: currentPagination.pageSize }).map((_, index) => (
                 <TableRow key={`skeleton-${index}`}>
                   {columns.map((_, cellIndex) => (
-                    <TableCell key={`skeleton-cell-${cellIndex}`}>
+                    <TableCell
+                      key={`skeleton-cell-${cellIndex}`}
+                      style={{
+                        position: cellIndex === 0 ? "sticky" : undefined,
+                        left: cellIndex === 0 ? 0 : undefined,
+                        zIndex: cellIndex === 0 ? 10 : undefined,
+                      }}
+                      className={cn(
+                        cellIndex === 0 && "border-r-0 bg-background",
+                        cellIndex === 1 && "pl-4",
+                        cellIndex === columns.length - 1 && "pr-4"
+                      )}
+                    >
                       <Skeleton className="h-5 w-full" />
                     </TableCell>
                   ))}
@@ -228,8 +268,21 @@ export function DataTable<TData, TValue>({
                     onRowClick && "cursor-pointer"
                   )}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                  {row.getVisibleCells().map((cell, cellIndex) => (
+                    <TableCell
+                      key={cell.id}
+                      style={{
+                        width: cell.column.getSize(),
+                        position: cellIndex === 0 ? "sticky" : undefined,
+                        left: cellIndex === 0 ? 0 : undefined,
+                        zIndex: cellIndex === 0 ? 10 : undefined,
+                      }}
+                      className={cn(
+                        cellIndex === 0 && "border-r-0 bg-background",
+                        cellIndex === 1 && "pl-4",
+                        cellIndex === row.getVisibleCells().length - 1 && "pr-4"
+                      )}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -243,7 +296,7 @@ export function DataTable<TData, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center text-muted-foreground"
+                  className="h-24 text-center text-muted-foreground px-4"
                 >
                   {emptyMessage}
                 </TableCell>

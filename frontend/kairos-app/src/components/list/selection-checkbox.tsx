@@ -96,21 +96,18 @@ export function SelectionCheckbox({
   );
 
   return (
-    <div
-      className={cn("flex items-center justify-center", className)}
+    <Checkbox
+      ref={checkboxRef}
+      checked={indeterminate ? "indeterminate" : checked}
+      onCheckedChange={onCheckedChange}
+      disabled={disabled}
+      aria-label={ariaLabel}
       onClick={handleClick}
-    >
-      <Checkbox
-        ref={checkboxRef}
-        checked={indeterminate ? "indeterminate" : checked}
-        onCheckedChange={onCheckedChange}
-        disabled={disabled}
-        aria-label={ariaLabel}
-        className={cn(
-          "data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground"
-        )}
-      />
-    </div>
+      className={cn(
+        "data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground",
+        className
+      )}
+    />
   );
 }
 

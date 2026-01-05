@@ -313,7 +313,10 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
           );
         },
         enableSorting: false,
-        size: 40,
+        enableResizing: false,
+        size: 32,
+        minSize: 32,
+        maxSize: 32,
       },
       // Name/title column
       {
@@ -838,22 +841,24 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
       </div>
 
       {/* Content area */}
-      <div className="flex-1 overflow-auto p-6 space-y-4">
+      <div className="flex-1 overflow-auto">
           {/* Active Filters */}
           {getValidFilters(filterConditions).length > 0 && (
-            <ActiveFilters
-              filters={filterConditions}
-              fields={visibleFields}
-              onRemove={(id) =>
-                setFilterConditions((prev) => prev.filter((f) => f.id !== id))
-              }
-              onClearAll={() => setFilterConditions([])}
-            />
+            <div className="px-6 pt-4">
+              <ActiveFilters
+                filters={filterConditions}
+                fields={visibleFields}
+                onRemove={(id) =>
+                  setFilterConditions((prev) => prev.filter((f) => f.id !== id))
+                }
+                onClearAll={() => setFilterConditions([])}
+              />
+            </div>
           )}
 
           {/* Selection Info */}
           {hasSelection && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground px-6 py-2">
               <span>{selectedCount} item{selectedCount !== 1 ? "s" : ""} selected</span>
               <Button
                 variant="ghost"
@@ -868,13 +873,15 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
 
           {/* List Error */}
           {listError && (
-            <Card className="border-destructive">
-              <CardContent className="pt-6">
-                <p className="text-sm text-destructive">
-                  Error loading documents: {listError.message}
-                </p>
-              </CardContent>
-            </Card>
+            <div className="px-6 py-4">
+              <Card className="border-destructive">
+                <CardContent className="pt-6">
+                  <p className="text-sm text-destructive">
+                    Error loading documents: {listError.message}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           )}
 
           {/* Data Table */}
@@ -895,7 +902,7 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
 
           {/* Total Count Info */}
           {!listLoading && totalCount > 0 && (
-            <p className="text-sm text-muted-foreground text-center">
+            <p className="text-sm text-muted-foreground text-center px-6 py-4">
               Total: {totalCount.toLocaleString()} {doctypeName.toLowerCase()}
               {totalCount !== 1 ? "s" : ""}
             </p>

@@ -30,7 +30,9 @@ interface SidebarState {
 
 interface SidebarContextValue {
   width: number;
+  actualWidth: number;
   isCollapsed: boolean;
+  isHoverExpanded: boolean;
   isResizing: boolean;
   minWidth: number;
   maxWidth: number;
@@ -40,6 +42,7 @@ interface SidebarContextValue {
   setWidth: (width: number) => void;
   startResizing: () => void;
   stopResizing: () => void;
+  setHoverExpanded: (value: boolean) => void;
 }
 
 // ============================================================================
@@ -67,6 +70,7 @@ interface SidebarProviderProps {
 export function SidebarProvider({ children }: SidebarProviderProps) {
   const [width, setWidthState] = useState(DEFAULT_WIDTH);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isHoverExpanded, setIsHoverExpanded] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -128,6 +132,21 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
     setIsResizing(false);
   }, []);
 
+  // Keyboard shortcut: ⌘. to toggle sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey && e.key === ".") {
+        e.preventDefault();
+        const newCollapsed = !isCollapsed;
+        setIsCollapsed(newCollapsed);
+        saveState(width, newCollapsed);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isCollapsed, width, saveState]);
+
   // Don't render children until hydrated to avoid layout shift
   if (!isHydrated) {
     return null;
@@ -137,7 +156,9 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
     <SidebarContext.Provider
       value={{
         width: isCollapsed ? COLLAPSED_WIDTH : width,
+        actualWidth: width,
         isCollapsed,
+        isHoverExpanded,
         isResizing,
         minWidth: MIN_WIDTH,
         maxWidth: MAX_WIDTH,
@@ -147,6 +168,7 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
         setWidth,
         startResizing,
         stopResizing,
+        setHoverExpanded: setIsHoverExpanded,
       }}
     >
       {children}

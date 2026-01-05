@@ -9,7 +9,8 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Menu, PanelLeft } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, Menu, PanelLeftClose } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +19,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
@@ -37,14 +46,17 @@ function MainLayoutContent({ children }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const {
     width,
+    actualWidth,
     isCollapsed,
+    isHoverExpanded,
     isResizing,
     minWidth,
     maxWidth,
     setWidth,
     startResizing,
     stopResizing,
-    expand,
+    setHoverExpanded,
+    collapse,
   } = useSidebar();
 
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -113,30 +125,96 @@ function MainLayoutContent({ children }: MainLayoutProps) {
         <AppHeader className="flex-1" />
       </div>
 
-      {/* Main content area with sidebar */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Expand button when collapsed */}
-        {isCollapsed && (
-          <div className="hidden md:flex items-start pt-2 pl-2 flex-shrink-0">
+      {/* Hover zone to expand collapsed sidebar (full height) */}
+      {isCollapsed && !isHoverExpanded && (
+        <div
+          className="hidden md:block fixed left-0 top-0 bottom-0 w-2 z-[60] cursor-pointer"
+          onMouseEnter={() => setHoverExpanded(true)}
+        />
+      )}
+
+      {/* Hover-expanded sidebar overlay (header + sidebar) */}
+      {isCollapsed && isHoverExpanded && (
+        <div
+          className="hidden md:flex fixed left-0 top-0 bottom-0 z-[60] flex-col shadow-xl border-r bg-background"
+          style={{ width: actualWidth }}
+          onMouseLeave={() => setHoverExpanded(false)}
+        >
+          {/* Hover sidebar header */}
+          <div className="flex h-12 items-center gap-1 border-b bg-muted/50 px-3 flex-shrink-0">
+            {/* Logo */}
+            <Link
+              href="/"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm flex-shrink-0"
+            >
+              K
+            </Link>
+
+            {/* Workspace Selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 gap-1 px-2 font-semibold"
+                >
+                  <span className="truncate">Kairos</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <div className="flex h-6 w-6 items-center justify-center rounded bg-primary text-primary-foreground text-xs font-bold mr-2">
+                    K
+                  </div>
+                  Kairos
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* Collapse Button */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={expand}
-                    className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      setHoverExpanded(false);
+                      collapse();
+                    }}
+                    className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200 group"
                   >
-                    <PanelLeft className="h-4 w-4" />
+                    <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="right">
-                  Expand sidebar
+                <TooltipContent side="bottom" className="flex items-center gap-2">
+                  <span>Collapse sidebar</span>
+                  <div className="flex items-center gap-0.5">
+                    <kbd className="flex h-5 min-w-5 items-center justify-center rounded border border-background/30 bg-foreground px-1 font-mono text-[10px] font-medium text-background">
+                      ⌘
+                    </kbd>
+                    <kbd className="flex h-5 min-w-5 items-center justify-center rounded border border-background/30 bg-foreground px-1 font-mono text-[10px] font-medium text-background">
+                      .
+                    </kbd>
+                  </div>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
-        )}
+
+          {/* Hover sidebar content */}
+          <AppSidebar className="flex-1" />
+        </div>
+      )}
+
+      {/* Main content area with sidebar */}
+      <div className="flex flex-1 overflow-hidden">
 
         {/* Desktop Sidebar with resize handle */}
         <div

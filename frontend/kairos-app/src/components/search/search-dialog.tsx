@@ -594,12 +594,26 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [open, selectedRecord, navigateUp, navigateDown, navigateToRecord, onOpenChange]);
 
-  // Global shortcut
+  // Global shortcuts: ⌘K and /
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // ⌘K to toggle
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         onOpenChange(!open);
+        return;
+      }
+
+      // "/" to open (only when not in an input/textarea)
+      if (e.key === "/" && !open) {
+        const target = e.target as HTMLElement;
+        const isInput = target.tagName === "INPUT" ||
+                       target.tagName === "TEXTAREA" ||
+                       target.isContentEditable;
+        if (!isInput) {
+          e.preventDefault();
+          onOpenChange(true);
+        }
       }
     };
 

@@ -30,6 +30,8 @@ import {
   MapPin,
   MessageSquare,
   Newspaper,
+  PanelLeft,
+  PanelLeftClose,
   Settings,
   User,
   UserCheck,
@@ -152,7 +154,7 @@ export function AppHeader({ className }: AppHeaderProps) {
   const { user, isLoading, logout } = useCurrentUser();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pageContext = usePageContext();
-  const { width: sidebarWidth, isCollapsed: sidebarCollapsed } = useSidebar();
+  const { width: sidebarWidth, isCollapsed: sidebarCollapsed, collapse: collapseSidebar, expand: expandSidebar } = useSidebar();
 
   // Check if we came from a parent record (related tab navigation)
   const parentDoctype = searchParams.get("parentDoctype");
@@ -299,10 +301,10 @@ export function AppHeader({ className }: AppHeaderProps) {
         className
       )}
     >
-      {/* Left: Logo + Workspace Selector (same width as sidebar) */}
+      {/* Left: Logo + Workspace Selector + Collapse (same width as sidebar) */}
       <div
         className={cn(
-          "hidden md:flex items-center gap-1 flex-shrink-0 border-r bg-muted/50 px-3 transition-[width] duration-200 overflow-hidden",
+          "hidden md:flex items-center gap-1 flex-shrink-0 border-r bg-muted/50 px-3 h-full transition-[width] duration-200 overflow-hidden",
           sidebarCollapsed && "w-0 px-0 border-r-0"
         )}
         style={{ width: sidebarCollapsed ? 0 : sidebarWidth }}
@@ -310,7 +312,7 @@ export function AppHeader({ className }: AppHeaderProps) {
         {/* Logo */}
         <Link
           href="/"
-          className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm"
+          className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm flex-shrink-0"
         >
           K
         </Link>
@@ -323,8 +325,8 @@ export function AppHeader({ className }: AppHeaderProps) {
               size="sm"
               className="h-8 gap-1 px-2 font-semibold"
             >
-              Kairos
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="truncate">Kairos</span>
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-48">
@@ -338,10 +340,68 @@ export function AppHeader({ className }: AppHeaderProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Spacer to push collapse button to the right */}
+        <div className="flex-1" />
+
+        {/* Collapse Sidebar Button */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={collapseSidebar}
+                className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200 group"
+              >
+                <PanelLeftClose className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="flex items-center gap-2">
+              <span>Collapse sidebar</span>
+              <div className="flex items-center gap-0.5">
+                <kbd className="flex h-5 min-w-5 items-center justify-center rounded border border-background/30 bg-foreground px-1 font-mono text-[10px] font-medium text-background">
+                  ⌘
+                </kbd>
+                <kbd className="flex h-5 min-w-5 items-center justify-center rounded border border-background/30 bg-foreground px-1 font-mono text-[10px] font-medium text-background">
+                  .
+                </kbd>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       {/* Current Page Context / Record Navigation */}
       <div className="flex items-center gap-1 px-2">
+        {/* Expand Sidebar Button (when collapsed) */}
+        {sidebarCollapsed && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={expandSidebar}
+                  className="hidden md:flex h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200 group"
+                >
+                  <PanelLeft className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="flex items-center gap-2">
+                <span>Expand sidebar</span>
+                <div className="flex items-center gap-0.5">
+                  <kbd className="flex h-5 min-w-5 items-center justify-center rounded border border-background/30 bg-foreground px-1 font-mono text-[10px] font-medium text-background">
+                    ⌘
+                  </kbd>
+                  <kbd className="flex h-5 min-w-5 items-center justify-center rounded border border-background/30 bg-foreground px-1 font-mono text-[10px] font-medium text-background">
+                    .
+                  </kbd>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
         {pageContext.isRecordView ? (
           <>
             {/* Close button */}
