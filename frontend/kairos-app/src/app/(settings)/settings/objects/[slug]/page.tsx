@@ -236,17 +236,15 @@ export default function ObjectDetailPage({ params }: ObjectDetailPageProps) {
       setError(null);
 
       try {
-        // Fetch DocType metadata
+        // Fetch DocType metadata using getdoctype (GET request)
         const metaResponse = await fetch(
-          `/api/frappe/api/method/frappe.desk.form.utils.get_meta`,
+          `/api/frappe/api/method/frappe.desk.form.load.getdoctype?doctype=${encodeURIComponent(doctypeName)}&with_parent=0`,
           {
-            method: "POST",
+            method: "GET",
             credentials: "include",
             headers: {
               Accept: "application/json",
-              "Content-Type": "application/json",
             },
-            body: JSON.stringify({ doctype: doctypeName }),
           }
         );
 
@@ -255,7 +253,7 @@ export default function ObjectDetailPage({ params }: ObjectDetailPageProps) {
         }
 
         const metaData = await metaResponse.json();
-        const rawMeta = metaData.message;
+        const rawMeta = metaData.message?.docs?.[0];
 
         if (!rawMeta) {
           throw new Error("DocType not found");

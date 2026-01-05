@@ -220,17 +220,15 @@ export default function ObjectsListPage() {
         await Promise.all(
           allDoctypes.map(async (doctype) => {
             try {
-              // Fetch DocType metadata
+              // Fetch DocType metadata using getdoctype (GET request)
               const metaResponse = await fetch(
-                `/api/frappe/api/method/frappe.desk.form.utils.get_meta`,
+                `/api/frappe/api/method/frappe.desk.form.load.getdoctype?doctype=${encodeURIComponent(doctype)}&with_parent=0`,
                 {
-                  method: "POST",
+                  method: "GET",
                   credentials: "include",
                   headers: {
                     Accept: "application/json",
-                    "Content-Type": "application/json",
                   },
-                  body: JSON.stringify({ doctype }),
                 }
               );
 
@@ -240,7 +238,7 @@ export default function ObjectsListPage() {
               }
 
               const metaData = await metaResponse.json();
-              const meta = metaData.message;
+              const meta = metaData.message?.docs?.[0];
 
               if (!meta) return;
 
