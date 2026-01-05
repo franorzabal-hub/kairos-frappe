@@ -787,10 +787,11 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
 
       {/* Secondary toolbar: Sort indicator + Filter (Attio style) */}
       <div className="flex items-center gap-2 px-6 py-2 border-b bg-background">
-        {/* Sort indicator with dropdown */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
+        <div className="flex items-center rounded-md border border-border/50 bg-muted/50">
+          {/* Sort indicator with dropdown */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground rounded-r-none">
               {currentSortField?.desc ? (
                 <ArrowDown className="h-4 w-4" />
               ) : (
@@ -863,21 +864,24 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
               </p>
             </div>
           </PopoverContent>
-        </Popover>
+          </Popover>
 
-        {/* Filter button with attribute search */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
-              <SlidersHorizontal className="h-4 w-4" />
-              Filter
-              {getValidFilters(filterConditions).length > 0 && (
-                <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
-                  {getValidFilters(filterConditions).length}
-                </span>
-              )}
-            </Button>
-          </PopoverTrigger>
+          {/* Divider */}
+          <div className="w-px h-5 bg-border/50" />
+
+          {/* Filter button with attribute search */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground rounded-l-none">
+                <SlidersHorizontal className="h-4 w-4" />
+                Filter
+                {getValidFilters(filterConditions).length > 0 && (
+                  <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">
+                    {getValidFilters(filterConditions).length}
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
           <PopoverContent className="w-64 p-0" align="start">
             <Command>
               <CommandInput placeholder="Search attributes..." />
@@ -900,7 +904,8 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
               </CommandList>
             </Command>
           </PopoverContent>
-        </Popover>
+          </Popover>
+        </div>
       </div>
 
       {/* Content area */}
