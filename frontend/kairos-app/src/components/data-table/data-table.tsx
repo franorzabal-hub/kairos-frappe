@@ -191,7 +191,6 @@ export function DataTable<TData, TValue>({
                       className={cn(
                         canSort && "cursor-pointer select-none hover:bg-muted/50",
                         header.index === 0 && "border-r-0 bg-background",
-                        header.index === 1 && "pl-4",
                         header.index === headerGroup.headers.length - 1 && "pr-4"
                       )}
                       onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
@@ -248,7 +247,6 @@ export function DataTable<TData, TValue>({
                       }}
                       className={cn(
                         cellIndex === 0 && "border-r-0 bg-background",
-                        cellIndex === 1 && "pl-4",
                         cellIndex === columns.length - 1 && "pr-4"
                       )}
                     >
@@ -279,7 +277,6 @@ export function DataTable<TData, TValue>({
                       }}
                       className={cn(
                         cellIndex === 0 && "border-r-0 bg-background",
-                        cellIndex === 1 && "pl-4",
                         cellIndex === row.getVisibleCells().length - 1 && "pr-4"
                       )}
                     >
