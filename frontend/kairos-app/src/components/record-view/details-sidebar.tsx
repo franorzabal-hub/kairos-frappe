@@ -210,7 +210,7 @@ export function DetailsSidebar({
   };
 
   return (
-    <div className={cn("flex flex-col h-full border-l bg-background", className)}>
+    <div className={cn("flex flex-col h-full min-h-0 border-l bg-background", className)}>
       {/* Tab header */}
       <div className="flex border-b px-4">
         <TabButton

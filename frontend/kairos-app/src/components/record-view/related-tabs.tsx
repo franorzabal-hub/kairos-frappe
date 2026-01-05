@@ -223,7 +223,7 @@ export function RelatedTabs({
   const activeInHidden = hiddenTabs.some((t) => t.id === activeTab);
 
   return (
-    <div className={cn("flex flex-col", className)}>
+    <div className={cn("flex flex-col min-h-0", className)}>
       {/* Tabs header */}
       <div className="border-b">
         <div className="flex items-center px-4">

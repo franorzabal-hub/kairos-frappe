@@ -204,9 +204,9 @@ export default function DocTypeDetailPage({ params }: DocTypeDetailPageProps) {
       />
 
       {/* Main content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex min-h-0">
         {/* Left side: Tabs and content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {docMeta && (
             <>
               {/* Related tabs (Overview, Activity, Child tables) */}
