@@ -791,7 +791,7 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
         <div className="rounded-md border border-border/50 bg-muted/50">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="sm" className="gap-1 h-7 px-2 text-muted-foreground hover:text-foreground">
               {currentSortField?.desc ? (
                 <ArrowDown className="h-4 w-4" />
               ) : (
@@ -874,7 +874,7 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
         <div className="rounded-md border border-border/50 bg-muted/50">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="sm" className="gap-1 h-7 px-2 text-muted-foreground hover:text-foreground">
                 <SlidersHorizontal className="h-4 w-4" />
                 Filter
                 {getValidFilters(filterConditions).length > 0 && (
