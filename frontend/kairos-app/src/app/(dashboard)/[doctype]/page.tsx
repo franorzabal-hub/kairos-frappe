@@ -314,9 +314,9 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
         },
         enableSorting: false,
         enableResizing: false,
-        size: 32,
-        minSize: 32,
-        maxSize: 32,
+        size: 40,
+        minSize: 40,
+        maxSize: 40,
       },
       // Name/title column
       {
