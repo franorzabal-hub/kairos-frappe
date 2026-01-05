@@ -170,6 +170,9 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
   // Bulk operations loading state
   const [isBulkOperating, setIsBulkOperating] = useState(false);
 
+  // Column order state (stores column IDs in display order)
+  const [columnOrder, setColumnOrder] = useState<string[]>([]);
+
   // ============================================================================
   // Data Fetching
   // ============================================================================
@@ -288,7 +291,8 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
   // Define document type for table
   type DocRecord = Record<string, unknown>;
 
-  const columns = useMemo<ColumnDef<DocRecord, unknown>[]>(() => {
+  // Build base columns (without order applied)
+  const baseColumns = useMemo<ColumnDef<DocRecord, unknown>[]>(() => {
     // Name/title column with integrated checkbox
     const headerLabel = titleField
       ? listViewFields.find((f) => f.fieldname === titleField)?.label || "Name"
@@ -296,6 +300,7 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
 
     const cols: ColumnDef<DocRecord, unknown>[] = [
       {
+        id: titleField || "name",
         accessorKey: titleField || "name",
         header: () => (
           <div className="flex items-center gap-3">
@@ -337,6 +342,7 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
       }
 
       cols.push({
+        id: field.fieldname,
         accessorKey: field.fieldname,
         header: field.label,
         cell: ({ getValue }) => {
@@ -372,6 +378,7 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
     // Add modified column if not already present
     if (!listViewFields.some((f) => f.fieldname === "modified")) {
       cols.push({
+        id: "modified",
         accessorKey: "modified",
         header: "Modified",
         cell: ({ getValue }) => {
@@ -390,6 +397,57 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
 
     return cols;
   }, [listViewFields, titleField, isAllPageSelected, isPartiallySelected, toggleSelectAll, currentPageIds, isSelected, handleRangeSelection, listLoading]);
+
+  // Apply column order to get final columns
+  const columns = useMemo<ColumnDef<DocRecord, unknown>[]>(() => {
+    if (columnOrder.length === 0) {
+      return baseColumns;
+    }
+
+    // First column (with checkbox) always stays first
+    const firstColumn = baseColumns[0];
+    const otherColumns = baseColumns.slice(1);
+
+    // Sort other columns based on columnOrder
+    const orderedOtherColumns = [...otherColumns].sort((a, b) => {
+      const aIndex = columnOrder.indexOf(a.id as string);
+      const bIndex = columnOrder.indexOf(b.id as string);
+
+      // If both are in the order, sort by their position
+      if (aIndex !== -1 && bIndex !== -1) {
+        return aIndex - bIndex;
+      }
+      // If only one is in the order, it comes first
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+      // If neither is in the order, keep original order
+      return 0;
+    });
+
+    return [firstColumn, ...orderedOtherColumns];
+  }, [baseColumns, columnOrder]);
+
+  // Handle column order change
+  const handleColumnOrderChange = useCallback((columnId: string, direction: "left" | "right") => {
+    setColumnOrder((prevOrder) => {
+      // Get current column IDs (excluding first column)
+      const currentIds = prevOrder.length > 0
+        ? prevOrder
+        : baseColumns.slice(1).map(col => col.id as string);
+
+      const currentIndex = currentIds.indexOf(columnId);
+      if (currentIndex === -1) return prevOrder;
+
+      const newIndex = direction === "left" ? currentIndex - 1 : currentIndex + 1;
+      if (newIndex < 0 || newIndex >= currentIds.length) return prevOrder;
+
+      // Swap positions
+      const newOrder = [...currentIds];
+      [newOrder[currentIndex], newOrder[newIndex]] = [newOrder[newIndex], newOrder[currentIndex]];
+
+      return newOrder;
+    });
+  }, [baseColumns]);
 
   // ============================================================================
   // Handlers
@@ -890,6 +948,7 @@ export default function DocTypeListPage({ params }: DocTypeListPageProps) {
             sorting={sorting}
             onSortingChange={handleSortingChange}
             onRowClick={handleRowClick}
+            onColumnOrderChange={handleColumnOrderChange}
             emptyMessage={"No " + doctypeName.toLowerCase() + " found. Click \"New " + doctypeName + "\" to create one."}
             showPageSizeSelector={true}
             pageSizeOptions={PAGE_SIZE_OPTIONS}
