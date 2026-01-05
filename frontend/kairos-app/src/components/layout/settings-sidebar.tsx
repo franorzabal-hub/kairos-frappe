@@ -138,7 +138,7 @@ const settingsSections: SettingsSection[] = [
   {
     title: "Build",
     items: [
-      { label: "DocType", href: "/settings/DocType", icon: Database, doctype: "DocType" },
+      { label: "Objects", href: "/settings/objects", icon: Database },
       { label: "Customize Form", href: "/settings/Customize-Form", icon: Settings, doctype: "Customize Form" },
       { label: "Custom Field", href: "/settings/Custom-Field", icon: SquareCode, doctype: "Custom Field" },
       { label: "Report", href: "/settings/Report", icon: FileCode, doctype: "Report" },
