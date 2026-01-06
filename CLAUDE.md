@@ -4,7 +4,6 @@
 
 Backend de Kairos construido sobre Frappe Framework v15. Incluye:
 - **kairos/** - App Frappe con DocTypes, API, lógica de negocio
-- **frontend/kairos-app/** - Kairos Desk (admin UI para colegios) en Next.js
 
 ## Arquitectura Multi-Tenant
 
@@ -17,9 +16,78 @@ sites/
 ```
 
 **Releases vs Customizaciones:**
-- Tu código (apps/kairos/) se actualiza con cada release (~4 meses)
+- Tu código (apps/kairos/) se actualiza con cada release
 - Customizaciones de colegios (Custom Fields, Property Setters) se preservan
 - `bench migrate --site all` aplica cambios sin romper customizaciones
+
+---
+
+## Desarrollo y Deploy
+
+> **Documentación completa**: Ver [infra/docs/DEVELOPMENT.md](https://github.com/franorzabal-hub/frappe-saas-platform/blob/main/docs/DEVELOPMENT.md)
+
+### Ambientes
+
+| Ambiente | URL | Trigger |
+|----------|-----|---------|
+| **Dev** | `dev.1kairos.com` | Desarrollo directo en Desk |
+| **Prod** | `{tenant}.1kairos.com` | Tag `v*` |
+
+### Desarrollo en Desk (sin Docker local)
+
+La mayoría del desarrollo se hace **directo en el Desk** de `dev.1kairos.com`:
+
+| Tipo de cambio | Cómo hacerlo |
+|----------------|--------------|
+| Crear/modificar DocTypes | Directo en Desk |
+| Configurar formularios | Customize Form |
+| Workflows | Workflow Builder |
+| Print Formats | Print Format Builder |
+| Reports | Report Builder |
+| Roles y permisos | Role Permissions Manager |
+
+```bash
+# Acceso al Desk de desarrollo
+URL: https://dev.1kairos.com
+User: developer@kairos.com
+Pass: (solicitar a admin)
+```
+
+### Exportar cambios
+
+```bash
+# Exportar fixtures después de hacer cambios en Desk
+bench --site dev.1kairos.com export-fixtures
+
+# Commit y push
+git add . && git commit -m "feat: nuevo doctype X" && git push
+```
+
+### Deploy a Producción
+
+```bash
+# Deploy a todos los tenants
+git tag v1.0.0 -m "Release 1.0.0"
+git push origin v1.0.0
+# → Cloud Build: build image → deploy GKE → migrate all sites
+```
+
+### Desarrollo con código Python (raro)
+
+Solo si necesitas escribir código custom:
+
+```bash
+# Opción 1: Docker local
+docker compose up -d
+# Frappe en http://localhost:8000
+
+# Opción 2: Editar en servidor dev (SSH)
+ssh dev-server
+cd frappe-bench/apps/kairos
+# editar, bench restart
+```
+
+---
 
 ## Estructura
 
@@ -32,10 +100,6 @@ backend/
 │   ├── permissions.py            # Row-level security
 │   ├── middleware/               # Trial access, etc.
 │   └── tasks/                    # Scheduled tasks
-├── frontend/kairos-app/          # Kairos Desk (Next.js)
-│   ├── src/pages/                # Páginas admin
-│   ├── src/components/           # UI components
-│   └── package.json
 ├── docker-compose.yml            # Dev local
 └── Dockerfile                    # Producción
 ```
@@ -76,19 +140,6 @@ POST /api/method/kairos.api.invitations.accept_invitation
 GET  /api/method/kairos.api.trial.get_trial_status
 ```
 
-## Desarrollo Local
-
-```bash
-# Opción 1: Docker (recomendado)
-docker compose up -d
-# Frappe en http://localhost:8000
-
-# Opción 2: Bench nativo
-bench start
-# En otra terminal:
-cd frontend/kairos-app && npm run dev
-```
-
 ## Roles y Permisos
 
 | Rol | Acceso |
@@ -114,20 +165,3 @@ bench --site {site} new-doctype "My DocType"
 # Tests
 bench --site {site} run-tests --app kairos
 ```
-
-## Kairos Desk (frontend/kairos-app/)
-
-Admin UI custom para colegios, construido con Next.js sobre Frappe.
-
-```bash
-cd frontend/kairos-app
-npm install
-npm run dev     # http://localhost:3000
-```
-
-**Stack:**
-- Next.js 16
-- Frappe React SDK
-- TanStack Query + Table
-- Tailwind CSS
-- Radix UI
