@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const FRAPPE_URL = process.env.NEXT_PUBLIC_FRAPPE_URL || "http://kairos.localhost:8000";
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   async rewrites() {
     return {
       beforeFiles: [
