@@ -4,6 +4,8 @@
 
 Backend de Kairos construido sobre Frappe Framework v15. Incluye:
 - **kairos/** - App Frappe con DocTypes, API, lógica de negocio
+- **Portal para padres** - Frappe Portal customizado en `/portal`
+- **API REST** - Endpoints para apps móviles nativas
 
 ## Arquitectura Multi-Tenant
 
@@ -26,12 +28,18 @@ sites/
 
 > **Documentación completa**: Ver [infra/docs/DEVELOPMENT.md](https://github.com/franorzabal-hub/frappe-saas-platform/blob/main/docs/DEVELOPMENT.md)
 
-### Ambientes
+### Ambientes e Interfaces
 
 | Ambiente | URL | Trigger |
 |----------|-----|---------|
 | **Dev** | `dev.1kairos.com` | Desarrollo directo en Desk |
 | **Prod** | `{tenant}.1kairos.com` | Tag `v*` |
+
+| Interfaz | Ruta | Usuario |
+|----------|------|---------|
+| Frappe Desk | `/app` | Staff (admin, docentes) |
+| Portal Padres | `/portal` | Padres/Tutores |
+| API REST | `/api` | Apps móviles nativas |
 
 ### Desarrollo en Desk (sin Docker local)
 
@@ -142,13 +150,13 @@ GET  /api/method/kairos.api.trial.get_trial_status
 
 ## Roles y Permisos
 
-| Rol | Acceso |
-|-----|--------|
-| School Admin | Todo el tenant |
-| School Manager | Gestión operativa |
-| Teacher | Sus secciones y alumnos |
-| Secretary | Comunicaciones |
-| Parent | Solo sus hijos (via app) |
+| Rol | Acceso | Interfaz |
+|-----|--------|----------|
+| School Admin | Todo el tenant | Frappe Desk (`/app`) |
+| School Manager | Gestión operativa | Frappe Desk (`/app`) |
+| Teacher | Sus secciones y alumnos | Frappe Desk (`/app`) |
+| Secretary | Comunicaciones | Frappe Desk (`/app`) |
+| Parent | Solo sus hijos | Portal (`/portal`) + App móvil |
 
 ## Comandos Útiles
 
