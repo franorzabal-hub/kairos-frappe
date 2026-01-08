@@ -1,0 +1,108 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="container py-4">
+    <h1 class="mb-4">{{ _("Noticias") }}</h1>
+
+    {% if no_guardian %}
+    <div class="alert alert-warning">
+        <p>{{ _("No se encontró un perfil de tutor asociado a tu cuenta.") }}</p>
+    </div>
+    {% elif not news_list %}
+    <div class="alert alert-info">
+        <p>{{ _("No hay noticias disponibles.") }}</p>
+    </div>
+    {% else %}
+
+    {% if featured_news %}
+    <div class="row mb-4">
+        {% for news in featured_news %}
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-primary">
+                {% if news.featured_image %}
+                <img src="{{ news.featured_image }}" class="card-img-top" alt="{{ news.title }}"
+                     style="height: 180px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <div class="mb-2">
+                        <span class="badge bg-primary">{{ _("Destacada") }}</span>
+                        {% if news.is_pinned %}
+                        <span class="badge bg-warning text-dark">{{ _("Fijada") }}</span>
+                        {% endif %}
+                    </div>
+                    <h5 class="card-title">{{ news.title }}</h5>
+                    {% if news.summary %}
+                    <p class="card-text text-muted">{{ news.summary[:100] }}{% if news.summary|length > 100 %}...{% endif %}</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent">
+                    <small class="text-muted">
+                        {{ frappe.utils.formatdate(news.publish_date) }}
+                        {% if news.author_name %} | {{ news.author_name }}{% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="row">
+        {% for news in news_list %}
+        {% if not news.is_featured %}
+        <div class="col-12 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        {% if news.featured_image %}
+                        <div class="col-md-3">
+                            <img src="{{ news.featured_image }}" alt="{{ news.title }}"
+                                 class="img-fluid rounded" style="max-height: 150px; object-fit: cover;">
+                        </div>
+                        {% endif %}
+                        <div class="{% if news.featured_image %}col-md-9{% else %}col-12{% endif %}">
+                            <div class="d-flex align-items-center mb-2">
+                                {% if news.is_pinned %}
+                                <span class="badge bg-warning text-dark me-2">
+                                    <i class="fa fa-thumbtack"></i> {{ _("Fijada") }}
+                                </span>
+                                {% endif %}
+                                {% if news.category_name %}
+                                <span class="badge bg-secondary me-2">{{ news.category_name }}</span>
+                                {% endif %}
+                                <small class="text-muted">
+                                    {{ frappe.utils.formatdate(news.publish_date) }}
+                                </small>
+                            </div>
+
+                            <h5 class="card-title mb-2">
+                                <a href="/noticia/{{ news.slug or news.name }}" class="text-decoration-none">
+                                    {{ news.title }}
+                                </a>
+                            </h5>
+
+                            {% if news.summary %}
+                            <p class="card-text text-muted mb-2">
+                                {{ news.summary[:200] }}{% if news.summary|length > 200 %}...{% endif %}
+                            </p>
+                            {% endif %}
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fa fa-user me-1"></i> {{ news.author_name or _("Anónimo") }}
+                                </small>
+                                <a href="/noticia/{{ news.slug or news.name }}" class="btn btn-sm btn-outline-primary">
+                                    {{ _("Leer más") }} <i class="fa fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

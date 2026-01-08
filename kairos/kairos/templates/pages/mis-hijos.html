@@ -1,0 +1,73 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="container py-4">
+    <h1 class="mb-4">{{ _("Mis Hijos") }}</h1>
+
+    {% if no_guardian %}
+    <div class="alert alert-warning">
+        <p>{{ _("No se encontró un perfil de tutor asociado a tu cuenta.") }}</p>
+        <p>{{ _("Por favor contacta a la administración del colegio.") }}</p>
+    </div>
+    {% elif not children %}
+    <div class="alert alert-info">
+        <p>{{ _("No hay estudiantes registrados bajo tu tutela.") }}</p>
+        <p>{{ _("Si crees que esto es un error, contacta a la administración del colegio.") }}</p>
+    </div>
+    {% else %}
+    <div class="row">
+        {% for child in children %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if child.photo %}
+                        <img src="{{ child.photo }}" alt="{{ child.full_name }}"
+                             class="rounded-circle me-3"
+                             style="width: 64px; height: 64px; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3"
+                             style="width: 64px; height: 64px; font-size: 24px;">
+                            {{ child.first_name[0] }}{{ child.last_name[0] }}
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h5 class="card-title mb-0">{{ child.full_name }}</h5>
+                            <small class="text-muted">{{ child.relation }}</small>
+                        </div>
+                    </div>
+
+                    <ul class="list-unstyled mb-0">
+                        {% if child.grade %}
+                        <li class="mb-2">
+                            <i class="fa fa-graduation-cap text-muted me-2"></i>
+                            <strong>{{ _("Grado") }}:</strong> {{ child.grade }}
+                            {% if child.section %} - {{ child.section }}{% endif %}
+                        </li>
+                        {% endif %}
+
+                        {% if child.date_of_birth %}
+                        <li class="mb-2">
+                            <i class="fa fa-birthday-cake text-muted me-2"></i>
+                            <strong>{{ _("Nacimiento") }}:</strong> {{ frappe.utils.formatdate(child.date_of_birth) }}
+                        </li>
+                        {% endif %}
+
+                        <li class="mb-2">
+                            <i class="fa fa-circle {% if child.status == 'Active' %}text-success{% else %}text-warning{% endif %} me-2"></i>
+                            <strong>{{ _("Estado") }}:</strong> {{ _(child.status) }}
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="/estudiante/{{ child.name }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fa fa-eye me-1"></i> {{ _("Ver Detalle") }}
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

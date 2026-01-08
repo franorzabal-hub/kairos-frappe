@@ -1,0 +1,135 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="container py-4">
+    <h1 class="mb-4">{{ _("Eventos") }}</h1>
+
+    {% if no_guardian %}
+    <div class="alert alert-warning">
+        <p>{{ _("No se encontró un perfil de tutor asociado a tu cuenta.") }}</p>
+    </div>
+    {% elif not events %}
+    <div class="alert alert-info">
+        <p>{{ _("No hay eventos disponibles.") }}</p>
+    </div>
+    {% else %}
+
+    {% if upcoming_events %}
+    <h2 class="h4 mb-3">
+        <i class="fa fa-calendar-check text-primary me-2"></i>
+        {{ _("Próximos Eventos") }}
+    </h2>
+
+    <div class="row mb-4">
+        {% for event in upcoming_events %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100 {% if event.is_featured %}border-primary{% endif %}">
+                {% if event.featured_image %}
+                <img src="{{ event.featured_image }}" class="card-img-top" alt="{{ event.event_name }}"
+                     style="height: 150px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    {% if event.is_today %}
+                    <span class="badge bg-success mb-2">{{ _("Hoy") }}</span>
+                    {% endif %}
+                    {% if event.is_featured %}
+                    <span class="badge bg-primary mb-2">{{ _("Destacado") }}</span>
+                    {% endif %}
+
+                    <h5 class="card-title">{{ event.event_name }}</h5>
+
+                    <div class="mb-2">
+                        <i class="fa fa-clock text-muted me-1"></i>
+                        <strong>{{ frappe.utils.formatdate(event.start_datetime) }}</strong>
+                        {% if not event.all_day %}
+                        <span class="text-muted">
+                            {{ frappe.utils.format_time(event.start_datetime) }}
+                        </span>
+                        {% else %}
+                        <span class="text-muted">{{ _("Todo el día") }}</span>
+                        {% endif %}
+                    </div>
+
+                    {% if event.venue_name %}
+                    <div class="mb-2">
+                        <i class="fa fa-map-marker text-muted me-1"></i>
+                        {{ event.venue_name }}
+                        {% if event.room %} - {{ event.room }}{% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if event.location_type == "Virtual" %}
+                    <div class="mb-2">
+                        <i class="fa fa-video text-muted me-1"></i>
+                        {{ _("Evento Virtual") }}
+                    </div>
+                    {% endif %}
+
+                    {% if event.summary %}
+                    <p class="card-text text-muted small">
+                        {{ event.summary[:100] }}{% if event.summary|length > 100 %}...{% endif %}
+                    </p>
+                    {% endif %}
+
+                    {% if event.rsvp_enabled %}
+                    <div class="mt-2">
+                        {% if event.user_rsvp == "Yes" %}
+                        <span class="badge bg-success">
+                            <i class="fa fa-check me-1"></i>{{ _("Confirmado") }}
+                        </span>
+                        {% elif event.user_rsvp == "No" %}
+                        <span class="badge bg-secondary">
+                            <i class="fa fa-times me-1"></i>{{ _("No asistiré") }}
+                        </span>
+                        {% elif event.user_rsvp == "Maybe" %}
+                        <span class="badge bg-warning text-dark">
+                            <i class="fa fa-question me-1"></i>{{ _("Quizás") }}
+                        </span>
+                        {% else %}
+                        <span class="badge bg-info">
+                            <i class="fa fa-hand-paper me-1"></i>{{ _("RSVP pendiente") }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="/evento/{{ event.slug or event.name }}" class="btn btn-sm btn-outline-primary">
+                        {{ _("Ver Detalle") }}
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if past_events %}
+    <h2 class="h4 mb-3">
+        <i class="fa fa-history text-muted me-2"></i>
+        {{ _("Eventos Pasados") }}
+    </h2>
+
+    <div class="list-group">
+        {% for event in past_events %}
+        <a href="/evento/{{ event.slug or event.name }}" class="list-group-item list-group-item-action">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-1">{{ event.event_name }}</h6>
+                    <small class="text-muted">
+                        {{ frappe.utils.formatdate(event.start_datetime) }}
+                        {% if event.venue_name %} | {{ event.venue_name }}{% endif %}
+                    </small>
+                </div>
+                {% if event.category_name %}
+                <span class="badge bg-secondary">{{ event.category_name }}</span>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% endif %}
+</div>
+{% endblock %}

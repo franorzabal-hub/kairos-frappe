@@ -38,9 +38,20 @@ app_include_js = "kairos.bundle.js"
 # home_page = "login"
 
 # website user home page (by Role)
-# role_home_page = {
-#     "Role": "home_page"
-# }
+role_home_page = {
+    "Parent": "mis-hijos"
+}
+
+# Portal Menu Items
+# -----------------
+# Menu items visible in the portal sidebar for parents
+
+portal_menu_items = [
+    {"title": "Mis Hijos", "route": "/mis-hijos", "role": "Parent"},
+    {"title": "Mensajes", "route": "/mensajes", "role": "Parent"},
+    {"title": "Noticias", "route": "/noticias", "role": "Parent"},
+    {"title": "Eventos", "route": "/eventos", "role": "Parent"},
+]
 
 # Generators
 # ----------

@@ -1,0 +1,86 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ _("Mensajes") }}</h1>
+        {% if unread_count %}
+        <span class="badge bg-primary rounded-pill">{{ unread_count }} {{ _("sin leer") }}</span>
+        {% endif %}
+    </div>
+
+    {% if no_guardian %}
+    <div class="alert alert-warning">
+        <p>{{ _("No se encontró un perfil de tutor asociado a tu cuenta.") }}</p>
+    </div>
+    {% elif not messages %}
+    <div class="alert alert-info">
+        <p>{{ _("No tienes mensajes.") }}</p>
+    </div>
+    {% else %}
+    <div class="list-group">
+        {% for msg in messages %}
+        <a href="/mensaje/{{ msg.recipient_name }}"
+           class="list-group-item list-group-item-action {% if not msg.is_read %}bg-light{% endif %}">
+            <div class="d-flex w-100 justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-1">
+                        {% if not msg.is_read %}
+                        <span class="badge bg-primary me-2">{{ _("Nuevo") }}</span>
+                        {% endif %}
+                        {% if msg.priority == "Urgent" %}
+                        <span class="badge bg-danger me-2">{{ _("Urgente") }}</span>
+                        {% elif msg.priority == "High" %}
+                        <span class="badge bg-warning me-2">{{ _("Alta prioridad") }}</span>
+                        {% endif %}
+                        <h5 class="mb-0">{{ msg.subject }}</h5>
+                    </div>
+
+                    <p class="mb-1 text-muted small">
+                        <i class="fa fa-user me-1"></i> {{ msg.sender_name }}
+                        {% if msg.student_name %}
+                        <span class="mx-2">|</span>
+                        <i class="fa fa-child me-1"></i> {{ msg.student_name }}
+                        {% endif %}
+                    </p>
+
+                    {% if msg.content_plain %}
+                    <p class="mb-1 text-truncate" style="max-width: 600px;">
+                        {{ msg.content_plain[:150] }}{% if msg.content_plain|length > 150 %}...{% endif %}
+                    </p>
+                    {% endif %}
+
+                    {% if msg.requires_acknowledgment and not msg.acknowledged %}
+                    <span class="badge bg-warning text-dark">
+                        <i class="fa fa-exclamation-triangle me-1"></i>
+                        {{ _("Requiere confirmación") }}
+                    </span>
+                    {% elif msg.acknowledged %}
+                    <span class="badge bg-success">
+                        <i class="fa fa-check me-1"></i>
+                        {{ _("Confirmado") }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="text-end text-muted small ms-3" style="white-space: nowrap;">
+                    <div>{{ frappe.utils.pretty_date(msg.send_datetime) }}</div>
+                    <div class="mt-1">
+                        {% if msg.message_type == "Announcement" %}
+                        <i class="fa fa-bullhorn" title="{{ _('Anuncio') }}"></i>
+                        {% elif msg.message_type == "Notice" %}
+                        <i class="fa fa-info-circle" title="{{ _('Aviso') }}"></i>
+                        {% elif msg.message_type == "Alert" %}
+                        <i class="fa fa-bell" title="{{ _('Alerta') }}"></i>
+                        {% else %}
+                        <i class="fa fa-envelope" title="{{ _('Mensaje') }}"></i>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
