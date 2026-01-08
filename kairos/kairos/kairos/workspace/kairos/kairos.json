@@ -1,0 +1,228 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"welcome\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Bienvenido a Kairos</span>\",\"col\":12}},{\"id\":\"shortcuts\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Student\",\"col\":3}},{\"id\":\"shortcut_guardian\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Guardian\",\"col\":3}},{\"id\":\"shortcut_message\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Message\",\"col\":3}},{\"id\":\"shortcut_news\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"News\",\"col\":3}},{\"id\":\"spacer1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"academic_header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\">Estructura Acad\\u00e9mica</span>\",\"col\":12}},{\"id\":\"academic_links\",\"type\":\"links\",\"data\":{\"link_type\":\"DocType\",\"label\":\"Gesti\\u00f3n Acad\\u00e9mica\",\"link_to\":\"Student\",\"link_name\":\"academic\",\"col\":12}},{\"id\":\"spacer2\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"comm_header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\">Comunicaci\\u00f3n</span>\",\"col\":12}},{\"id\":\"comm_links\",\"type\":\"links\",\"data\":{\"link_type\":\"DocType\",\"label\":\"Comunicaciones\",\"link_to\":\"Message\",\"link_name\":\"communication\",\"col\":12}},{\"id\":\"spacer3\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"admin_header\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h5\\\">Administraci\\u00f3n</span>\",\"col\":12}},{\"id\":\"admin_links\",\"type\":\"links\",\"data\":{\"link_type\":\"DocType\",\"label\":\"Configuraci\\u00f3n\",\"link_to\":\"Institution\",\"link_name\":\"administration\",\"col\":12}}]",
+ "creation": "2025-01-08 00:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "education",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Kairos",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Estudiantes",
+   "link_count": 0,
+   "link_to": "Student",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Tutores",
+   "link_count": 0,
+   "link_to": "Guardian",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Vinculaciones",
+   "link_count": 0,
+   "link_to": "Student Guardian",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Grados",
+   "link_count": 0,
+   "link_to": "Grade",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Secciones",
+   "link_count": 0,
+   "link_to": "Section",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Personal",
+   "link_count": 0,
+   "link_to": "Staff",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Mensajes",
+   "link_count": 0,
+   "link_to": "Message",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Noticias",
+   "link_count": 0,
+   "link_to": "News",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Eventos",
+   "link_count": 0,
+   "link_to": "School Event",
+   "link_type": "DocType",
+   "onboard": 1,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Excursiones",
+   "link_count": 0,
+   "link_to": "Field Trip",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Instituci\u00f3n",
+   "link_count": 0,
+   "link_to": "Institution",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Campus",
+   "link_count": 0,
+   "link_to": "Campus",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "A\u00f1o Acad\u00e9mico",
+   "link_count": 0,
+   "link_to": "Academic Year",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Unidades Escolares",
+   "link_count": 0,
+   "link_to": "School Unit",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Materias",
+   "link_count": 0,
+   "link_to": "Subject",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2025-01-08 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Kairos",
+ "name": "Kairos",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [],
+ "sequence_id": 1,
+ "shortcuts": [
+  {
+   "color": "Blue",
+   "doc_view": "List",
+   "label": "Estudiantes",
+   "link_to": "Student",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Tutores",
+   "link_to": "Guardian",
+   "type": "DocType"
+  },
+  {
+   "color": "Orange",
+   "doc_view": "List",
+   "label": "Mensajes",
+   "link_to": "Message",
+   "type": "DocType"
+  },
+  {
+   "color": "Purple",
+   "doc_view": "List",
+   "label": "Noticias",
+   "link_to": "News",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "label": "Eventos",
+   "link_to": "School Event",
+   "type": "DocType"
+  },
+  {
+   "color": "Cyan",
+   "doc_view": "List",
+   "label": "Secciones",
+   "link_to": "Section",
+   "type": "DocType"
+  }
+ ],
+ "title": "Kairos"
+}

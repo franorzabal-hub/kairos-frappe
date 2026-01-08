@@ -4,23 +4,6 @@
  */
 
 /* ==========================================================================
-   TEST: Si ves esto, el CSS está cargando correctamente
-   ========================================================================== */
-
-/* TEST OBVIO - navbar roja para verificar que el CSS carga */
-.navbar {
-  background-color: #dc2626 !important;
-  background: #dc2626 !important;
-}
-
-/* TEST OBVIO - botones verdes */
-.btn-primary {
-  background-color: #16a34a !important;
-  background: #16a34a !important;
-  border-color: #16a34a !important;
-}
-
-/* ==========================================================================
    Override Frappe CSS Variables (Most effective approach)
    ========================================================================== */
 
