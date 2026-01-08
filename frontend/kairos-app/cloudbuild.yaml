@@ -8,7 +8,7 @@ options:
 substitutions:
   _SERVICE_NAME: kairos-desk
   _REGION: us-central1
-  _FRAPPE_URL: https://api-dev.1kairos.com
+  _FRAPPE_URL: https://dev.1kairos.com
 
 steps:
   # Build Docker image
@@ -50,7 +50,7 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'NEXT_PUBLIC_FRAPPE_URL=${_FRAPPE_URL}'
+      - 'NEXT_PUBLIC_FRAPPE_URL=${_FRAPPE_URL},FRAPPE_URL=${_FRAPPE_URL}'
     waitFor: ['push']
 
 images:
