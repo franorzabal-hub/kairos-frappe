@@ -287,7 +287,7 @@ export function AudienceSelector<T extends FieldValues>({
   );
 
   const campusList: CascadeOption[] =
-    allCampuses?.message?.map((c: { name: string; campus_name: string }) => ({
+    (allCampuses?.message as Array<{ name: string; campus_name: string }> | undefined)?.map((c) => ({
       value: c.name,
       label: c.campus_name,
     })) ?? [];
